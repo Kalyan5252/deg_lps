@@ -50,9 +50,7 @@ export default function SchemaCanvas({
   const canvasRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(zoom);
   const panRef = useRef(pan);
-  const targetZoomRef = useRef(zoom);
-  const anchorRef = useRef({ sx: 0, sy: 0, cx: 0, cy: 0 });
-  const rafRef = useRef<number | null>(null);
+  const [smooth, setSmooth] = useState(false);
   useEffect(() => {
     zoomRef.current = zoom;
   }, [zoom]);
@@ -60,27 +58,13 @@ export default function SchemaCanvas({
     panRef.current = pan;
   }, [pan]);
 
-  // Smooth, cursor-anchored zoom. The wheel sets a *target* zoom proportional to
-  // the scroll amount; a rAF loop eases the actual zoom toward it and keeps the
-  // point under the cursor fixed, so even chunky mouse-wheel notches glide.
+  // Smooth, cursor-anchored zoom. The wheel applies a zoom delta proportional to
+  // the scroll amount (so trackpads are fine-grained); a short CSS transition on
+  // the transform eases each step so even chunky mouse-wheel notches glide. The
+  // transition is disabled while dragging so panning stays 1:1.
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
-
-    const step = () => {
-      const tz = targetZoomRef.current;
-      let z = zoomRef.current;
-      z += (tz - z) * 0.22;
-      if (Math.abs(tz - z) < 0.001) z = tz;
-      const a = anchorRef.current;
-      const np = { x: a.sx - a.cx * z, y: a.sy - a.cy * z };
-      zoomRef.current = z;
-      panRef.current = np;
-      setZoom(z);
-      setPan(np);
-      rafRef.current = z !== tz ? requestAnimationFrame(step) : null;
-    };
-
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = el.getBoundingClientRect();
@@ -88,26 +72,21 @@ export default function SchemaCanvas({
       const sy = e.clientY - rect.top;
       const z0 = zoomRef.current;
       const p0 = panRef.current;
-      // fix the content point under the cursor for the whole gesture
-      anchorRef.current = { sx, sy, cx: (sx - p0.x) / z0, cy: (sy - p0.y) / z0 };
-      if (rafRef.current === null) targetZoomRef.current = z0;
-      // normalise delta across wheel/trackpad/line modes, scale continuously
       let d = e.deltaY;
       if (e.deltaMode === 1) d *= 16;
       else if (e.deltaMode === 2) d *= 400;
-      const factor = Math.exp(-d * 0.0012);
-      targetZoomRef.current = Math.min(
-        2,
-        Math.max(0.4, targetZoomRef.current * factor)
-      );
-      if (rafRef.current === null) rafRef.current = requestAnimationFrame(step);
+      const next = Math.min(2, Math.max(0.4, z0 * Math.exp(-d * 0.0015)));
+      if (next === z0) return;
+      // keep the point under the cursor fixed
+      const np = { x: sx - ((sx - p0.x) / z0) * next, y: sy - ((sy - p0.y) / z0) * next };
+      zoomRef.current = next;
+      panRef.current = np;
+      setSmooth(true);
+      setZoom(next);
+      setPan(np);
     };
-
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => {
-      el.removeEventListener("wheel", onWheel);
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
+    return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
   useEffect(() => {
@@ -132,6 +111,7 @@ export default function SchemaCanvas({
 
   function onNodeDown(e: React.PointerEvent, name: string) {
     e.stopPropagation();
+    setSmooth(false);
     dragRef.current = {
       type: "node",
       name,
@@ -142,6 +122,7 @@ export default function SchemaCanvas({
     };
   }
   function onPanDown(e: React.PointerEvent) {
+    setSmooth(false);
     dragRef.current = {
       type: "pan",
       sx: e.clientX,
@@ -262,6 +243,8 @@ export default function SchemaCanvas({
             width: "100%",
             height: "100%",
             position: "relative",
+            transition: smooth ? "transform 110ms ease-out" : "none",
+            willChange: "transform",
           }}
         >
           <svg
