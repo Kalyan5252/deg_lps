@@ -47,6 +47,68 @@ export default function SchemaCanvas({
     ox: number;
     oy: number;
   } | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef(zoom);
+  const panRef = useRef(pan);
+  const targetZoomRef = useRef(zoom);
+  const anchorRef = useRef({ sx: 0, sy: 0, cx: 0, cy: 0 });
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+  useEffect(() => {
+    panRef.current = pan;
+  }, [pan]);
+
+  // Smooth, cursor-anchored zoom. The wheel sets a *target* zoom proportional to
+  // the scroll amount; a rAF loop eases the actual zoom toward it and keeps the
+  // point under the cursor fixed, so even chunky mouse-wheel notches glide.
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+
+    const step = () => {
+      const tz = targetZoomRef.current;
+      let z = zoomRef.current;
+      z += (tz - z) * 0.22;
+      if (Math.abs(tz - z) < 0.001) z = tz;
+      const a = anchorRef.current;
+      const np = { x: a.sx - a.cx * z, y: a.sy - a.cy * z };
+      zoomRef.current = z;
+      panRef.current = np;
+      setZoom(z);
+      setPan(np);
+      rafRef.current = z !== tz ? requestAnimationFrame(step) : null;
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const z0 = zoomRef.current;
+      const p0 = panRef.current;
+      // fix the content point under the cursor for the whole gesture
+      anchorRef.current = { sx, sy, cx: (sx - p0.x) / z0, cy: (sy - p0.y) / z0 };
+      if (rafRef.current === null) targetZoomRef.current = z0;
+      // normalise delta across wheel/trackpad/line modes, scale continuously
+      let d = e.deltaY;
+      if (e.deltaMode === 1) d *= 16;
+      else if (e.deltaMode === 2) d *= 400;
+      const factor = Math.exp(-d * 0.0012);
+      targetZoomRef.current = Math.min(
+        2,
+        Math.max(0.4, targetZoomRef.current * factor)
+      );
+      if (rafRef.current === null) rafRef.current = requestAnimationFrame(step);
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let saved: Record<string, { x: number; y: number }> | null = null;
@@ -176,10 +238,11 @@ export default function SchemaCanvas({
         className="absolute left-2 top-3 z-20 rounded bg-white/80 px-2 py-1 text-[11px] text-sub"
         style={{ pointerEvents: "none" }}
       >
-        Drag tables to arrange · drag canvas to pan
+        Drag tables to arrange · drag canvas to pan · scroll to zoom
       </div>
 
       <div
+        ref={canvasRef}
         className="h-full w-full cursor-grab active:cursor-grabbing"
         onPointerDown={onPanDown}
         onPointerMove={onMove}
