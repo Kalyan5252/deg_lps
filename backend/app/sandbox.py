@@ -177,8 +177,16 @@ async def _set_session(conn: asyncpg.Connection, schema: str) -> None:
 
 
 async def run(scenario: Scenario, sql: str) -> dict[str, Any]:
+    return await run_in_schema(schema_name(scenario.key), sql)
+
+
+async def drop_schema(schema: str) -> None:
+    async with db.pool().acquire() as conn:
+        await conn.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
+
+
+async def run_in_schema(schema: str, sql: str) -> dict[str, Any]:
     """Execute (possibly multi-statement) SQL; return the last statement's result."""
-    schema = schema_name(scenario.key)
     statements = _split_statements(sql)
     if not statements:
         return {"ok": False, "error": "No SQL statement found.", "columns": [],

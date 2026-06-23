@@ -3,11 +3,11 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import ai, auth, db, sandbox
+from . import ai, auth, custom, db, sandbox
 from .config import get_settings
 from .scenarios import PATHS, all_scenarios, get_scenario
 
@@ -336,6 +336,230 @@ async def history(user: dict = auth.CurrentUser):
         d["title"] = titles.get(d["scenario_key"], d["scenario_key"])
         out.append(d)
     return out
+
+
+# --------------------------------------------------------------------------
+# Custom Tracks
+# --------------------------------------------------------------------------
+
+class TrackRunIn(BaseModel):
+    sql: str
+
+
+class TrackSubmitIn(BaseModel):
+    question_id: int
+    sql: str
+
+
+async def _own_track(track_id: int, user_id: int) -> dict:
+    row = await db.pool().fetchrow(
+        "SELECT * FROM app.custom_tracks WHERE id=$1 AND user_id=$2",
+        track_id, user_id)
+    if not row:
+        raise HTTPException(404, "Track not found")
+    return dict(row)
+
+
+async def _ensure_provisioned(track_id: int) -> None:
+    schema = custom.schema_for(track_id)
+    exists = await db.pool().fetchval(
+        "SELECT 1 FROM information_schema.schemata WHERE schema_name=$1", schema)
+    if not exists:
+        await custom.provision(track_id)
+        await db.pool().execute(
+            "UPDATE app.custom_tracks SET status='active' WHERE id=$1", track_id)
+
+
+def _schema_text(graph: dict) -> str:
+    lines = []
+    for t in graph["tables"]:
+        cols = ", ".join(
+            f'{c["name"]} {c["type"]}' + (" PK" if c["pk"] else "")
+            for c in t["columns"])
+        lines.append(f"{t['name']}({cols})")
+    for r in graph["relations"]:
+        lines.append(
+            f"-- {r['from_table']}.{r['from_col']} -> {r['to_table']}.{r['to_col']}")
+    return "\n".join(lines)
+
+
+@app.post("/api/tracks")
+async def create_track(
+    name: str = Form(...),
+    level: int = Form(1),
+    files: list[UploadFile] = File(...),
+    user: dict = auth.CurrentUser,
+):
+    parsed = []
+    for f in files:
+        raw = await f.read()
+        try:
+            text = raw.decode("utf-8-sig", errors="replace")
+            table = custom.parse_csv(f.filename or "table.csv", text)
+        except Exception as exc:
+            raise HTTPException(400, f"Could not parse {f.filename}: {exc}")
+        parsed.append(table)
+    if not parsed:
+        raise HTTPException(400, "Upload at least one CSV file.")
+
+    track = await db.pool().fetchrow(
+        "INSERT INTO app.custom_tracks (user_id, name, level) VALUES ($1,$2,$3) "
+        "RETURNING id, name, status, level, created_at",
+        user["id"], name.strip() or "Untitled dataset", max(1, min(5, level)))
+    track_id = track["id"]
+    # dedupe table names within the track
+    seen: set[str] = set()
+    for t in parsed:
+        base, n, tn = t["table_name"], 1, t["table_name"]
+        while tn in seen:
+            n += 1
+            tn = f"{base}_{n}"
+        seen.add(tn)
+        await db.pool().execute(
+            "INSERT INTO app.custom_tables (track_id, table_name, columns, row_count, csv_text) "
+            "VALUES ($1,$2,$3,$4,$5)",
+            track_id, tn, t["columns"], t["row_count"], t["csv_text"])
+    return dict(track) | {"tables": len(parsed)}
+
+
+@app.get("/api/tracks")
+async def list_tracks(user: dict = auth.CurrentUser):
+    rows = await db.pool().fetch(
+        "SELECT t.id, t.name, t.status, t.level, t.created_at, "
+        "(SELECT count(*) FROM app.custom_tables ct WHERE ct.track_id=t.id) AS tables "
+        "FROM app.custom_tracks t WHERE t.user_id=$1 ORDER BY t.id DESC", user["id"])
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/tracks/{track_id}")
+async def get_track(track_id: int, user: dict = auth.CurrentUser):
+    track = await _own_track(track_id, user["id"])
+    graph = await custom.schema_graph(track_id)
+    return {"track": track, "schema": graph}
+
+
+@app.get("/api/tracks/{track_id}/schema")
+async def track_schema(track_id: int, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    return await custom.schema_graph(track_id)
+
+
+@app.post("/api/tracks/{track_id}/activate")
+async def activate_track(track_id: int, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    await custom.provision(track_id)
+    await db.pool().execute(
+        "UPDATE app.custom_tracks SET status='active' WHERE id=$1", track_id)
+    return {"ok": True, "schema": await custom.schema_graph(track_id)}
+
+
+@app.post("/api/tracks/{track_id}/stop")
+async def stop_track(track_id: int, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    await custom.teardown(track_id)
+    await db.pool().execute(
+        "UPDATE app.custom_tracks SET status='ready' WHERE id=$1", track_id)
+    return {"ok": True}
+
+
+@app.delete("/api/tracks/{track_id}")
+async def delete_track(track_id: int, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    await custom.teardown(track_id)
+    await db.pool().execute("DELETE FROM app.custom_tracks WHERE id=$1", track_id)
+    return {"ok": True}
+
+
+@app.post("/api/tracks/{track_id}/run")
+async def track_run(track_id: int, body: TrackRunIn, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    await _ensure_provisioned(track_id)
+    return await sandbox.run_in_schema(custom.schema_for(track_id), body.sql)
+
+
+@app.post("/api/tracks/{track_id}/question")
+async def track_question(track_id: int, user: dict = auth.CurrentUser):
+    track = await _own_track(track_id, user["id"])
+    await _ensure_provisioned(track_id)
+    level = track["level"]
+    schema = custom.schema_for(track_id)
+
+    recent = [r["prompt"] for r in await db.pool().fetch(
+        "SELECT prompt FROM app.custom_questions WHERE track_id=$1 "
+        "ORDER BY id DESC LIMIT 8", track_id)]
+
+    graph = await custom.schema_graph(track_id)
+    q = None
+    ai_q = await ai.custom_question_ai(_schema_text(graph), level, recent)
+    if ai_q:
+        check = await sandbox.run_in_schema(schema, ai_q["reference_sql"])
+        if check["ok"]:
+            q = {"prompt": ai_q["prompt"], "reference_sql": ai_q["reference_sql"],
+                 "skills": ai_q.get("skills", ["SELECT"]), "source": "ai",
+                 "level": level}
+    if not q:
+        q = await custom.generate_question(track_id, level, recent)
+    if not q:
+        raise HTTPException(422, "Could not generate a question for this dataset.")
+
+    row = await db.pool().fetchrow(
+        "INSERT INTO app.custom_questions "
+        "(track_id, user_id, level, prompt, reference_sql, skills, source) "
+        "VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at",
+        track_id, user["id"], q["level"], q["prompt"], q["reference_sql"],
+        q["skills"], q["source"])
+    return {"id": row["id"], "prompt": q["prompt"], "level": q["level"],
+            "skills": q["skills"], "source": q["source"]}
+
+
+@app.post("/api/tracks/{track_id}/submit")
+async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.CurrentUser):
+    track = await _own_track(track_id, user["id"])
+    await _ensure_provisioned(track_id)
+    q = await db.pool().fetchrow(
+        "SELECT * FROM app.custom_questions WHERE id=$1 AND track_id=$2",
+        body.question_id, track_id)
+    if not q:
+        raise HTTPException(404, "Question not found")
+
+    result = await custom.evaluate(track_id, q["reference_sql"], body.sql)
+    if not result["ok"]:
+        return {"ok": False, "passed": False, "score": 0, "error": result["error"],
+                "feedback": {"summary": "Your SQL didn't run — fix the error first.",
+                             "optimization": "", "next": result["error"]}}
+
+    feedback = await ai.custom_feedback(
+        q["prompt"], body.sql, result["passed"],
+        result["expected_rows"], result["got_rows"])
+
+    await db.pool().execute(
+        "INSERT INTO app.custom_attempts (question_id, user_id, sql, score, passed, feedback) "
+        "VALUES ($1,$2,$3,$4,$5,$6)",
+        body.question_id, user["id"], body.sql, result["score"], result["passed"],
+        {"feedback": feedback, "expected_rows": result["expected_rows"],
+         "got_rows": result["got_rows"]})
+
+    await db.pool().execute(
+        "UPDATE app.custom_questions SET status=$2 WHERE id=$1",
+        body.question_id, "passed" if result["passed"] else "failed")
+
+    # adaptive difficulty
+    new_level = track["level"]
+    if result["passed"]:
+        new_level = min(5, track["level"] + 1)
+    else:
+        new_level = max(1, track["level"] - 1)
+    await db.pool().execute(
+        "UPDATE app.custom_tracks SET level=$2 WHERE id=$1", track_id, new_level)
+    await _update_skills(user["id"], q["skills"], result["score"], result["passed"])
+
+    return {
+        "ok": True, "passed": result["passed"], "score": result["score"],
+        "expected_rows": result["expected_rows"], "got_rows": result["got_rows"],
+        "expected_columns": result["expected_columns"],
+        "expected_preview": result["expected_preview"],
+        "result": result["result"], "feedback": feedback, "level": new_level,
+    }
 
 
 @app.get("/api/health")

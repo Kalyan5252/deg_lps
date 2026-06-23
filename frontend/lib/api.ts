@@ -103,4 +103,49 @@ export const api = {
     request<any[]>(`/mentor/${scenario_key}`),
   progress: () => request<any>("/progress"),
   attempts: () => request<any[]>("/history"),
+
+  // ---- Custom Tracks ----
+  tracks: () => request<any[]>("/tracks"),
+  track: (id: number | string) => request<any>(`/tracks/${id}`),
+  createTrack: async (name: string, level: number, files: FileList | File[]) => {
+    const fd = new FormData();
+    fd.append("name", name);
+    fd.append("level", String(level));
+    Array.from(files).forEach((f) => fd.append("files", f));
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/tracks`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+    });
+    if (!res.ok) {
+      let detail = `Upload failed (${res.status})`;
+      try {
+        detail = (await res.json()).detail || detail;
+      } catch {
+        /* noop */
+      }
+      throw new Error(detail);
+    }
+    return res.json();
+  },
+  trackSchema: (id: number | string) => request<any>(`/tracks/${id}/schema`),
+  activateTrack: (id: number | string) =>
+    request<any>(`/tracks/${id}/activate`, { method: "POST" }),
+  stopTrack: (id: number | string) =>
+    request<any>(`/tracks/${id}/stop`, { method: "POST" }),
+  deleteTrack: (id: number | string) =>
+    request<any>(`/tracks/${id}`, { method: "DELETE" }),
+  trackRun: (id: number | string, sql: string) =>
+    request<any>(`/tracks/${id}/run`, {
+      method: "POST",
+      body: JSON.stringify({ sql }),
+    }),
+  trackQuestion: (id: number | string) =>
+    request<any>(`/tracks/${id}/question`, { method: "POST" }),
+  trackSubmit: (id: number | string, question_id: number, sql: string) =>
+    request<any>(`/tracks/${id}/submit`, {
+      method: "POST",
+      body: JSON.stringify({ question_id, sql }),
+    }),
 };

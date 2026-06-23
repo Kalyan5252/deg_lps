@@ -22,7 +22,27 @@ difficulty as you improve.
 | **Adaptive difficulty** | Solve an incident → difficulty climbs and the next incident is recommended. |
 
 ### Pages
-Dashboard · Learning Paths · Scenario View (with SQL Editor + Mentor Panel) · Progress · Scenario History
+Dashboard · Learning Paths · Custom Tracks · Scenario View (with SQL Editor + Mentor Panel) · Progress · Scenario History
+
+### Custom Tracks (learn on your own data)
+Import your own dataset and the platform builds an adaptive SQL course around it:
+
+- **Import:** upload one or more CSVs (one table per file). Column types,
+  primary keys, and inter-table relations are inferred automatically and the
+  raw data is kept in your personal storage (`app.custom_tables`).
+- **On-demand database:** the dataset's Postgres schema (`custom_<id>`) is only
+  provisioned when you open the track and is dropped on **Stop dataset** — it
+  isn't kept running.
+- **AI interactive learning:** questions are generated from your real schema
+  (AI when credits are available, with a deterministic template generator as the
+  always-on backbone that also guarantees a runnable reference solution).
+  Difficulty starts where you choose and adapts — solve a question and it gets
+  harder, miss it and it eases off.
+- **Evaluation:** your query runs against the dataset and is compared to the
+  reference (result-set match); the AI reviewer comments on correctness,
+  readability, and optimization.
+- **Schema whiteboard:** a FigJam-style pannable/zoomable canvas (a tab next to
+  the question) showing draggable table cards and their relations.
 
 ### Scenarios shipped
 Fully playable: **Slow Dashboard** (missing FK index → seq scan), **Duplicate Customers** (dedup investigation), **Missing Indexes** (point-lookup seq scan). Five more (Failed ETL, Revenue Reporting, Data Quality, Inventory Mismatch, Customer Segmentation) are registered as "coming soon" stubs and easy to author — see `backend/app/scenarios.py`.

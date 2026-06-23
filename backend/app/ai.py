@@ -167,6 +167,98 @@ def _ai_error(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
+async def custom_question_ai(
+    schema_text: str, level: int, recent_prompts: list[str],
+) -> dict[str, Any] | None:
+    """Ask the model for a question + reference SQL over a user's dataset.
+
+    Returns {prompt, reference_sql, skills} or None (caller falls back to the
+    deterministic template generator and always validates the reference SQL).
+    """
+    if not get_settings().ai_enabled:
+        return None
+    avoid = "\n".join(f"- {p}" for p in recent_prompts[-6:]) or "(none yet)"
+    prompt = (
+        "You are designing a hands-on SQL exercise over a learner's own dataset.\n"
+        f"Difficulty level: {level}/5 (1=basic SELECT/COUNT, 3=GROUP BY, "
+        "4=JOINs, 5=multi-join/window).\n\n"
+        f"Database schema (PostgreSQL):\n{schema_text}\n\n"
+        f"Avoid repeating these recent questions:\n{avoid}\n\n"
+        "Return STRICT JSON only:\n"
+        '{"prompt": "the question, in plain English, referencing real table/column '
+        'names", "reference_sql": "a correct PostgreSQL query that answers it, using '
+        'only the tables above", "skills": ["SELECT"|"JOINS"|"GROUP BY"|"WINDOW '
+        'FUNCTIONS"|...]}'
+    )
+    try:
+        raw = await _chat(
+            [
+                {"role": "system", "content": "You output only valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=500, temperature=0.6,
+        )
+        parsed = _extract_json(raw)
+        if parsed and parsed.get("prompt") and parsed.get("reference_sql"):
+            parsed.setdefault("skills", ["SELECT"])
+            return parsed
+    except Exception as exc:
+        logger.warning("AI question generation failed: %s", _ai_error(exc))
+    return None
+
+
+async def custom_feedback(
+    prompt: str, user_sql: str, passed: bool,
+    expected_rows: int, got_rows: int,
+) -> dict[str, Any]:
+    if not get_settings().ai_enabled:
+        return _fallback_custom_feedback(passed, expected_rows, got_rows)
+    msg = (
+        f"Exercise: {prompt}\n\n"
+        f"Learner's SQL:\n```sql\n{user_sql.strip()}\n```\n\n"
+        f"Result: {'CORRECT' if passed else 'INCORRECT'} "
+        f"(reference returned {expected_rows} rows, learner returned {got_rows}).\n\n"
+        "As a senior reviewer respond with STRICT JSON only:\n"
+        '{"summary": "1-2 sentences", "optimization": "one concrete performance or '
+        'readability tip about THEIR query", "next": "what to try next; if incorrect, '
+        'a nudge — do NOT paste the answer"}'
+    )
+    try:
+        raw = await _chat(
+            [
+                {"role": "system", "content": "You output only valid JSON."},
+                {"role": "user", "content": msg},
+            ],
+            max_tokens=400, temperature=0.4,
+        )
+        parsed = _extract_json(raw)
+        if parsed:
+            parsed.setdefault("summary", "")
+            parsed.setdefault("optimization", "")
+            parsed.setdefault("next", "")
+            return parsed
+    except Exception as exc:
+        logger.warning("AI custom feedback failed: %s", _ai_error(exc))
+    return _fallback_custom_feedback(passed, expected_rows, got_rows)
+
+
+def _fallback_custom_feedback(passed, expected_rows, got_rows) -> dict[str, Any]:
+    if passed:
+        return {
+            "summary": "Correct — your result matches the expected output exactly.",
+            "optimization": "When you're confident, check whether your filters could "
+            "use an index, and prefer selecting only the columns you need.",
+            "next": "Ready for a harder one — generate the next question.",
+        }
+    return {
+        "summary": f"Not matching yet — expected {expected_rows} rows, your query "
+        f"returned {got_rows}.",
+        "optimization": "Re-read the question for the exact columns, grouping and "
+        "ordering it asks for.",
+        "next": "Compare your output shape to what's asked, adjust, and resubmit.",
+    }
+
+
 def _extract_json(text: str) -> dict[str, Any] | None:
     try:
         return json.loads(text)

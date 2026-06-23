@@ -114,6 +114,51 @@ CREATE TABLE IF NOT EXISTS app.mentor_messages (
     content       TEXT NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ---- Custom Tracks (user-imported datasets + AI interactive learning) ----
+
+CREATE TABLE IF NOT EXISTS app.custom_tracks (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'ready',   -- ready | active
+    level       INT NOT NULL DEFAULT 1,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- raw imported tables (data kept here so the live schema can be spun up on demand)
+CREATE TABLE IF NOT EXISTS app.custom_tables (
+    id          BIGSERIAL PRIMARY KEY,
+    track_id    BIGINT NOT NULL REFERENCES app.custom_tracks(id) ON DELETE CASCADE,
+    table_name  TEXT NOT NULL,
+    columns     JSONB NOT NULL,        -- [{name, type, pk}]
+    row_count   INT NOT NULL DEFAULT 0,
+    csv_text    TEXT NOT NULL          -- original CSV, re-parsed on provision
+);
+
+CREATE TABLE IF NOT EXISTS app.custom_questions (
+    id            BIGSERIAL PRIMARY KEY,
+    track_id      BIGINT NOT NULL REFERENCES app.custom_tracks(id) ON DELETE CASCADE,
+    user_id       BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    level         INT NOT NULL,
+    prompt        TEXT NOT NULL,
+    reference_sql TEXT NOT NULL,       -- server-side answer key
+    skills        JSONB NOT NULL DEFAULT '[]',
+    source        TEXT NOT NULL DEFAULT 'template',  -- template | ai
+    status        TEXT NOT NULL DEFAULT 'open',      -- open | passed | failed
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS app.custom_attempts (
+    id            BIGSERIAL PRIMARY KEY,
+    question_id   BIGINT NOT NULL REFERENCES app.custom_questions(id) ON DELETE CASCADE,
+    user_id       BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    sql           TEXT NOT NULL,
+    score         INT NOT NULL,
+    passed        BOOLEAN NOT NULL,
+    feedback      JSONB NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 """
 
 
