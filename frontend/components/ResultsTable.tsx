@@ -28,10 +28,34 @@ export default function ResultsTable({ result }: { result: any }) {
   }
 
   const cols: string[] = result.columns;
-  const rows: any[] = result.rows;
+  // Backend already caps rows; slice again defensively so the DOM never holds
+  // more than this many rows even if a caller sends more.
+  const rows: any[] = (result.rows as any[]).slice(0, 1000);
+  const total: number = result.row_count ?? rows.length;
 
   return (
-    <div className="overflow-auto">
+    <div className="flex h-full flex-col">
+      {result.truncated && (
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-warn/5 px-3 py-1.5 text-xs text-warn">
+          <span>
+            Showing the first{" "}
+            <span className="font-semibold tabular-nums">
+              {rows.length.toLocaleString()}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold tabular-nums">
+              {total.toLocaleString()}
+            </span>{" "}
+            rows.
+          </span>
+          <span className="text-sub">
+            Add a <code className="font-mono">WHERE</code> /{" "}
+            <code className="font-mono">LIMIT</code> or aggregate to narrow it
+            down.
+          </span>
+        </div>
+      )}
+      <div className="min-h-0 flex-1 overflow-auto">
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 bg-canvas">
           <tr>
@@ -64,6 +88,7 @@ export default function ResultsTable({ result }: { result: any }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

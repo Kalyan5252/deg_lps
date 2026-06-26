@@ -15,6 +15,24 @@ PASS_THRESHOLD = 80
 SKILL_LIST = ["SELECT", "JOINS", "GROUP BY", "WINDOW FUNCTIONS",
               "INDEXES", "CTEs", "QUERY OPTIMIZATION"]
 
+# The query runs in full (row_count + timing are accurate), but we only ship a
+# slice to the browser so the UI never has to render tens of thousands of rows.
+MAX_DISPLAY_ROWS = 1000
+
+
+def _cap(result: dict) -> dict:
+    """Return a copy of a run result with rows capped for client display."""
+    if not result.get("ok"):
+        return result
+    rows = result.get("rows", [])
+    total = result.get("row_count", len(rows))
+    if len(rows) > MAX_DISPLAY_ROWS:
+        return {**result, "rows": rows[:MAX_DISPLAY_ROWS],
+                "displayed": MAX_DISPLAY_ROWS, "truncated": True,
+                "row_count": total}
+    return {**result, "displayed": len(rows), "truncated": False,
+            "row_count": total}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -186,7 +204,7 @@ async def workbench_run(body: RunIn, user: dict = auth.CurrentUser):
         "VALUES ($1,$2,$3,$4,$5,$6,$7)",
         user["id"], body.scenario_key, body.sql, result["ok"],
         result["error"], result["duration_ms"], result["row_count"])
-    return result
+    return _cap(result)
 
 
 @app.post("/api/workbench/explain")
@@ -246,7 +264,7 @@ async def workbench_submit(body: RunIn, user: dict = auth.CurrentUser):
 
     return {
         "ok": True, "score": score, "passed": passed, "checks": checks,
-        "feedback": feedback, "result": result,
+        "feedback": feedback, "result": _cap(result),
         "difficulty": new_difficulty, "next_recommendation": next_key,
     }
 
@@ -474,7 +492,7 @@ async def delete_track(track_id: int, user: dict = auth.CurrentUser):
 async def track_run(track_id: int, body: TrackRunIn, user: dict = auth.CurrentUser):
     await _own_track(track_id, user["id"])
     await _ensure_provisioned(track_id)
-    return await sandbox.run_in_schema(custom.schema_for(track_id), body.sql)
+    return _cap(await sandbox.run_in_schema(custom.schema_for(track_id), body.sql))
 
 
 @app.post("/api/tracks/{track_id}/question")
@@ -558,7 +576,7 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
         "expected_rows": result["expected_rows"], "got_rows": result["got_rows"],
         "expected_columns": result["expected_columns"],
         "expected_preview": result["expected_preview"],
-        "result": result["result"], "feedback": feedback, "level": new_level,
+        "result": _cap(result["result"]), "feedback": feedback, "level": new_level,
     }
 
 
