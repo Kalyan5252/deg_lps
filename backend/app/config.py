@@ -7,6 +7,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql://sqlforge:sqlforge@localhost:5433/sqlforge"
+    # Connection tuning — works for both a local Postgres and a remote one
+    # (e.g. Postgres running in a Lightning Studio, reached directly or over an
+    # SSH tunnel). sslmode: disable | require | verify-full
+    db_sslmode: str = "disable"
+    db_pool_min: int = 1
+    db_pool_max: int = 10
+    db_connect_timeout: int = 15
+    db_connect_retries: int = 10  # remote DBs may take a moment to accept conns
 
     jwt_secret: str = "change-me-in-production"
     jwt_ttl_hours: int = 720

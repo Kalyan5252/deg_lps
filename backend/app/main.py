@@ -564,4 +564,25 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "ai_enabled": get_settings().ai_enabled}
+    settings = get_settings()
+    # round-trip the DB and report which host we're actually using (no creds)
+    db_ok, db_host, db_latency_ms = False, None, None
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(settings.database_url)
+        db_host = f"{parsed.hostname}:{parsed.port or 5432}"
+        import time as _t
+        t0 = _t.perf_counter()
+        await db.pool().fetchval("SELECT 1")
+        db_latency_ms = round((_t.perf_counter() - t0) * 1000, 1)
+        db_ok = True
+    except Exception as exc:  # noqa: BLE001
+        db_host = db_host or "unknown"
+        return {"ok": False, "ai_enabled": settings.ai_enabled,
+                "db": {"ok": False, "host": db_host, "error": str(exc)}}
+    return {
+        "ok": True,
+        "ai_enabled": settings.ai_enabled,
+        "db": {"ok": db_ok, "host": db_host, "latency_ms": db_latency_ms,
+               "sslmode": settings.db_sslmode},
+    }

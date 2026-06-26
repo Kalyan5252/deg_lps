@@ -9,11 +9,16 @@ EXPLAIN output, and per-statement timeouts in the sandbox.
 """
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
+import ssl as ssl_module
 
 import asyncpg
 
 from .config import get_settings
+
+logger = logging.getLogger("sqlforge.db")
 
 _pool: asyncpg.Pool | None = None
 
@@ -25,17 +30,52 @@ async def _init_conn(conn: asyncpg.Connection) -> None:
         )
 
 
+def _ssl_arg(sslmode: str):
+    """Map a libpq-style sslmode to an asyncpg ssl argument."""
+    mode = (sslmode or "disable").strip().lower()
+    if mode in ("disable", "allow", "prefer", ""):
+        return False
+    if mode in ("require",):
+        # encrypt but don't verify the cert (fine for a self-managed Studio DB)
+        ctx = ssl_module.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl_module.CERT_NONE
+        return ctx
+    # verify-ca / verify-full -> full verification against system CAs
+    return ssl_module.create_default_context()
+
+
 async def init_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
         settings = get_settings()
-        _pool = await asyncpg.create_pool(
-            dsn=settings.database_url,
-            min_size=1,
-            max_size=10,
-            command_timeout=60,
-            init=_init_conn,
-        )
+        ssl_arg = _ssl_arg(settings.db_sslmode)
+        last_err: Exception | None = None
+        for attempt in range(1, settings.db_connect_retries + 1):
+            try:
+                _pool = await asyncpg.create_pool(
+                    dsn=settings.database_url,
+                    min_size=settings.db_pool_min,
+                    max_size=settings.db_pool_max,
+                    command_timeout=60,
+                    timeout=settings.db_connect_timeout,
+                    ssl=ssl_arg,
+                    init=_init_conn,
+                )
+                break
+            except (OSError, asyncpg.PostgresError) as exc:
+                last_err = exc
+                wait = min(2 * attempt, 10)
+                logger.warning(
+                    "DB connect attempt %d/%d failed (%s); retrying in %ds",
+                    attempt, settings.db_connect_retries, exc, wait,
+                )
+                await asyncio.sleep(wait)
+        if _pool is None:
+            raise RuntimeError(
+                f"Could not connect to the database after "
+                f"{settings.db_connect_retries} attempts: {last_err}"
+            )
         await _bootstrap(_pool)
     return _pool
 

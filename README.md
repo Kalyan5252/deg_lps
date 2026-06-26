@@ -77,6 +77,40 @@ docker compose up -d   # Postgres on host port 5433
 ```
 Then set `DATABASE_URL=postgresql://sqlforge:sqlforge@localhost:5433/sqlforge` in `backend/.env`.
 
+**Option C — Postgres in a Lightning Studio (offload SQL to the cloud).**
+Move all SQL execution off the local machine onto a cloud box so query
+performance doesn't depend on an unpredictable laptop. Everything (scenario
+sandboxes, Custom Tracks provisioning, query execution) runs on the Studio
+because it all goes through `DATABASE_URL`.
+
+1. Create a Studio (the free 4 vCPU / 16 GB instance is enough to start), open a
+   terminal in it, and run the bring-up script (Docker-first, apt fallback,
+   tuned for that box):
+   ```bash
+   bash infra/lightning-studio/setup-postgres.sh
+   ```
+2. On your laptop, open an SSH tunnel to the Studio's Postgres (the wire
+   protocol needs raw TCP, so use SSH rather than Lightning's HTTP port share):
+   ```bash
+   STUDIO_SSH="s_xxxxx@ssh.lightning.ai" bash infra/lightning-studio/tunnel.sh
+   ```
+3. Point the backend at the tunnel and restart it:
+   ```env
+   DATABASE_URL=postgresql://sqlforge:sqlforge@localhost:5432/sqlforge
+   DB_SSLMODE=disable
+   ```
+   `GET /api/health` reports the DB `host`, round-trip `latency_ms`, and
+   `sslmode` so you can confirm you're hitting the Studio. The backend retries
+   the connection on startup (`DB_CONNECT_RETRIES`) in case the tunnel/DB is
+   still coming up, and pool size / SSL are configurable (`DB_POOL_*`,
+   `DB_SSLMODE`). To scale later, move the backend into the Studio too (then
+   `DATABASE_URL` just points at `localhost` with no tunnel) or swap in a larger
+   instance — no code changes.
+
+   > Note: the first connect to a fresh cloud DB seeds the scenario datasets
+   > (run server-side via `generate_series`, so almost no data crosses the
+   > network). Importing a Custom Track sends its CSV to the cloud once.
+
 ### 2. Backend
 ```bash
 cd backend
