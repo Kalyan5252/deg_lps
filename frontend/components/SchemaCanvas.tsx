@@ -11,9 +11,24 @@ type Relation = {
   to_col: string;
 };
 
-const CARD_W = 210;
+const CARD_MIN = 220;
+const CARD_MAX = 460;
 const HEAD_H = 34;
 const ROW_H = 22;
+
+// Size each card to fit its widest content (table name + "rows" badge, and the
+// longest "column  TYPE" row), clamped so it never gets absurdly wide/narrow.
+function cardWidth(t: Table): number {
+  // header: name (mono 13px semibold) + "<rows> rows" badge + padding/gap
+  const badge = (String(t.row_count).length + 5) * 6.0;
+  const title = t.name.length * 8.4 + badge + 40;
+  // rows: column name (mono 12px) + TYPE label + padding
+  let cols = 0;
+  for (const c of t.columns) {
+    cols = Math.max(cols, c.name.length * 7.6 + c.type.length * 6.2 + 48);
+  }
+  return Math.max(CARD_MIN, Math.min(CARD_MAX, Math.ceil(Math.max(title, cols))));
+}
 
 function layout(tables: Table[]): Record<string, { x: number; y: number }> {
   // Two-column masonry so cards stay visible even in a narrow panel; users
@@ -158,9 +173,9 @@ export default function SchemaCanvas({
         const tIdx = tt.columns.findIndex((c) => c.name === r.to_col);
         const fy = pos[ft.name].y + HEAD_H + (Math.max(0, fIdx) + 0.5) * ROW_H;
         const ty = pos[tt.name].y + HEAD_H + (Math.max(0, tIdx) + 0.5) * ROW_H;
-        const fromRight = pos[ft.name].x + CARD_W;
+        const fromRight = pos[ft.name].x + cardWidth(ft);
         const fromLeft = pos[ft.name].x;
-        const toRight = pos[tt.name].x + CARD_W;
+        const toRight = pos[tt.name].x + cardWidth(tt);
         const toLeft = pos[tt.name].x;
         // pick nearest sides
         const useFromRight =
@@ -276,33 +291,35 @@ export default function SchemaCanvas({
               style={{
                 left: pos[t.name]?.x ?? 0,
                 top: pos[t.name]?.y ?? 0,
-                width: CARD_W,
+                width: cardWidth(t),
                 cursor: "grab",
               }}
             >
-              <div className="flex items-center justify-between rounded-t-lg border-b border-line bg-ink px-3 text-white" style={{ height: HEAD_H }}>
-                <span className="truncate font-mono text-[13px] font-semibold">
+              <div className="flex items-center justify-between gap-2 rounded-t-lg border-b border-line bg-ink px-3 text-white" style={{ height: HEAD_H }}>
+                <span className="min-w-0 truncate font-mono text-[13px] font-semibold">
                   {t.name}
                 </span>
-                <span className="text-[10px] text-white/60">
+                <span className="shrink-0 whitespace-nowrap text-[10px] text-white/60">
                   {t.row_count} rows
                 </span>
               </div>
               {t.columns.map((c) => (
                 <div
                   key={c.name}
-                  className="flex items-center justify-between px-3 text-[12px]"
+                  className="flex items-center justify-between gap-2 px-3 text-[12px]"
                   style={{ height: ROW_H }}
                 >
-                  <span className="flex items-center gap-1 font-mono">
+                  <span className="flex min-w-0 items-center gap-1 font-mono">
                     {c.pk && (
-                      <span className="text-warn" title="primary key">
+                      <span className="shrink-0 text-warn" title="primary key">
                         ★
                       </span>
                     )}
-                    {c.name}
+                    <span className="truncate">{c.name}</span>
                   </span>
-                  <span className="text-[10px] uppercase text-sub">{c.type}</span>
+                  <span className="shrink-0 text-[10px] uppercase text-sub">
+                    {c.type}
+                  </span>
                 </div>
               ))}
             </div>
