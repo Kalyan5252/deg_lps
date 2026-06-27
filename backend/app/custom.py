@@ -181,28 +181,34 @@ async def provision(track_id: int) -> None:
         track_id)
     async with db.pool().acquire() as conn:
         await conn.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
-        await conn.execute(f'CREATE SCHEMA "{schema}"')
-        for t in tables:
-            cols = t["columns"]
-            coldefs = ", ".join(
-                f'"{c["name"]}" {c["type"]}' + (" PRIMARY KEY" if c["pk"] else "")
-                for c in cols)
-            await conn.execute(f'CREATE TABLE "{schema}"."{t["table_name"]}" ({coldefs})')
+        try:
+            async with conn.transaction():
+                await conn.execute(f'CREATE SCHEMA "{schema}"')
+                for t in tables:
+                    cols = t["columns"]
+                    coldefs = ", ".join(
+                        f'"{c["name"]}" {c["type"]}' + (" PRIMARY KEY" if c["pk"] else "")
+                        for c in cols)
+                    await conn.execute(
+                        f'CREATE TABLE "{schema}"."{t["table_name"]}" ({coldefs})')
 
-            reader = csv.reader(io.StringIO(t["csv_text"]))
-            all_rows = [r for r in reader if any(c.strip() for c in r)]
-            data = all_rows[1:][:MAX_ROWS]
-            recs = []
-            for r in data:
-                rec = tuple(
-                    _convert(cols[i]["type"], r[i] if i < len(r) else "")
-                    for i in range(len(cols)))
-                recs.append(rec)
-            if recs:
-                await conn.copy_records_to_table(
-                    t["table_name"], records=recs,
-                    columns=[c["name"] for c in cols], schema_name=schema)
-        await conn.execute(f'ANALYZE')
+                    reader = csv.reader(io.StringIO(t["csv_text"]))
+                    all_rows = [r for r in reader if any(c.strip() for c in r)]
+                    data = all_rows[1:][:MAX_ROWS]
+                    recs = []
+                    for r in data:
+                        rec = tuple(
+                            _convert(cols[i]["type"], r[i] if i < len(r) else "")
+                            for i in range(len(cols)))
+                        recs.append(rec)
+                    if recs:
+                        await conn.copy_records_to_table(
+                            t["table_name"], records=recs,
+                            columns=[c["name"] for c in cols], schema_name=schema)
+                await conn.execute(f'ANALYZE "{schema}"')
+        except Exception:
+            await conn.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
+            raise
 
 
 async def teardown(track_id: int) -> None:
@@ -448,14 +454,14 @@ async def generate_question(track_id: int, level: int, recent_prompts: list[str]
 
 async def evaluate(track_id: int, reference_sql: str, user_sql: str):
     schema = schema_for(track_id)
-    user = await sandbox.run_in_schema(schema, user_sql)
+    user = await sandbox.run_in_schema(schema, user_sql, max_rows=None)
     if not user["ok"]:
         return {
             "ok": False, "passed": False, "score": 0,
             "error": user["error"],
             "expected_columns": [], "expected_preview": [],
         }
-    ref = await sandbox.run_in_schema(schema, reference_sql)
+    ref = await sandbox.run_in_schema(schema, reference_sql, max_rows=None)
     exp_ms = sandbox._multiset([dict(r) for r in ref["rows"]])
     got_ms = sandbox._multiset(user["rows"])
     passed = exp_ms == got_ms

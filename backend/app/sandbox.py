@@ -24,10 +24,29 @@ from .scenarios import Scenario, all_scenarios
 
 STATEMENT_TIMEOUT_MS = 15000
 _ROW_KEYWORDS = ("SELECT", "WITH", "EXPLAIN", "SHOW", "TABLE", "VALUES")
+DEFAULT_FETCH_ROWS = 1000
+_BLOCKED_SQL = re.compile(
+    r"\b(?:DROP|ALTER|CREATE)\s+(?:DATABASE|SCHEMA)\b|"
+    r"\bSET\s+(?:LOCAL\s+)?search_path\b",
+    re.IGNORECASE,
+)
+_PROTECTED_SCHEMA_REF = re.compile(
+    r'(?:"(?P<q_schema>app|public|sandbox_[A-Za-z0-9_]+|custom_[A-Za-z0-9_]+)"|'
+    r'(?P<schema>app|public|sandbox_[A-Za-z0-9_]+|custom_[A-Za-z0-9_]+))\s*\.',
+    re.IGNORECASE,
+)
+
+
+class SandboxPermissionError(Exception):
+    """Raised when user SQL tries to leave its assigned schema."""
 
 
 def schema_name(key: str) -> str:
     return f"sandbox_{key}"
+
+
+def user_schema_name(user_id: int, key: str) -> str:
+    return f"sandbox_u{int(user_id)}_{key}"
 
 
 # --------------------------------------------------------------------------
@@ -55,6 +74,43 @@ async def provision(scenario: Scenario, force: bool = False) -> None:
 async def provision_all(force: bool = False) -> None:
     for scenario in all_scenarios():
         await provision(scenario, force=force)
+
+
+async def provision_user_snapshot(
+    scenario: Scenario, user_id: int, force: bool = False
+) -> str:
+    """Create a user's private scenario schema from the admin seed schema."""
+    admin_schema = schema_name(scenario.key)
+    user_schema = user_schema_name(user_id, scenario.key)
+    await provision(scenario)
+    async with db.pool().acquire() as conn:
+        if force:
+            await conn.execute(f'DROP SCHEMA IF EXISTS "{user_schema}" CASCADE')
+        exists = await conn.fetchval(
+            "SELECT 1 FROM information_schema.schemata WHERE schema_name = $1",
+            user_schema,
+        )
+        if exists and not force:
+            return user_schema
+        async with conn.transaction():
+            await conn.execute(f'CREATE SCHEMA "{user_schema}"')
+            tables = await conn.fetch(
+                "SELECT tablename FROM pg_tables WHERE schemaname = $1 "
+                "ORDER BY tablename",
+                admin_schema,
+            )
+            for table in tables:
+                name = table["tablename"]
+                await conn.execute(
+                    f'CREATE TABLE "{user_schema}"."{name}" '
+                    f'(LIKE "{admin_schema}"."{name}" INCLUDING ALL)'
+                )
+                await conn.execute(
+                    f'INSERT INTO "{user_schema}"."{name}" '
+                    f'SELECT * FROM "{admin_schema}"."{name}"'
+                )
+            await conn.execute(f'ANALYZE "{user_schema}"')
+    return user_schema
 
 
 # --------------------------------------------------------------------------
@@ -171,13 +227,38 @@ def _returns_rows(stmt: str) -> bool:
     return bool(first and first.group(0).upper() in _ROW_KEYWORDS)
 
 
+def _can_wrap_limit(stmt: str) -> bool:
+    cleaned = _strip_comments(stmt).lstrip()
+    first = re.match(r"[A-Za-z]+", cleaned)
+    return bool(first and first.group(0).upper() in {"SELECT", "WITH", "VALUES", "TABLE"})
+
+
+def _validate_schema_access(stmt: str, schema: str) -> None:
+    cleaned = _strip_comments(stmt)
+    if _BLOCKED_SQL.search(cleaned):
+        raise SandboxPermissionError(
+            "Schema and database administration commands are not allowed here."
+        )
+    for match in _PROTECTED_SCHEMA_REF.finditer(cleaned):
+        name = match.group("q_schema") or match.group("schema") or ""
+        if name.lower() != schema.lower():
+            raise SandboxPermissionError(
+                f'Access to schema "{name}" is not allowed in this workspace.'
+            )
+
+
 async def _set_session(conn: asyncpg.Connection, schema: str) -> None:
-    await conn.execute(f'SET LOCAL search_path TO "{schema}"')
+    await conn.execute(f'SET LOCAL search_path TO "{schema}", pg_temp')
     await conn.execute(f"SET LOCAL statement_timeout = {STATEMENT_TIMEOUT_MS}")
 
 
-async def run(scenario: Scenario, sql: str) -> dict[str, Any]:
-    return await run_in_schema(schema_name(scenario.key), sql)
+async def run(
+    scenario: Scenario,
+    sql: str,
+    schema: str | None = None,
+    max_rows: int | None = DEFAULT_FETCH_ROWS,
+) -> dict[str, Any]:
+    return await run_in_schema(schema or schema_name(scenario.key), sql, max_rows=max_rows)
 
 
 async def drop_schema(schema: str) -> None:
@@ -185,7 +266,9 @@ async def drop_schema(schema: str) -> None:
         await conn.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
 
 
-async def run_in_schema(schema: str, sql: str) -> dict[str, Any]:
+async def run_in_schema(
+    schema: str, sql: str, max_rows: int | None = DEFAULT_FETCH_ROWS
+) -> dict[str, Any]:
     """Execute (possibly multi-statement) SQL; return the last statement's result."""
     statements = _split_statements(sql)
     if not statements:
@@ -203,8 +286,21 @@ async def run_in_schema(schema: str, sql: str) -> dict[str, Any]:
                 for stmt in statements:
                     if _is_empty(stmt):
                         continue
+                    _validate_schema_access(stmt, schema)
                     if _returns_rows(stmt):
-                        records = await conn.fetch(stmt)
+                        if max_rows is None:
+                            records = await conn.fetch(stmt)
+                            truncated = False
+                        elif _can_wrap_limit(stmt):
+                            records = await conn.fetch(
+                                f"SELECT * FROM ({stmt}) AS sqlforge_limited "
+                                f"LIMIT {max_rows + 1}"
+                            )
+                            truncated = len(records) > max_rows
+                            records = records[:max_rows]
+                        else:
+                            records = await conn.fetch(stmt)
+                            truncated = False
                         columns = list(records[0].keys()) if records else []
                         rows = [
                             {k: _jsonable(v) for k, v in r.items()} for r in records
@@ -213,18 +309,21 @@ async def run_in_schema(schema: str, sql: str) -> dict[str, Any]:
                     else:
                         command = await conn.execute(stmt)
                         columns, rows = [], []
-    except asyncpg.PostgresError as exc:
+    except (asyncpg.PostgresError, SandboxPermissionError) as exc:
         return {"ok": False, "error": str(exc), "columns": [], "rows": [],
                 "row_count": 0,
                 "duration_ms": round((time.perf_counter() - start) * 1000, 2),
                 "command": None}
     duration_ms = round((time.perf_counter() - start) * 1000, 2)
     return {"ok": True, "error": None, "columns": columns, "rows": rows,
-            "row_count": len(rows), "duration_ms": duration_ms, "command": command}
+            "row_count": len(rows), "duration_ms": duration_ms, "command": command,
+            "truncated": bool(locals().get("truncated", False))}
 
 
-async def explain(scenario: Scenario, sql: str, analyze: bool = True) -> dict[str, Any]:
-    schema = schema_name(scenario.key)
+async def explain(
+    scenario: Scenario, sql: str, analyze: bool = True, schema: str | None = None
+) -> dict[str, Any]:
+    schema = schema or schema_name(scenario.key)
     statements = _split_statements(sql)
     target = next((s for s in statements if _returns_rows(s)), None)
     if not target:
@@ -237,8 +336,9 @@ async def explain(scenario: Scenario, sql: str, analyze: bool = True) -> dict[st
         async with db.pool().acquire() as conn:
             async with conn.transaction():
                 await _set_session(conn, schema)
+                _validate_schema_access(target, schema)
                 plan = await conn.fetchval(f"EXPLAIN ({opts}) {target}")
-    except asyncpg.PostgresError as exc:
+    except (asyncpg.PostgresError, SandboxPermissionError) as exc:
         return {"ok": False, "error": str(exc), "plan": None}
     return {"ok": True, "error": None, "plan": plan}
 
@@ -284,8 +384,9 @@ async def _explain_nodes(conn: asyncpg.Connection, target: str):
 async def run_checks(
     scenario: Scenario, user_sql: str,
     user_columns: list[str], user_rows: list[dict[str, Any]],
+    schema: str | None = None,
 ) -> list[dict[str, Any]]:
-    schema = schema_name(scenario.key)
+    schema = schema or schema_name(scenario.key)
     statements = _split_statements(user_sql)
     user_query = next((s for s in statements if _returns_rows(s)), None)
     results: list[dict[str, Any]] = []
@@ -320,6 +421,7 @@ async def run_checks(
                         if not target:
                             detail = "No query to analyze."
                         else:
+                            _validate_schema_access(target, schema)
                             nodes = await _explain_nodes(conn, target)
                             table = chk.get("table")
                             if ctype == "explain_no_seqscan":
@@ -348,6 +450,7 @@ async def run_checks(
                             detail = "No query to time."
                         else:
                             t0 = time.perf_counter()
+                            _validate_schema_access(target, schema)
                             await conn.fetch(re.sub(
                                 r"^\s*EXPLAIN\s*(\([^)]*\))?\s*", "", target,
                                 flags=re.IGNORECASE))
@@ -370,7 +473,7 @@ async def run_checks(
                                   else f"No index on {table}({', '.join(cols)}).")
                     else:
                         detail = f"Unknown check type: {ctype}"
-                except asyncpg.PostgresError as exc:
+                except (asyncpg.PostgresError, SandboxPermissionError) as exc:
                     passed = False
                     detail = f"Check failed to run: {exc}"
 

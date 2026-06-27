@@ -26,7 +26,7 @@ def _cap(result: dict) -> dict:
         return result
     rows = result.get("rows", [])
     total = result.get("row_count", len(rows))
-    if len(rows) > MAX_DISPLAY_ROWS:
+    if result.get("truncated") or len(rows) > MAX_DISPLAY_ROWS:
         return {**result, "rows": rows[:MAX_DISPLAY_ROWS],
                 "displayed": MAX_DISPLAY_ROWS, "truncated": True,
                 "row_count": total}
@@ -172,6 +172,8 @@ async def scenario_detail(key: str, user: dict = auth.CurrentUser):
     scenario = get_scenario(key)
     if not scenario:
         raise HTTPException(404, "Scenario not found")
+    if scenario.available:
+        await _user_scenario_schema(user["id"], key)
     prog = await _progress_row(user["id"], key)
     messages = [dict(r) for r in await db.pool().fetch(
         "SELECT role, content, created_at FROM app.mentor_messages "
@@ -184,7 +186,7 @@ async def reset_scenario(key: str, user: dict = auth.CurrentUser):
     scenario = get_scenario(key)
     if not scenario or not scenario.available:
         raise HTTPException(404, "Scenario not found")
-    await sandbox.provision(scenario, force=True)
+    await _user_scenario_schema(user["id"], key, force=True)
     return {"ok": True, "message": f"Sandbox for '{scenario.title}' reset to its initial state."}
 
 
@@ -197,7 +199,8 @@ async def workbench_run(body: RunIn, user: dict = auth.CurrentUser):
     scenario = get_scenario(body.scenario_key)
     if not scenario or not scenario.available:
         raise HTTPException(404, "Scenario not found")
-    result = await sandbox.run(scenario, body.sql)
+    schema = await _user_scenario_schema(user["id"], body.scenario_key)
+    result = await sandbox.run(scenario, body.sql, schema=schema)
     await db.pool().execute(
         "INSERT INTO app.query_history "
         "(user_id, scenario_key, sql, success, error, duration_ms, row_count) "
@@ -212,7 +215,8 @@ async def workbench_explain(body: ExplainIn, user: dict = auth.CurrentUser):
     scenario = get_scenario(body.scenario_key)
     if not scenario or not scenario.available:
         raise HTTPException(404, "Scenario not found")
-    return await sandbox.explain(scenario, body.sql, analyze=body.analyze)
+    schema = await _user_scenario_schema(user["id"], body.scenario_key)
+    return await sandbox.explain(scenario, body.sql, analyze=body.analyze, schema=schema)
 
 
 @app.post("/api/workbench/submit")
@@ -220,10 +224,11 @@ async def workbench_submit(body: RunIn, user: dict = auth.CurrentUser):
     scenario = get_scenario(body.scenario_key)
     if not scenario or not scenario.available:
         raise HTTPException(404, "Scenario not found")
+    schema = await _user_scenario_schema(user["id"], body.scenario_key)
 
     # Apply the submission (so optimize-scenario DDL like CREATE INDEX persists),
     # then evaluate against the resulting state.
-    result = await sandbox.run(scenario, body.sql)
+    result = await sandbox.run(scenario, body.sql, schema=schema, max_rows=None)
     if not result["ok"]:
         return {"ok": False, "error": result["error"], "score": 0, "passed": False,
                 "checks": [], "feedback": {
@@ -231,7 +236,7 @@ async def workbench_submit(body: RunIn, user: dict = auth.CurrentUser):
                     "strengths": [], "recommendations": [result["error"]]}}
 
     checks = await sandbox.run_checks(
-        scenario, body.sql, result["columns"], result["rows"])
+        scenario, body.sql, result["columns"], result["rows"], schema=schema)
     total_weight = sum(c["weight"] for c in checks) or 1
     score = round(sum(c["weight"] for c in checks if c["passed"]) / total_weight * 100)
     passed = score >= PASS_THRESHOLD
@@ -369,6 +374,10 @@ class TrackSubmitIn(BaseModel):
     sql: str
 
 
+class DeleteConfirmIn(BaseModel):
+    confirm: bool = False
+
+
 async def _own_track(track_id: int, user_id: int) -> dict:
     row = await db.pool().fetchrow(
         "SELECT * FROM app.custom_tracks WHERE id=$1 AND user_id=$2",
@@ -380,12 +389,21 @@ async def _own_track(track_id: int, user_id: int) -> dict:
 
 async def _ensure_provisioned(track_id: int) -> None:
     schema = custom.schema_for(track_id)
-    exists = await db.pool().fetchval(
-        "SELECT 1 FROM information_schema.schemata WHERE schema_name=$1", schema)
-    if not exists:
+    expected = await db.pool().fetchval(
+        "SELECT count(*) FROM app.custom_tables WHERE track_id=$1", track_id)
+    actual = await db.pool().fetchval(
+        "SELECT count(*) FROM pg_tables WHERE schemaname=$1", schema)
+    if int(actual or 0) < int(expected or 0):
         await custom.provision(track_id)
         await db.pool().execute(
             "UPDATE app.custom_tracks SET status='active' WHERE id=$1", track_id)
+
+
+async def _user_scenario_schema(user_id: int, key: str, force: bool = False) -> str:
+    scenario = get_scenario(key)
+    if not scenario or not scenario.available:
+        raise HTTPException(404, "Scenario not found")
+    return await sandbox.provision_user_snapshot(scenario, user_id, force=force)
 
 
 def _schema_text(graph: dict) -> str:
@@ -481,8 +499,12 @@ async def stop_track(track_id: int, user: dict = auth.CurrentUser):
 
 
 @app.delete("/api/tracks/{track_id}")
-async def delete_track(track_id: int, user: dict = auth.CurrentUser):
+async def delete_track(
+    track_id: int, body: DeleteConfirmIn, user: dict = auth.CurrentUser
+):
     await _own_track(track_id, user["id"])
+    if not body.confirm:
+        raise HTTPException(400, "Deletion requires explicit confirmation.")
     await custom.teardown(track_id)
     await db.pool().execute("DELETE FROM app.custom_tracks WHERE id=$1", track_id)
     return {"ok": True}

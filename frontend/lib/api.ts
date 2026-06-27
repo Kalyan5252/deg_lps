@@ -135,7 +135,10 @@ export const api = {
   stopTrack: (id: number | string) =>
     request<any>(`/tracks/${id}/stop`, { method: "POST" }),
   deleteTrack: (id: number | string) =>
-    request<any>(`/tracks/${id}`, { method: "DELETE" }),
+    request<any>(`/tracks/${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ confirm: true }),
+    }),
   trackRun: (id: number | string, sql: string) =>
     request<any>(`/tracks/${id}/run`, {
       method: "POST",
