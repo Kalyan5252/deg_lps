@@ -514,17 +514,21 @@ export default function TrackWorkbench() {
                   </button>
                 ))}
               </div>
+              {/* Both stay mounted so the conversation state survives tab switches */}
               <div className="min-h-0 flex-1">
-                {rightTab === "chat" ? (
+                <div className={rightTab === "chat" ? "h-full" : "hidden"}>
                   <TrackMentorChat trackId={id} currentSql={sql} />
-                ) : (
-                  <div className="h-full overflow-auto p-4">
-                    <FeedbackPanel
-                      evalResult={evalResult}
-                      busy={busy === "submit"}
-                    />
-                  </div>
-                )}
+                </div>
+                <div
+                  className={
+                    rightTab === "review" ? "h-full overflow-auto p-4" : "hidden"
+                  }
+                >
+                  <FeedbackPanel
+                    evalResult={evalResult}
+                    busy={busy === "submit"}
+                  />
+                </div>
               </div>
             </aside>
           )}
