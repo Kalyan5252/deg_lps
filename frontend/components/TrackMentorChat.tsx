@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import Markdown from "@/components/Markdown";
+import { useSpeechToText } from "@/lib/useSpeechToText";
 
 type Msg = { role: string; content: string };
 
@@ -140,8 +141,28 @@ function ChatInput({
   onSend: (t: string) => void;
   busy: boolean;
 }) {
+  // capture what was typed before recording so dictation appends to it
+  const baseRef = useRef("");
+  const { supported, listening, toggle } = useSpeechToText((text) => {
+    setValue((baseRef.current ? baseRef.current + " " : "") + text);
+  });
+
+  function onMic() {
+    if (!listening) baseRef.current = value.trim();
+    toggle();
+  }
+
   return (
     <div className="border-t border-line p-3">
+      {listening && (
+        <div className="mb-1.5 flex items-center gap-1.5 text-xs text-bad">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bad/60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-bad" />
+          </span>
+          Listening… speak now, tap the mic to stop
+        </div>
+      )}
       <div className="flex items-end gap-2">
         <textarea
           rows={2}
@@ -156,14 +177,44 @@ function ChatInput({
           placeholder="Ask your mentor…  (Enter to send, Shift+Enter for newline)"
           className="flex-1 resize-none rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-accent"
         />
-        <button
-          onClick={() => onSend(value)}
-          disabled={busy || !value.trim()}
-          className="btn btn-primary self-stretch"
-        >
-          Send
-        </button>
+        <div className="flex flex-col gap-1.5 self-stretch">
+          {supported && (
+            <button
+              onClick={onMic}
+              title={listening ? "Stop dictation" : "Dictate with your voice"}
+              className={`flex h-8 w-9 items-center justify-center rounded-md border text-sm transition-colors ${
+                listening
+                  ? "border-bad bg-bad/10 text-bad"
+                  : "border-line text-sub hover:bg-canvas hover:text-ink"
+              }`}
+            >
+              <MicIcon />
+            </button>
+          )}
+          <button
+            onClick={() => onSend(value)}
+            disabled={busy || !value.trim()}
+            className="btn btn-primary flex-1"
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+      <path
+        d="M5 11a7 7 0 0 0 14 0M12 18v3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
   );
 }
