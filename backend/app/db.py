@@ -57,6 +57,10 @@ async def init_pool() -> asyncpg.Pool:
                     dsn=settings.database_url,
                     min_size=settings.db_pool_min,
                     max_size=settings.db_pool_max,
+                    max_queries=settings.db_pool_max_queries,
+                    max_inactive_connection_lifetime=(
+                        settings.db_pool_max_inactive_connection_lifetime
+                    ),
                     command_timeout=60,
                     timeout=settings.db_connect_timeout,
                     ssl=ssl_arg,

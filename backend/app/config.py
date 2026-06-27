@@ -11,8 +11,10 @@ class Settings(BaseSettings):
     # (e.g. Postgres running in a Lightning Studio, reached directly or over an
     # SSH tunnel). sslmode: disable | require | verify-full
     db_sslmode: str = "disable"
-    db_pool_min: int = 1
-    db_pool_max: int = 4
+    db_pool_min: int = 0
+    db_pool_max: int = 2
+    db_pool_max_queries: int = 1
+    db_pool_max_inactive_connection_lifetime: float = 5.0
     db_connect_timeout: int = 30
     db_connect_retries: int = 10  # remote DBs may take a moment to accept conns
 
