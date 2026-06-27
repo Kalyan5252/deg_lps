@@ -13,6 +13,12 @@ PG_PASS="${PG_PASS:-sqlforge}"
 PG_DB="${PG_DB:-sqlforge}"
 PG_PORT="${PG_PORT:-5432}"
 CONTAINER="sqlforge_pg"
+# IMPORTANT: a Lightning Studio's Docker storage is EPHEMERAL — containers and
+# named volumes are wiped when the Studio sleeps. Persist the DB by bind-mounting
+# the data dir onto the persistent home ($HOME = /home/zeus). Re-run this script
+# after each wake (the image may need re-pulling, but the data survives).
+PGDATA_DIR="${PGDATA_DIR:-$HOME/sqlforge_pgdata}"
+mkdir -p "$PGDATA_DIR"
 
 # Tuned for 4 vCPU / 16 GB
 PG_TUNING=(
@@ -32,12 +38,13 @@ if command -v docker >/dev/null 2>&1; then
     echo "    Container '${CONTAINER}' already exists — starting it"
     docker start "${CONTAINER}" >/dev/null
   else
+    echo "    Running Postgres with data on persistent ${PGDATA_DIR}"
     docker run -d --name "${CONTAINER}" \
       -e POSTGRES_USER="${PG_USER}" \
       -e POSTGRES_PASSWORD="${PG_PASS}" \
       -e POSTGRES_DB="${PG_DB}" \
       -p "${PG_PORT}:5432" \
-      -v sqlforge_pgdata:/var/lib/postgresql/data \
+      -v "${PGDATA_DIR}:/var/lib/postgresql/data" \
       postgres:16 "${PG_TUNING[@]}" >/dev/null
   fi
   echo -n "    waiting for Postgres"
