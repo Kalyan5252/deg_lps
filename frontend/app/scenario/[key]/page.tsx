@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
+import RunningState from "@/components/RunningState";
 import MentorPanel from "@/components/MentorPanel";
 import { api } from "@/lib/api";
 
@@ -165,10 +166,10 @@ export default function ScenarioPage() {
   async function run() {
     setBusy("run");
     setErr(null);
+    setTab("results"); // switch to Results immediately so the state change is visible
     try {
       const r = await api.run(key, sql);
       setResult(r);
-      setTab("results");
       refreshHistory();
     } catch (e: any) {
       setErr(e.message);
@@ -464,10 +465,15 @@ export default function ScenarioPage() {
                   )
                 )}
                 <div className="ml-auto py-2 pr-1 text-xs text-sub">
-                  {result?.ok && tab === "results" && (
-                    <span>
-                      {result.row_count} rows · {result.duration_ms} ms
-                    </span>
+                  {busy === "run" && tab === "results" ? (
+                    <span className="text-accent">running…</span>
+                  ) : (
+                    result?.ok &&
+                    tab === "results" && (
+                      <span>
+                        {result.row_count} rows · {result.duration_ms} ms
+                      </span>
+                    )
                   )}
                 </div>
               </div>
@@ -478,7 +484,8 @@ export default function ScenarioPage() {
                     {err}
                   </div>
                 )}
-                {tab === "results" && <ResultsTable result={result} />}
+                {tab === "results" &&
+                  (busy === "run" ? <RunningState /> : <ResultsTable result={result} />)}
                 {tab === "plan" && <PlanView plan={plan} rows={planRows} />}
                 {tab === "evaluation" && (
                   <EvaluationView evaluation={evaluation} />

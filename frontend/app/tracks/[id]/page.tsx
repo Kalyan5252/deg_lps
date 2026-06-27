@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
+import RunningState from "@/components/RunningState";
 import SchemaCanvas from "@/components/SchemaCanvas";
 import Splitter from "@/components/Splitter";
 import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
@@ -434,10 +435,14 @@ export default function TrackWorkbench() {
                   Results
                 </span>
                 <div className="ml-auto py-2 pr-1 text-xs text-sub">
-                  {result?.ok && (
-                    <span>
-                      {result.row_count} rows · {result.duration_ms} ms
-                    </span>
+                  {busy === "run" || busy === "submit" ? (
+                    <span className="text-accent">running…</span>
+                  ) : (
+                    result?.ok && (
+                      <span>
+                        {result.row_count} rows · {result.duration_ms} ms
+                      </span>
+                    )
                   )}
                 </div>
               </div>
@@ -447,7 +452,13 @@ export default function TrackWorkbench() {
                     {err}
                   </div>
                 )}
-                <ResultsTable result={result} />
+                {busy === "run" || busy === "submit" ? (
+                  <RunningState
+                    label={busy === "submit" ? "Evaluating…" : "Running query…"}
+                  />
+                ) : (
+                  <ResultsTable result={result} />
+                )}
               </div>
             </div>
           </section>
