@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     # SSH tunnel). sslmode: disable | require | verify-full
     db_sslmode: str = "disable"
     db_pool_min: int = 1
-    db_pool_max: int = 10
-    db_connect_timeout: int = 15
+    db_pool_max: int = 4
+    db_connect_timeout: int = 30
     db_connect_retries: int = 10  # remote DBs may take a moment to accept conns
 
     jwt_secret: str = "change-me-in-production"

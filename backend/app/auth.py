@@ -10,6 +10,11 @@ from . import db
 from .config import get_settings
 
 
+def _db_error_detail(exc: Exception) -> str:
+    msg = str(exc).strip()
+    return msg or exc.__class__.__name__
+
+
 def make_token(user_id: int) -> str:
     s = get_settings()
     payload = {
@@ -33,16 +38,35 @@ async def current_user(request: Request) -> dict:
     if not auth.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
     user_id = _decode(auth[len("Bearer "):].strip())
-    try:
-        row = await db.pool().fetchrow(
-            "SELECT id, email, display_name FROM app.users WHERE id = $1", user_id
-        )
-    except (TimeoutError, OSError, RuntimeError, asyncpg.PostgresError) as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Database unavailable; check the Postgres tunnel/Studio DB. ({exc})",
-        )
+    row = None
+    last_exc: Exception | None = None
+    for attempt in range(2):
+        try:
+            row = await db.pool().fetchrow(
+                "SELECT id, email, display_name FROM app.users WHERE id = $1", user_id
+            )
+            break
+        except (TimeoutError, OSError, RuntimeError, asyncpg.PostgresError) as exc:
+            last_exc = exc
+            if attempt == 0:
+                await db.pool().expire_connections()
+                continue
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Database unavailable; check the Postgres tunnel/Studio DB. "
+                    f"({_db_error_detail(exc)})"
+                ),
+            )
     if not row:
+        if last_exc:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Database unavailable; check the Postgres tunnel/Studio DB. "
+                    f"({_db_error_detail(last_exc)})"
+                ),
+            )
         raise HTTPException(status_code=401, detail="User not found")
     return dict(row)
 
