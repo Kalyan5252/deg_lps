@@ -63,7 +63,7 @@ async def init_pool() -> asyncpg.Pool:
                     init=_init_conn,
                 )
                 break
-            except (OSError, asyncpg.PostgresError) as exc:
+            except (TimeoutError, OSError, asyncpg.PostgresError) as exc:
                 last_err = exc
                 wait = min(2 * attempt, 10)
                 logger.warning(

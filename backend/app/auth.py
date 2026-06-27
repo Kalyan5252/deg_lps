@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 
+import asyncpg
 import jwt
 from fastapi import Depends, HTTPException, Request
 
@@ -32,9 +33,15 @@ async def current_user(request: Request) -> dict:
     if not auth.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
     user_id = _decode(auth[len("Bearer "):].strip())
-    row = await db.pool().fetchrow(
-        "SELECT id, email, display_name FROM app.users WHERE id = $1", user_id
-    )
+    try:
+        row = await db.pool().fetchrow(
+            "SELECT id, email, display_name FROM app.users WHERE id = $1", user_id
+        )
+    except (TimeoutError, OSError, RuntimeError, asyncpg.PostgresError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database unavailable; check the Postgres tunnel/Studio DB. ({exc})",
+        )
     if not row:
         raise HTTPException(status_code=401, detail="User not found")
     return dict(row)

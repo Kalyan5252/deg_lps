@@ -17,7 +17,7 @@
 # the `ssh-keygen`/key steps the first time).
 set -euo pipefail
 
-: "${STUDIO_SSH:?Set STUDIO_SSH to your Studio's ssh target, e.g. s_xxx@ssh.lightning.ai}"
+: "${STUDIO_SSH:?Set STUDIO_SSH to your Studio SSH target, e.g. s_xxx@ssh.lightning.ai}"
 LOCAL_PORT="${LOCAL_PORT:-5455}"   # local side (avoids clashing with local PG on 5432)
 REMOTE_PORT="${REMOTE_PORT:-5432}" # Postgres inside the Studio
 
