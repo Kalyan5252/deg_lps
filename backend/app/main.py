@@ -580,6 +580,54 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
     }
 
 
+class TrackChatIn(BaseModel):
+    message: str
+    current_sql: str | None = None
+
+
+@app.get("/api/tracks/{track_id}/chat")
+async def track_chat_thread(track_id: int, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    rows = await db.pool().fetch(
+        "SELECT role, content, created_at FROM app.custom_chat_messages "
+        "WHERE track_id=$1 AND user_id=$2 ORDER BY id", track_id, user["id"])
+    return [dict(r) for r in rows]
+
+
+@app.post("/api/tracks/{track_id}/chat")
+async def track_chat(track_id: int, body: TrackChatIn, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    msg = body.message.strip()
+    if not msg:
+        raise HTTPException(400, "Empty message")
+
+    await db.pool().execute(
+        "INSERT INTO app.custom_chat_messages (track_id, user_id, role, content) "
+        "VALUES ($1,$2,'user',$3)", track_id, user["id"], msg)
+
+    history = [dict(r) for r in await db.pool().fetch(
+        "SELECT role, content FROM app.custom_chat_messages "
+        "WHERE track_id=$1 AND user_id=$2 ORDER BY id", track_id, user["id"])]
+
+    graph = await custom.schema_graph(track_id)
+    reply = await ai.track_chat_reply(
+        _schema_text(graph), history, msg, body.current_sql)
+
+    await db.pool().execute(
+        "INSERT INTO app.custom_chat_messages (track_id, user_id, role, content) "
+        "VALUES ($1,$2,'assistant',$3)", track_id, user["id"], reply)
+    return {"reply": reply}
+
+
+@app.delete("/api/tracks/{track_id}/chat")
+async def track_chat_clear(track_id: int, user: dict = auth.CurrentUser):
+    await _own_track(track_id, user["id"])
+    await db.pool().execute(
+        "DELETE FROM app.custom_chat_messages WHERE track_id=$1 AND user_id=$2",
+        track_id, user["id"])
+    return {"ok": True}
+
+
 @app.get("/api/health")
 async def health():
     settings = get_settings()

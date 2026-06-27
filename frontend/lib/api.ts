@@ -148,4 +148,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ question_id, sql }),
     }),
+  trackChatThread: (id: number | string) =>
+    request<any[]>(`/tracks/${id}/chat`),
+  trackChat: (id: number | string, message: string, current_sql?: string) =>
+    request<{ reply: string }>(`/tracks/${id}/chat`, {
+      method: "POST",
+      body: JSON.stringify({ message, current_sql }),
+    }),
+  trackChatClear: (id: number | string) =>
+    request<any>(`/tracks/${id}/chat`, { method: "DELETE" }),
 };

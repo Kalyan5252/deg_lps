@@ -9,17 +9,20 @@ import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
 import RunningState from "@/components/RunningState";
 import SchemaCanvas from "@/components/SchemaCanvas";
+import TrackMentorChat from "@/components/TrackMentorChat";
 import Splitter from "@/components/Splitter";
 import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
 import { api } from "@/lib/api";
 
 type LeftTab = "question" | "schema" | "data";
+type RightTab = "chat" | "review";
 
 export default function TrackWorkbench() {
   const { id } = useParams<{ id: string }>();
   const [track, setTrack] = useState<any>(null);
   const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
   const [leftTab, setLeftTab] = useState<LeftTab>("question");
+  const [rightTab, setRightTab] = useState<RightTab>("chat");
 
   const [question, setQuestion] = useState<any>(null);
   const [sql, setSql] = useState("-- write your query here\n");
@@ -141,6 +144,7 @@ export default function TrackWorkbench() {
     try {
       const ev = await api.trackSubmit(id, question.id, sql);
       setEvalResult(ev);
+      setRightTab("review"); // surface the score/feedback after submitting
       if (ev.result) setResult(ev.result);
       if (ev.level) setTrack((t: any) => ({ ...t, level: ev.level }));
     } catch (e: any) {
@@ -469,28 +473,59 @@ export default function TrackWorkbench() {
             />
           )}
 
-          {/* Right: AI evaluation / feedback */}
+          {/* Right: AI mentor (chat) + reviewer */}
           {showRight && (
             <aside
               style={{ width: rightW }}
-              className="flex shrink-0 flex-col border-l border-line bg-white"
+              className="flex min-h-0 shrink-0 flex-col border-l border-line bg-white"
             >
-            <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
-                AI
-              </div>
-              <div>
-                <div className="text-sm font-semibold leading-none">
-                  AI Reviewer
+              <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
+                  AI
                 </div>
-                <div className="mt-0.5 text-xs text-sub">
-                  Evaluates correctness & optimization
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold leading-none">
+                    AI Mentor
+                  </div>
+                  <div className="mt-0.5 text-xs text-sub">
+                    Chat to learn · reviews your answers
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="min-h-0 flex-1 overflow-auto p-4">
-              <FeedbackPanel evalResult={evalResult} busy={busy === "submit"} />
-            </div>
+              <div className="flex items-center gap-1 border-b border-line px-3">
+                {(["chat", "review"] as RightTab[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setRightTab(t)}
+                    className={`relative border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                      rightTab === t
+                        ? "border-accent text-ink"
+                        : "border-transparent text-sub hover:text-ink"
+                    }`}
+                  >
+                    {t}
+                    {t === "review" && evalResult && (
+                      <span
+                        className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full ${
+                          evalResult.passed ? "bg-ok" : "bg-warn"
+                        }`}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="min-h-0 flex-1">
+                {rightTab === "chat" ? (
+                  <TrackMentorChat trackId={id} currentSql={sql} />
+                ) : (
+                  <div className="h-full overflow-auto p-4">
+                    <FeedbackPanel
+                      evalResult={evalResult}
+                      busy={busy === "submit"}
+                    />
+                  </div>
+                )}
+              </div>
             </aside>
           )}
         </div>

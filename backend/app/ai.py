@@ -259,6 +259,78 @@ def _fallback_custom_feedback(passed, expected_rows, got_rows) -> dict[str, Any]
     }
 
 
+TUTOR_SYSTEM = """\
+You are an expert SQL & data-engineering mentor having a live, back-and-forth \
+conversation with a learner who is practicing on their OWN imported dataset.
+
+Teach like a great human tutor:
+- Be warm, encouraging, and conversational — this is a dialogue, not a lecture.
+- Meet them where they are: answer the actual question, then offer one natural \
+next step or a small check-for-understanding.
+- Ground explanations in THEIR schema and columns when relevant (use the real \
+table/column names you're given), with short runnable SQL examples.
+- It's fine to be concise for simple questions and go deeper when they ask.
+
+Formatting — respond in clean GitHub-flavored Markdown for high readability:
+- Use `## headings` only when it genuinely helps structure a longer answer.
+- Use **bold** for key terms, bullet lists for steps, and fenced ```sql code \
+blocks for every query or snippet.
+- Use tables when comparing options. Keep paragraphs short.
+
+You can reference the conversation so far; stay consistent with it.
+"""
+
+
+async def track_chat_reply(
+    schema_text: str,
+    history: list[dict[str, str]],
+    user_message: str,
+    current_sql: str | None,
+) -> str:
+    """Conversational mentor reply (Markdown). Falls back when AI is disabled."""
+    if not get_settings().ai_enabled:
+        return _fallback_tutor(user_message, schema_text)
+
+    context = f"The learner's dataset schema (PostgreSQL):\n{schema_text or '(no tables yet)'}"
+    if current_sql and current_sql.strip():
+        context += f"\n\nWhat they currently have in the editor:\n```sql\n{current_sql.strip()}\n```"
+
+    messages = [
+        {"role": "system", "content": TUTOR_SYSTEM},
+        {"role": "system", "content": context},
+    ]
+    messages += [{"role": m["role"], "content": m["content"]} for m in history[-16:]]
+    try:
+        return await _chat(messages, max_tokens=900, temperature=0.5)
+    except Exception as exc:
+        logger.warning("AI tutor chat failed, using fallback: %s", _ai_error(exc))
+        return _fallback_tutor(user_message, schema_text)
+
+
+def _fallback_tutor(user_message: str, schema_text: str) -> str:
+    tables = [ln.split("(")[0] for ln in (schema_text or "").splitlines()
+              if ln and not ln.startswith("--")]
+    tbl_hint = ""
+    if tables:
+        tbl_hint = ("\n\nYour dataset has these tables: "
+                    + ", ".join(f"`{t.strip()}`" for t in tables[:8]) + ".")
+    return (
+        "> ⚡ **Live AI tutor is offline** (the model API has no credits right now), "
+        "so I'm giving you a basic guided answer instead of a full explanation.\n\n"
+        f"You asked: *{user_message.strip()[:300]}*\n\n"
+        "Here's how I'd approach it:\n\n"
+        "1. **Find the tables/columns involved** — open the **Schema** tab to see "
+        "the structure and relationships.\n"
+        "2. **Start small** — write a simple `SELECT … LIMIT 10` to see the shape of "
+        "the data before building the full query.\n"
+        "3. **Build up** — add `WHERE`, then `GROUP BY`/joins one step at a time, "
+        "running after each change."
+        f"{tbl_hint}\n\n"
+        "_Add credits to the Lightning account (or point `AI_BASE_URL` at another "
+        "model) and I'll give full, dataset-aware explanations with examples._"
+    )
+
+
 def _extract_json(text: str) -> dict[str, Any] | None:
     try:
         return json.loads(text)

@@ -31,6 +31,60 @@ body {
   background: transparent;
 }
 
+/* Markdown (mentor messages) */
+.md-body {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #16181d;
+  word-break: break-word;
+}
+.md-body :where(code):not(:where(pre code))::before,
+.md-body :where(code):not(:where(pre code))::after {
+  content: "" !important;
+}
+.md-body :where(code):not(:where(pre code)) {
+  background: #f1f2f5;
+  border: 1px solid #e7e8ec;
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.86em;
+  font-weight: 500;
+}
+.md-body pre {
+  border: 1px solid #e7e8ec;
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  overflow-x: auto;
+  font-size: 12.5px;
+}
+.md-body pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.md-body table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.md-body th,
+.md-body td {
+  border: 1px solid #e7e8ec;
+  padding: 0.3rem 0.55rem;
+}
+.md-body blockquote {
+  border-left: 3px solid #e7e8ec;
+  color: #4b5563;
+  font-style: normal;
+}
+.md-body :first-child {
+  margin-top: 0;
+}
+.md-body :last-child {
+  margin-bottom: 0;
+}
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-md border border-line

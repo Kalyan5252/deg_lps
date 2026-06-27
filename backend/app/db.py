@@ -199,6 +199,18 @@ CREATE TABLE IF NOT EXISTS app.custom_attempts (
     feedback      JSONB NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Free-form mentor chat per track (the "real-time mentor" conversation).
+CREATE TABLE IF NOT EXISTS app.custom_chat_messages (
+    id            BIGSERIAL PRIMARY KEY,
+    track_id      BIGINT NOT NULL REFERENCES app.custom_tracks(id) ON DELETE CASCADE,
+    user_id       BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    role          TEXT NOT NULL,   -- user | assistant
+    content       TEXT NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS custom_chat_track_idx
+    ON app.custom_chat_messages (track_id, id);
 """
 
 
