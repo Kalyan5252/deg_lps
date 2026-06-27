@@ -31,6 +31,88 @@ body {
   background: transparent;
 }
 
+/* ---- Siri-style white glow (floating mentor) ---- */
+@property --siri-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes siri-spin {
+  to {
+    --siri-angle: 360deg;
+  }
+}
+@keyframes siri-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+@keyframes siri-bloom {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.8;
+  }
+}
+.siri-glow {
+  /* no `position` here — consumers set their own (fixed/relative); forcing it
+     would override Tailwind's positioning utilities via source order */
+  isolation: isolate;
+}
+.siri-glow::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  z-index: -1;
+  background: conic-gradient(
+    from var(--siri-angle),
+    rgba(255, 255, 255, 0) 0deg,
+    rgba(255, 255, 255, 0.98) 70deg,
+    rgba(196, 208, 255, 0.55) 140deg,
+    rgba(255, 255, 255, 0.98) 210deg,
+    rgba(214, 224, 255, 0.5) 290deg,
+    rgba(255, 255, 255, 0) 360deg
+  );
+  filter: blur(9px);
+  animation: siri-spin 6.5s linear infinite, siri-pulse 3.4s ease-in-out infinite;
+}
+.siri-glow::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: inherit;
+  z-index: -2;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0) 75%
+  );
+  filter: blur(16px);
+  animation: siri-bloom 4s ease-in-out infinite;
+}
+.siri-glow.is-active::before {
+  filter: blur(13px);
+  animation: siri-spin 2.2s linear infinite, siri-pulse 1.5s ease-in-out infinite;
+}
+.siri-glow.is-active::after {
+  animation: siri-bloom 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .siri-glow::before,
+  .siri-glow::after {
+    animation: none;
+  }
+}
+
 /* Markdown (mentor messages) */
 .md-body {
   font-size: 13.5px;
