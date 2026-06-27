@@ -39,10 +39,10 @@ lectures unless asked.
 
 def _client_headers() -> dict[str, str]:
     s = get_settings()
-    return {
-        "Authorization": f"Bearer {s.lightning_api_key}",
-        "Content-Type": "application/json",
-    }
+    headers = {"Content-Type": "application/json"}
+    if s.lightning_api_key.strip():  # local providers (Ollama) need no auth
+        headers["Authorization"] = f"Bearer {s.lightning_api_key}"
+    return headers
 
 
 async def _chat(messages: list[dict[str, str]], *, max_tokens: int = 600,

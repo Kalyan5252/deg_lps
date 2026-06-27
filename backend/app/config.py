@@ -31,8 +31,14 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     @property
+    def _is_local_ai(self) -> bool:
+        u = self.ai_base_url.lower()
+        return any(s in u for s in ("localhost", "127.0.0.1", "11434", "ollama"))
+
+    @property
     def ai_enabled(self) -> bool:
-        return bool(self.lightning_api_key.strip())
+        # A key enables hosted providers; local providers (Ollama) need no key.
+        return bool(self.lightning_api_key.strip()) or self._is_local_ai
 
 
 @lru_cache
