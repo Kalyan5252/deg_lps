@@ -143,13 +143,18 @@ function ChatInput({
 }) {
   // capture what was typed before recording so dictation appends to it
   const baseRef = useRef("");
-  const { supported, listening, toggle } = useSpeechToText((text) => {
+  const { supported, listening, toggle, stop } = useSpeechToText((text) => {
     setValue((baseRef.current ? baseRef.current + " " : "") + text);
   });
 
   function onMic() {
     if (!listening) baseRef.current = value.trim();
     toggle();
+  }
+
+  function submit(text: string) {
+    if (listening) stop(); // don't keep the mic open after sending
+    onSend(text);
   }
 
   return (
@@ -171,7 +176,7 @@ function ChatInput({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              onSend(value);
+              submit(value);
             }
           }}
           placeholder="Ask your mentor…  (Enter to send, Shift+Enter for newline)"
@@ -192,7 +197,7 @@ function ChatInput({
             </button>
           )}
           <button
-            onClick={() => onSend(value)}
+            onClick={() => submit(value)}
             disabled={busy || !value.trim()}
             className="btn btn-primary flex-1"
           >
