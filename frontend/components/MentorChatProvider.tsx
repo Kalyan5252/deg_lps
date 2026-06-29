@@ -51,16 +51,31 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
     async (text: string) => {
       const msg = text.trim();
       if (!msg || busy || !trackId) return;
-      setMessages((m) => [...m, { role: "user", content: msg }]);
+      // push the user message + an empty assistant bubble we'll stream into
+      setMessages((m) => [
+        ...m,
+        { role: "user", content: msg },
+        { role: "assistant", content: "" },
+      ]);
       setBusy(true);
       try {
-        const { reply } = await api.trackChat(trackId, msg);
-        setMessages((m) => [...m, { role: "assistant", content: reply }]);
+        await api.trackChatStream(trackId, msg, (delta) => {
+          setMessages((m) => {
+            const copy = [...m];
+            const last = copy[copy.length - 1];
+            copy[copy.length - 1] = { ...last, content: last.content + delta };
+            return copy;
+          });
+        });
       } catch (e: any) {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", content: `_Error: ${e.message}_` },
-        ]);
+        setMessages((m) => {
+          const copy = [...m];
+          copy[copy.length - 1] = {
+            role: "assistant",
+            content: `_Error: ${e.message}_`,
+          };
+          return copy;
+        });
       } finally {
         setBusy(false);
       }

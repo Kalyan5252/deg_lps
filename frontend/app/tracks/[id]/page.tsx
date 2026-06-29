@@ -9,17 +9,20 @@ import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
 import RunningState from "@/components/RunningState";
 import SchemaCanvas from "@/components/SchemaCanvas";
+import MentorChatWindow from "@/components/MentorChatWindow";
 import Splitter from "@/components/Splitter";
 import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
 import { api } from "@/lib/api";
 
 type LeftTab = "question" | "schema" | "data";
+type RightTab = "chat" | "review";
 
 export default function TrackWorkbench() {
   const { id } = useParams<{ id: string }>();
   const [track, setTrack] = useState<any>(null);
   const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
   const [leftTab, setLeftTab] = useState<LeftTab>("question");
+  const [rightTab, setRightTab] = useState<RightTab>("chat");
 
   const [question, setQuestion] = useState<any>(null);
   const [sql, setSql] = useState("-- write your query here\n");
@@ -141,6 +144,7 @@ export default function TrackWorkbench() {
     try {
       const ev = await api.trackSubmit(id, question.id, sql);
       setEvalResult(ev);
+      setRightTab("review"); // show the score after submitting
       if (ev.result) setResult(ev.result);
       if (ev.level) setTrack((t: any) => ({ ...t, level: ev.level }));
     } catch (e: any) {
@@ -469,7 +473,7 @@ export default function TrackWorkbench() {
             />
           )}
 
-          {/* Right: AI reviewer (chat lives in the floating mentor — ⌘⇧K) */}
+          {/* Right: agentic panel — chat window (messages) + review */}
           {showRight && (
             <aside
               style={{ width: rightW }}
@@ -481,18 +485,49 @@ export default function TrackWorkbench() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold leading-none">
-                    AI Reviewer
+                    AI Mentor
                   </div>
                   <div className="mt-0.5 text-xs text-sub">
-                    Evaluates correctness &amp; optimization
+                    Conversation &amp; answer review
                   </div>
                 </div>
               </div>
-              <div className="min-h-0 flex-1 overflow-auto p-4">
-                <FeedbackPanel
-                  evalResult={evalResult}
-                  busy={busy === "submit"}
-                />
+              <div className="flex items-center gap-1 border-b border-line px-3">
+                {(["chat", "review"] as RightTab[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setRightTab(t)}
+                    className={`relative border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                      rightTab === t
+                        ? "border-accent text-ink"
+                        : "border-transparent text-sub hover:text-ink"
+                    }`}
+                  >
+                    {t}
+                    {t === "review" && evalResult && (
+                      <span
+                        className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full ${
+                          evalResult.passed ? "bg-ok" : "bg-warn"
+                        }`}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="min-h-0 flex-1">
+                <div className={rightTab === "chat" ? "h-full" : "hidden"}>
+                  <MentorChatWindow />
+                </div>
+                <div
+                  className={
+                    rightTab === "review" ? "h-full overflow-auto p-4" : "hidden"
+                  }
+                >
+                  <FeedbackPanel
+                    evalResult={evalResult}
+                    busy={busy === "submit"}
+                  />
+                </div>
               </div>
             </aside>
           )}

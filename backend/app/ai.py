@@ -307,6 +307,76 @@ async def track_chat_reply(
         return _fallback_tutor(user_message, schema_text)
 
 
+async def track_chat_stream(
+    schema_text: str,
+    history: list[dict[str, str]],
+    user_message: str,
+    current_sql: str | None,
+):
+    """Async generator yielding the mentor reply token-by-token (Markdown deltas)."""
+    settings = get_settings()
+    if not settings.ai_enabled:
+        for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
+            yield chunk
+        return
+
+    context = f"The learner's dataset schema (PostgreSQL):\n{schema_text or '(no tables yet)'}"
+    if current_sql and current_sql.strip():
+        context += f"\n\nWhat they currently have in the editor:\n```sql\n{current_sql.strip()}\n```"
+    messages = [
+        {"role": "system", "content": TUTOR_SYSTEM},
+        {"role": "system", "content": context},
+    ]
+    messages += [{"role": m["role"], "content": m["content"]} for m in history[-16:]]
+
+    s = settings
+    url = f"{s.ai_base_url.rstrip('/')}/chat/completions"
+    payload = {
+        "model": s.ai_model,
+        "messages": messages,
+        "max_tokens": 900,
+        "temperature": 0.5,
+        "stream": True,
+    }
+    got_any = False
+    try:
+        async with httpx.AsyncClient(timeout=s.ai_timeout_seconds) as client:
+            async with client.stream(
+                "POST", url, headers=_client_headers(), json=payload
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line or not line.startswith("data:"):
+                        continue
+                    data = line[5:].strip()
+                    if data == "[DONE]":
+                        break
+                    try:
+                        delta = json.loads(data)["choices"][0]["delta"].get("content")
+                    except Exception:
+                        continue
+                    if delta:
+                        got_any = True
+                        yield delta
+    except Exception as exc:
+        logger.warning("AI stream failed, using fallback: %s", _ai_error(exc))
+        if not got_any:
+            for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
+                yield chunk
+
+
+def _chunk_text(text: str):
+    """Split text into small chunks so the offline fallback also 'streams'."""
+    buf = ""
+    for word in text.split(" "):
+        buf += word + " "
+        if len(buf) >= 8:
+            yield buf
+            buf = ""
+    if buf:
+        yield buf
+
+
 def _fallback_tutor(user_message: str, schema_text: str) -> str:
     tables = [ln.split("(")[0] for ln in (schema_text or "").splitlines()
               if ln and not ln.startswith("--")]

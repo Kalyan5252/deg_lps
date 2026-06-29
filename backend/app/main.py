@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from . import ai, auth, custom, db, sandbox
@@ -639,6 +640,39 @@ async def track_chat(track_id: int, body: TrackChatIn, user: dict = auth.Current
         "INSERT INTO app.custom_chat_messages (track_id, user_id, role, content) "
         "VALUES ($1,$2,'assistant',$3)", track_id, user["id"], reply)
     return {"reply": reply}
+
+
+@app.post("/api/tracks/{track_id}/chat/stream")
+async def track_chat_stream_ep(
+    track_id: int, body: TrackChatIn, user: dict = auth.CurrentUser
+):
+    await _own_track(track_id, user["id"])
+    msg = body.message.strip()
+    if not msg:
+        raise HTTPException(400, "Empty message")
+
+    await db.pool().execute(
+        "INSERT INTO app.custom_chat_messages (track_id, user_id, role, content) "
+        "VALUES ($1,$2,'user',$3)", track_id, user["id"], msg)
+    history = [dict(r) for r in await db.pool().fetch(
+        "SELECT role, content FROM app.custom_chat_messages "
+        "WHERE track_id=$1 AND user_id=$2 ORDER BY id", track_id, user["id"])]
+    schema_text = _schema_text(await custom.schema_graph(track_id))
+
+    async def gen():
+        parts: list[str] = []
+        async for delta in ai.track_chat_stream(
+            schema_text, history, msg, body.current_sql):
+            parts.append(delta)
+            yield delta
+        full = "".join(parts).strip()
+        if full:
+            await db.pool().execute(
+                "INSERT INTO app.custom_chat_messages "
+                "(track_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)",
+                track_id, user["id"], full)
+
+    return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
 
 
 @app.delete("/api/tracks/{track_id}/chat")

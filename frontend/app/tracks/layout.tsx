@@ -1,4 +1,5 @@
-import FloatingMentor from "@/components/FloatingMentor";
+import { MentorChatProvider } from "@/components/MentorChatProvider";
+import FloatingPrompt from "@/components/FloatingPrompt";
 
 export default function TracksLayout({
   children,
@@ -6,10 +7,10 @@ export default function TracksLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <MentorChatProvider>
       {children}
-      {/* Global, draggable AI mentor — available across all /tracks routes */}
-      <FloatingMentor />
-    </>
+      {/* input-only prompt component; messages render in the right chat window */}
+      <FloatingPrompt />
+    </MentorChatProvider>
   );
 }

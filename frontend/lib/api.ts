@@ -158,6 +158,45 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message, current_sql }),
     }),
+  // Streams the reply token-by-token; calls onToken with each delta.
+  trackChatStream: async (
+    id: number | string,
+    message: string,
+    onToken: (delta: string) => void,
+    current_sql?: string
+  ) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/tracks/${id}/chat/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, current_sql }),
+    });
+    if (res.status === 401) {
+      clearSession();
+      if (typeof window !== "undefined") window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+    if (!res.ok || !res.body) {
+      let detail = `Request failed (${res.status})`;
+      try {
+        detail = (await res.json()).detail || detail;
+      } catch {
+        /* noop */
+      }
+      throw new Error(detail);
+    }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const text = dec.decode(value, { stream: true });
+      if (text) onToken(text);
+    }
+  },
   trackChatClear: (id: number | string) =>
     request<any>(`/tracks/${id}/chat`, { method: "DELETE" }),
 };

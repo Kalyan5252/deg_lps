@@ -113,6 +113,69 @@ body {
   }
 }
 
+/* ---- Floating prompt: liquid-glass morph (orb <-> bar) ---- */
+.fp-morph {
+  transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease, background 0.5s ease;
+  will-change: left, top, width, height, border-radius;
+}
+/* dark charcoal "orb" matching the activation button */
+.fp-orb {
+  background: radial-gradient(
+    125% 125% at 30% 22%,
+    #626875 0%,
+    #2c2f37 46%,
+    #1b1d23 100%
+  );
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    inset 0 -6px 14px rgba(0, 0, 0, 0.35);
+}
+/* same charcoal family, but translucent liquid glass for the expanded bar */
+.fp-glass {
+  background: linear-gradient(
+    180deg,
+    rgba(70, 75, 85, 0.82),
+    rgba(28, 30, 36, 0.86)
+  );
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.fp-glass ::selection {
+  background: rgba(255, 255, 255, 0.25);
+}
+/* a soft white rim that breathes while active (listening/thinking) */
+.fp-rim::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  z-index: -1;
+  background: conic-gradient(
+    from var(--siri-angle),
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.9),
+    rgba(200, 212, 255, 0.4),
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+  filter: blur(7px);
+  opacity: 0.35;
+  animation: siri-spin 7s linear infinite;
+}
+.fp-rim.is-active::after {
+  opacity: 0.85;
+  filter: blur(11px);
+  animation: siri-spin 2.2s linear infinite, siri-pulse 1.5s ease-in-out infinite;
+}
+
 /* Markdown (mentor messages) */
 .md-body {
   font-size: 13.5px;
