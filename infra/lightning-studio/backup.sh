@@ -5,7 +5,9 @@
 #
 #   STUDIO_SSH="s_xxx@ssh.lightning.ai" bash backup.sh
 set -uo pipefail
-: "${STUDIO_SSH:?Set STUDIO_SSH, e.g. s_xxx@ssh.lightning.ai}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+STUDIO_SSH="${STUDIO_SSH:-$(cat "$HERE/.studio" 2>/dev/null || true)}"
+: "${STUDIO_SSH:?Set STUDIO_SSH (or write it to infra/lightning-studio/.studio)}"
 ssh -o StrictHostKeyChecking=accept-new "${STUDIO_SSH}" '
   mkdir -p ~/sqlforge/backups
   docker exec sqlforge_pg pg_dump -U sqlforge -Fc sqlforge > ~/sqlforge/backups/latest.dump.tmp \

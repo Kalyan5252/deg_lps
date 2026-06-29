@@ -55,6 +55,61 @@ STUDIO_SSH="..." bash backup.sh
 - `tunnel.sh` — self-healing SSH tunnel (auto-reconnect).
 - `backup.sh` — take an immediate snapshot to the persistent disk.
 
+## Run everything from scratch
+
+Set your Studio target once (already done if `.studio` exists):
+
+```bash
+echo "s_xxxxxxxx@ssh.lightning.ai" > infra/lightning-studio/.studio   # Studio → SSH
+```
+
+Then, in four terminals from the repo root:
+
+```bash
+# 1) AI — Ollama (model used by the backend)
+ollama serve            # then once:  ollama run gemma4:31b-cloud
+
+# 2) Database — connect to the Studio (starts Postgres + restores snapshot,
+#    then holds a self-healing tunnel on :5455). Keep this terminal open.
+cd infra/lightning-studio && bash connect.sh
+
+# 3) Backend  (reads backend/.env: DATABASE_URL=...localhost:5455, AI=Ollama)
+cd backend && ./.venv/bin/uvicorn app.main:app --reload --port 8000
+#    sanity check:  curl localhost:8000/api/health   ->  db.host localhost:5455
+
+# 4) Frontend
+cd frontend && npm run dev        # http://localhost:3000
+```
+
+Order matters only in that the tunnel (step 2) should be up before the backend
+(step 3). If the Studio was fully stopped, START it from the Lightning web UI
+first (SSH is refused while stopped).
+
+## Switch to a different Studio (replace the current one)
+
+The **only** thing tied to a Studio is the SSH target — the backend always talks
+to `localhost:5455`, so nothing in `.env` changes.
+
+```bash
+# 1) (optional) capture the old Studio's latest data
+STUDIO_SSH="s_OLD@ssh.lightning.ai" bash infra/lightning-studio/backup.sh
+
+# 2) register SSH for the new Studio (run its setup link once, from the new
+#    Studio's "SSH" panel), then point everything at it:
+echo "s_NEW@ssh.lightning.ai" > infra/lightning-studio/.studio
+
+# 3) (optional) migrate data old -> new (copy the snapshot across)
+ssh s_OLD@ssh.lightning.ai 'cat ~/sqlforge/backups/latest.dump' \
+  | ssh s_NEW@ssh.lightning.ai 'mkdir -p ~/sqlforge/backups && cat > ~/sqlforge/backups/latest.dump'
+
+# 4) connect — setup auto-restores from the snapshot on the new Studio
+cd infra/lightning-studio && bash connect.sh
+#    then restart the backend (Ctrl-C, re-run uvicorn)
+```
+
+If you skip step 3, the new Studio starts empty (scenarios re-seed on backend
+boot; re-import any Custom Tracks).
+
 ## The bulletproof alternative (recommended)
 
 The Studio sleep/ephemerality is inherent. For a learning app, a **managed

@@ -11,8 +11,10 @@
 # Then point backend/.env at:
 #   DATABASE_URL=postgresql://sqlforge:sqlforge@localhost:5455/sqlforge
 set -uo pipefail
-: "${STUDIO_SSH:?Set STUDIO_SSH, e.g. s_xxx@ssh.lightning.ai}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Studio target: env var wins, else read infra/lightning-studio/.studio
+STUDIO_SSH="${STUDIO_SSH:-$(cat "$HERE/.studio" 2>/dev/null || true)}"
+: "${STUDIO_SSH:?Set STUDIO_SSH (or write it to infra/lightning-studio/.studio)}"
 LOCAL_PORT="${LOCAL_PORT:-5455}"
 SSHOPTS=(-o StrictHostKeyChecking=accept-new -o ConnectTimeout=90)
 

@@ -7,7 +7,9 @@
 #
 # Defaults to local port 5455 (avoids clashing with a local Postgres on 5432).
 set -uo pipefail
-: "${STUDIO_SSH:?Set STUDIO_SSH, e.g. s_xxx@ssh.lightning.ai}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+STUDIO_SSH="${STUDIO_SSH:-$(cat "$HERE/.studio" 2>/dev/null || true)}"
+: "${STUDIO_SSH:?Set STUDIO_SSH (or write it to infra/lightning-studio/.studio)}"
 LOCAL_PORT="${LOCAL_PORT:-5455}"
 REMOTE_PORT="${REMOTE_PORT:-5432}"
 
