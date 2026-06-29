@@ -1,75 +1,80 @@
 #!/usr/bin/env bash
-# Run this INSIDE a Lightning Studio to bring up the SQLForge Postgres.
-# Free Studio target: 4 vCPU / 16 GB. Postgres is tuned for that box.
+# Run INSIDE a Lightning Studio. Brings up Postgres and — crucially — makes the
+# data survive Studio restarts even though Docker volumes are ephemeral here.
+#
+# Strategy (robust): the source of truth is a compressed pg_dump kept on the
+# Studio's PERSISTENT home. On every start we restore from it if the live DB is
+# empty, and a background loop snapshots back to it every few minutes. So even
+# if the container/volume is wiped on restart, the data comes back.
 #
 #   bash setup-postgres.sh
 #
-# Then connect from your laptop with an SSH tunnel (see tunnel.sh) and point the
-# backend's DATABASE_URL at localhost:5432.
+# Idempotent — safe to re-run on every wake.
 set -euo pipefail
 
-PG_USER="${PG_USER:-sqlforge}"
-PG_PASS="${PG_PASS:-sqlforge}"
-PG_DB="${PG_DB:-sqlforge}"
-PG_PORT="${PG_PORT:-5432}"
-CONTAINER="sqlforge_pg"
-# IMPORTANT: a Lightning Studio's Docker storage is EPHEMERAL — containers and
-# named volumes are wiped when the Studio sleeps. Persist the DB by bind-mounting
-# the data dir onto the persistent home ($HOME = /home/zeus). Re-run this script
-# after each wake (the image may need re-pulling, but the data survives).
-PGDATA_DIR="${PGDATA_DIR:-$HOME/sqlforge_pgdata}"
-mkdir -p "$PGDATA_DIR"
+PG_USER="${PG_USER:-sqlforge}"; PG_PASS="${PG_PASS:-sqlforge}"; PG_DB="${PG_DB:-sqlforge}"
+PG_PORT="${PG_PORT:-5432}"; CONTAINER="sqlforge_pg"
+PERSIST="${PERSIST_DIR:-$HOME/sqlforge}"          # persistent home (survives restart)
+PGDATA_DIR="$PERSIST/pgdata"
+BACKUP="$PERSIST/backups/latest.dump"
+BACKUP_EVERY="${BACKUP_EVERY:-300}"               # seconds between snapshots
+mkdir -p "$PGDATA_DIR" "$PERSIST/backups"
 
-# Tuned for 4 vCPU / 16 GB
-PG_TUNING=(
-  -c shared_buffers=4GB
-  -c effective_cache_size=12GB
-  -c work_mem=64MB
-  -c maintenance_work_mem=512MB
-  -c max_connections=50
-  -c max_parallel_workers=4
-  -c max_parallel_workers_per_gather=2
-  -c random_page_cost=1.1
-)
+command -v docker >/dev/null || { echo "docker required"; exit 1; }
 
-if command -v docker >/dev/null 2>&1; then
-  echo "==> Using Docker to run Postgres 16"
-  if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
-    echo "    Container '${CONTAINER}' already exists — starting it"
-    docker start "${CONTAINER}" >/dev/null
-  else
-    echo "    Running Postgres with data on persistent ${PGDATA_DIR}"
-    docker run -d --name "${CONTAINER}" \
-      -e POSTGRES_USER="${PG_USER}" \
-      -e POSTGRES_PASSWORD="${PG_PASS}" \
-      -e POSTGRES_DB="${PG_DB}" \
-      -p "${PG_PORT}:5432" \
-      -v "${PGDATA_DIR}:/var/lib/postgresql/data" \
-      postgres:16 "${PG_TUNING[@]}" >/dev/null
-  fi
-  echo -n "    waiting for Postgres"
-  for _ in $(seq 1 30); do
-    if docker exec "${CONTAINER}" pg_isready -U "${PG_USER}" >/dev/null 2>&1; then break; fi
-    echo -n "."; sleep 1
-  done
-  echo " ready"
+echo "==> Starting Postgres 16 (data: $PGDATA_DIR)"
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+  docker rm -f "${CONTAINER}" >/dev/null 2>&1 || true
+  sudo chown -R 999:999 "$PGDATA_DIR" 2>/dev/null || true
+  docker run -d --name "${CONTAINER}" --restart unless-stopped \
+    -e POSTGRES_USER="${PG_USER}" -e POSTGRES_PASSWORD="${PG_PASS}" -e POSTGRES_DB="${PG_DB}" \
+    -p "${PG_PORT}:5432" -v "${PGDATA_DIR}:/var/lib/postgresql/data" \
+    postgres:16 -c shared_buffers=4GB -c effective_cache_size=12GB \
+    -c work_mem=64MB -c max_connections=50 -c max_parallel_workers=4 >/dev/null
+fi
+
+echo -n "    waiting for Postgres"
+for _ in $(seq 1 60); do
+  docker exec "${CONTAINER}" pg_isready -U "${PG_USER}" >/dev/null 2>&1 && break
+  echo -n "."; sleep 1
+done
+echo " ready"
+
+# ---- restore from the persistent snapshot if the live DB has no app schema ----
+HAS_APP=$(docker exec "${CONTAINER}" psql -U "${PG_USER}" -d "${PG_DB}" -tAc \
+  "SELECT to_regclass('app.users') IS NOT NULL" 2>/dev/null || echo f)
+if [ "$HAS_APP" != "t" ] && [ -s "$BACKUP" ]; then
+  echo "==> Live DB is empty — restoring from $BACKUP"
+  docker exec -i "${CONTAINER}" pg_restore -U "${PG_USER}" -d "${PG_DB}" \
+    --no-owner --clean --if-exists < "$BACKUP" 2>/dev/null || true
+  echo "    restore complete"
+elif [ "$HAS_APP" = "t" ]; then
+  echo "==> Live DB already has data (no restore needed)"
 else
-  echo "==> Docker not found; installing Postgres via apt"
-  sudo apt-get update -y
-  sudo apt-get install -y postgresql
-  sudo service postgresql start
-  sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${PG_USER}'" | grep -q 1 || \
-    sudo -u postgres psql -c "CREATE ROLE ${PG_USER} LOGIN PASSWORD '${PG_PASS}'"
-  sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${PG_DB}'" | grep -q 1 || \
-    sudo -u postgres createdb -O "${PG_USER}" "${PG_DB}"
+  echo "==> Fresh DB and no snapshot yet (the backend will seed scenarios)"
+fi
+
+# ---- background snapshot loop -> persistent disk (the safety net) ----
+PIDFILE="$PERSIST/backups/loop.pid"
+if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+  echo "==> Snapshot loop already running (pid $(cat "$PIDFILE"))"
+else
+  echo "==> Starting snapshot loop (every ${BACKUP_EVERY}s -> $BACKUP)"
+  PERSIST="$PERSIST" CONTAINER="$CONTAINER" PG_USER="$PG_USER" PG_DB="$PG_DB" \
+  BACKUP_EVERY="$BACKUP_EVERY" nohup bash -c '
+    while true; do
+      sleep "$BACKUP_EVERY"
+      docker exec "$CONTAINER" pg_dump -U "$PG_USER" -Fc "$PG_DB" \
+        > "$PERSIST/backups/latest.dump.tmp" 2>/dev/null \
+        && mv -f "$PERSIST/backups/latest.dump.tmp" "$PERSIST/backups/latest.dump"
+    done
+  ' >/dev/null 2>&1 &
+  echo $! > "$PIDFILE"
+  disown 2>/dev/null || true
 fi
 
 echo ""
 echo "============================================================"
-echo "Postgres is up in this Studio on port ${PG_PORT}."
-echo "  user/pass/db: ${PG_USER}/${PG_PASS}/${PG_DB}"
-echo ""
-echo "From your laptop, open an SSH tunnel to this Studio, then set:"
-echo "  DATABASE_URL=postgresql://${PG_USER}:${PG_PASS}@localhost:${PG_PORT}/${PG_DB}"
-echo "  DB_SSLMODE=disable"
+echo "Postgres up on :${PG_PORT}.  Data persists via $BACKUP"
+echo "From your laptop:  bash connect.sh   (opens a self-healing tunnel)"
 echo "============================================================"

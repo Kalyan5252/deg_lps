@@ -53,6 +53,37 @@ app.add_middleware(
 )
 
 
+# Any DB-connection failure (tunnel down / Studio asleep) -> a clean 503 with a
+# helpful message, instead of a cryptic 500. CORS headers are still applied by
+# the middleware, so the frontend can read the error.
+import asyncpg  # noqa: E402
+from fastapi import Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+
+_DB_DOWN = (
+    OSError,
+    ConnectionError,
+    TimeoutError,
+    asyncpg.exceptions.InterfaceError,
+    asyncpg.exceptions.PostgresConnectionError,
+)
+
+
+@app.exception_handler(asyncpg.exceptions.PostgresConnectionError)
+@app.exception_handler(asyncpg.exceptions.InterfaceError)
+@app.exception_handler(ConnectionError)
+@app.exception_handler(TimeoutError)
+@app.exception_handler(OSError)
+async def _db_down_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "Database unavailable — the Studio DB/tunnel looks down. "
+            "Run infra/lightning-studio/connect.sh, then retry."
+        },
+    )
+
+
 # --------------------------------------------------------------------------
 # Schemas
 # --------------------------------------------------------------------------
