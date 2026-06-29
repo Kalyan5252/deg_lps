@@ -35,21 +35,31 @@ fi
 
 echo -n "    waiting for Postgres"
 for _ in $(seq 1 60); do
-  docker exec "${CONTAINER}" pg_isready -U "${PG_USER}" >/dev/null 2>&1 && break
+  docker exec "${CONTAINER}" pg_isready -U "${PG_USER}" >/dev/null 2>&1 \
+    && docker exec "${CONTAINER}" psql -U "${PG_USER}" -d "${PG_DB}" -tAc "SELECT 1" >/dev/null 2>&1 \
+    && break
   echo -n "."; sleep 1
 done
 echo " ready"
 
+app_present() {
+  [ "$(docker exec "${CONTAINER}" psql -U "${PG_USER}" -d "${PG_DB}" -tAc \
+    "SELECT to_regclass('app.users') IS NOT NULL" 2>/dev/null)" = "t" ]
+}
+
 # ---- restore from the persistent snapshot if the live DB has no app schema ----
-HAS_APP=$(docker exec "${CONTAINER}" psql -U "${PG_USER}" -d "${PG_DB}" -tAc \
-  "SELECT to_regclass('app.users') IS NOT NULL" 2>/dev/null || echo f)
-if [ "$HAS_APP" != "t" ] && [ -s "$BACKUP" ]; then
-  echo "==> Live DB is empty — restoring from $BACKUP"
-  docker exec -i "${CONTAINER}" pg_restore -U "${PG_USER}" -d "${PG_DB}" \
-    --no-owner --clean --if-exists < "$BACKUP" 2>/dev/null || true
-  echo "    restore complete"
-elif [ "$HAS_APP" = "t" ]; then
+if app_present; then
   echo "==> Live DB already has data (no restore needed)"
+elif [ -s "$BACKUP" ]; then
+  for attempt in 1 2 3; do
+    echo "==> Restoring from snapshot (attempt ${attempt})…"
+    docker exec -i "${CONTAINER}" pg_restore -U "${PG_USER}" -d "${PG_DB}" \
+      --no-owner --clean --if-exists < "$BACKUP" > "$PERSIST/backups/restore.log" 2>&1 || true
+    if app_present; then echo "    ✓ restore OK (app schema present)"; break; fi
+    echo "    attempt ${attempt} did not populate app; retrying (log: $PERSIST/backups/restore.log)"
+    sleep 2
+  done
+  app_present || echo "    ✗ restore failed after retries — see $PERSIST/backups/restore.log"
 else
   echo "==> Fresh DB and no snapshot yet (the backend will seed scenarios)"
 fi
