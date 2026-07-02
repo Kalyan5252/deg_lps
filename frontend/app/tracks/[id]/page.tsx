@@ -239,10 +239,15 @@ export default function TrackWorkbench() {
 
         <div className="flex min-h-0 flex-1">
           {/* Left: Question / Schema / Data */}
-          {showLeft && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showLeft ? leftW : 0 }}
+          >
             <aside
               style={{ width: leftW }}
-              className="flex shrink-0 flex-col border-r border-line bg-white"
+              className={`flex h-full flex-col border-r border-line bg-white transition-transform duration-300 ease-in-out ${
+                showLeft ? "translate-x-0" : "-translate-x-full"
+              }`}
             >
               <div className="flex items-center gap-1 border-b border-line px-3">
                 {(["question", "schema", "data"] as LeftTab[]).map((t) => (
@@ -367,7 +372,7 @@ export default function TrackWorkbench() {
                 </div>
               )}
             </aside>
-          )}
+          </div>
           {showLeft && (
             <Splitter
               axis="x"
@@ -491,10 +496,15 @@ export default function TrackWorkbench() {
           )}
 
           {/* Right: agentic panel — chat window (messages) + review */}
-          {showRight && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showRight ? rightW : 0 }}
+          >
             <aside
               style={{ width: rightW }}
-              className="flex min-h-0 shrink-0 flex-col border-l border-line bg-white"
+              className={`flex h-full min-h-0 flex-col border-l border-line bg-white transition-transform duration-300 ease-in-out ${
+                showRight ? "translate-x-0" : "translate-x-full"
+              }`}
             >
               <div className="flex items-center gap-2 border-b border-line px-4 py-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
@@ -547,7 +557,7 @@ export default function TrackWorkbench() {
                 </div>
               </div>
             </aside>
-          )}
+          </div>
         </div>
       </div>
     </Shell>
