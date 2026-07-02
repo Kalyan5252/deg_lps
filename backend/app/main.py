@@ -714,19 +714,25 @@ async def track_chat_stream_ep(
             return {"ok": False, "error": str(exc)}
 
     async def gen():
-        result = await ai.agent_chat(
+        parts: list[str] = []
+        questions: list[dict] = []
+        current_index = 0
+        async for kind, payload in ai.agent_chat_stream(
             schema_text, history, msg, body.current_sql, _run_sql,
-            level=track["level"])
+            level=track["level"]):
+            if kind == "delta":
+                parts.append(payload)
+                yield payload
+            elif kind == "result":
+                questions, current_index = payload
         await _apply_agent_questions(
-            track_id, user["id"], result["questions"], result["current_index"])
-        reply = (result["reply"] or "").strip()
-        if reply:
+            track_id, user["id"], questions, current_index)
+        full = "".join(parts).strip()
+        if full:
             await db.pool().execute(
                 "INSERT INTO app.custom_chat_messages "
                 "(track_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)",
-                track_id, user["id"], reply)
-        for chunk in ai._chunk_text(reply):
-            yield chunk
+                track_id, user["id"], full)
 
     return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
 

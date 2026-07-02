@@ -62,6 +62,37 @@ async def _chat(messages: list[dict[str, str]], *, max_tokens: int = 600,
     return data["choices"][0]["message"]["content"].strip()
 
 
+async def _chat_stream(messages: list[dict[str, str]], *, max_tokens: int = 900,
+                       temperature: float = 0.4):
+    """Async generator yielding content deltas from an OpenAI-compatible stream."""
+    s = get_settings()
+    url = f"{s.ai_base_url.rstrip('/')}/chat/completions"
+    payload = {
+        "model": s.ai_model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "stream": True,
+    }
+    async with httpx.AsyncClient(timeout=s.ai_timeout_seconds) as client:
+        async with client.stream(
+            "POST", url, headers=_client_headers(), json=payload
+        ) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line or not line.startswith("data:"):
+                    continue
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    delta = json.loads(data)["choices"][0]["delta"].get("content")
+                except Exception:
+                    continue
+                if delta:
+                    yield delta
+
+
 def _scenario_brief(scenario: Scenario) -> str:
     return (
         f"SCENARIO: {scenario.title}\n"
@@ -619,8 +650,11 @@ async def agent_chat(schema_text, history, user_message, current_sql, run_sql, *
                 current_index = len(questions)
                 questions.extend(added)
                 messages.append({"role": "user", "content":
-                    f"[curriculum of {len(added)} questions set, easy→hard] Present "
-                    "the FIRST challenge to the learner in friendly Markdown. No json."})
+                    f"[curriculum of {len(added)} questions set, easy→hard] The first "
+                    f"active challenge is now exactly:\n\"{added[0]['prompt']}\"\n"
+                    "Present THIS exact challenge to the learner in friendly Markdown "
+                    "(keep the task identical — do NOT invent a different one). "
+                    "Mention there are more steps to come. No json."})
             else:
                 messages.append({"role": "user", "content":
                     "[all reference_sql failed] Re-send set_curriculum with corrected SQL."})
@@ -629,3 +663,142 @@ async def agent_chat(schema_text, history, user_message, current_sql, run_sql, *
 
     return {"reply": last_text or "What would you like to work on next?",
             "questions": questions, "current_index": current_index}
+
+
+async def agent_chat_stream(schema_text, history, user_message, current_sql, run_sql,
+                            *, level: int = 1, max_steps: int = 5):
+    """Streaming agentic mentor turn.
+
+    Yields tuples:
+      ("delta", text)  — natural-language reply tokens to forward to the client
+      ("result", (questions, current_index)) — emitted once at the end so the
+        caller can persist any questions the agent created.
+
+    Tool/action turns (run_query / set_question / set_curriculum) are detected by
+    peeking at the first non-whitespace char of each model response: JSON actions
+    start with `{` or a ``` fence, so they are buffered silently (never streamed),
+    executed, and the loop continues. Prose replies are streamed through live.
+    """
+    settings = get_settings()
+    if not settings.ai_enabled:
+        for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
+            yield ("delta", chunk)
+        yield ("result", ([], 0))
+        return
+
+    ctx = (f"The learner's dataset schema (PostgreSQL):\n"
+           f"{schema_text or '(no tables yet)'}\n"
+           f"Current difficulty level: {level}/5.")
+    if current_sql and current_sql.strip():
+        ctx += f"\n\nEditor SQL:\n```sql\n{current_sql.strip()}\n```"
+
+    messages = [
+        {"role": "system", "content": AGENT_SYSTEM},
+        {"role": "system", "content": ctx},
+    ]
+    messages += [{"role": m["role"], "content": m["content"]} for m in history[-16:]]
+
+    questions: list[dict] = []
+    current_index = 0
+
+    for _ in range(max_steps):
+        buffer = ""
+        is_action: bool | None = None
+        streamed_any = False
+        try:
+            async for delta in _chat_stream(messages, max_tokens=1200):
+                buffer += delta
+                if is_action is None:
+                    stripped = buffer.lstrip()
+                    if not stripped:
+                        continue
+                    # decide once we have the first real character
+                    is_action = stripped[0] in ("{", "`")
+                    if not is_action:
+                        streamed_any = True
+                        yield ("delta", buffer)  # flush what we buffered so far
+                    continue
+                if is_action is False:
+                    streamed_any = True
+                    yield ("delta", delta)
+                # is_action True -> keep buffering silently
+        except Exception as exc:
+            logger.warning("agent stream failed: %s", _ai_error(exc))
+            if not streamed_any and is_action is not True:
+                for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
+                    yield ("delta", chunk)
+            yield ("result", (questions, current_index))
+            return
+
+        if not is_action:
+            # a plain prose reply was fully streamed — we're done
+            yield ("result", (questions, current_index))
+            return
+
+        # buffered JSON action — parse + execute, then continue the loop
+        action = _parse_agent_action(buffer)
+        if not action:
+            # not valid JSON after all — surface it as text so nothing is lost
+            yield ("delta", buffer)
+            yield ("result", (questions, current_index))
+            return
+
+        messages.append({"role": "assistant", "content": buffer})
+        act = action.get("action")
+
+        if act == "run_query":
+            sql = (action.get("sql") or "").strip()
+            res = await run_sql(sql) if sql else {"ok": False, "error": "empty sql"}
+            messages.append({"role": "user",
+                             "content": "[query result]\n" + _fmt_run_result(res)})
+        elif act == "set_question":
+            q = _norm_question(action, level)
+            v = await run_sql(q["reference_sql"]) if q["reference_sql"] else {"ok": False, "error": "no reference_sql"}
+            if v.get("ok"):
+                questions.append(q)
+                current_index = len(questions) - 1
+                messages.append({"role": "user", "content":
+                    f"[question set OK] The active challenge is now exactly:\n"
+                    f"\"{q['prompt']}\"\n"
+                    "Present THIS exact challenge to the learner in friendly Markdown "
+                    "(you may add warmth, but keep the task identical — do NOT invent "
+                    "a different challenge). Do NOT reveal the reference SQL. No json."})
+            else:
+                messages.append({"role": "user", "content":
+                    f"[reference_sql failed: {v.get('error')}] Send a corrected set_question action."})
+        elif act == "set_curriculum":
+            added = []
+            for rawq in (action.get("questions") or [])[:8]:
+                q = _norm_question(rawq, level)
+                if not q["reference_sql"]:
+                    continue
+                v = await run_sql(q["reference_sql"])
+                if v.get("ok"):
+                    added.append(q)
+            if added:
+                added.sort(key=lambda x: x["level"])
+                current_index = len(questions)
+                questions.extend(added)
+                messages.append({"role": "user", "content":
+                    f"[curriculum of {len(added)} questions set, easy→hard] The first "
+                    f"active challenge is now exactly:\n\"{added[0]['prompt']}\"\n"
+                    "Present THIS exact challenge to the learner in friendly Markdown "
+                    "(keep the task identical — do NOT invent a different one). "
+                    "Mention there are more steps to come. No json."})
+            else:
+                messages.append({"role": "user", "content":
+                    "[all reference_sql failed] Re-send set_curriculum with corrected SQL."})
+        else:
+            yield ("delta", buffer)
+            yield ("result", (questions, current_index))
+            return
+
+    # exhausted steps without a prose turn — ask for a short wrap-up (streamed)
+    messages.append({"role": "user", "content":
+        "Wrap up in one or two friendly sentences. Plain markdown, no json."})
+    try:
+        async for delta in _chat_stream(messages, max_tokens=200):
+            yield ("delta", delta)
+    except Exception:
+        yield ("delta", "Your challenge is ready — give it a shot!")
+    yield ("result", (questions, current_index))
