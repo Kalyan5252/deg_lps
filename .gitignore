@@ -13,3 +13,6 @@ frontend/out/
 # OS / editor
 .DS_Store
 *.log
+
+# local Studio SSH target
+infra/lightning-studio/.studio

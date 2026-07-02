@@ -51,6 +51,11 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
     async (text: string) => {
       const msg = text.trim();
       if (!msg || busy || !trackId) return;
+      // Let the workbench know a prompt was sent, so it can reveal the agent
+      // panel (where the reply streams in) even if the user had it collapsed.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("mentor:send"));
+      }
       // push the user message + an empty assistant bubble we'll stream into
       setMessages((m) => [
         ...m,
@@ -78,6 +83,11 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
         });
       } finally {
         setBusy(false);
+        // the mentor may have set/replaced the active question — let the
+        // workbench refresh its Question panel.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("mentor:done"));
+        }
       }
     },
     [busy, trackId]

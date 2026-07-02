@@ -7,24 +7,33 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql://sqlforge:sqlforge@localhost:5433/sqlforge"
-    # Connection tuning — works for both a local Postgres and a remote one
-    # (e.g. Postgres running in a Lightning Studio, reached directly or over an
-    # SSH tunnel). sslmode: disable | require | verify-full
+    # Connection tuning — Postgres runs on a DigitalOcean droplet, reached over a
+    # stable SSH tunnel (localhost:5455 -> droplet:5432). Because the droplet is
+    # always-on, we REUSE pooled connections instead of recycling after every
+    # query (the old min=0/max_queries=1/5s-lifetime values were a workaround for
+    # the flaky Lightning Studio tunnel and caused reconnect-per-request stalls).
+    # sslmode: disable | require | verify-full  (disable is fine — the SSH tunnel
+    # already encrypts the hop; Postgres only listens on the droplet's localhost).
     db_sslmode: str = "disable"
-    db_pool_min: int = 0
-    db_pool_max: int = 2
-    db_pool_max_queries: int = 1
-    db_pool_max_inactive_connection_lifetime: float = 5.0
+    db_pool_min: int = 1
+    db_pool_max: int = 5
+    db_pool_max_queries: int = 50000
+    db_pool_max_inactive_connection_lifetime: float = 300.0
     db_connect_timeout: int = 30
     db_connect_retries: int = 10  # remote DBs may take a moment to accept conns
 
     jwt_secret: str = "change-me-in-production"
     jwt_ttl_hours: int = 720
 
+    # AI provider. Default is Ollama cloud models via the local Ollama daemon
+    # (OpenAI-compatible at :11434). Cloud models need `ollama serve` running +
+    # `ollama signin`. To switch to Lightning (or any OpenAI-compatible host)
+    # later, set AI_BASE_URL/AI_MODEL and LIGHTNING_API_KEY in .env — the key is
+    # sent as a Bearer token; local Ollama needs no key.
     lightning_api_key: str = ""
-    ai_base_url: str = "https://lightning.ai/api/v1"
-    ai_model: str = "lightning-ai/gemma-4-31B-it"
-    ai_timeout_seconds: int = 60
+    ai_base_url: str = "http://localhost:11434/v1"
+    ai_model: str = "gemma4:31b-cloud"
+    ai_timeout_seconds: int = 120
 
     cors_origins: str = "http://localhost:3000"
 

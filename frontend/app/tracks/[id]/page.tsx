@@ -3,7 +3,7 @@
 import Editor from "@monaco-editor/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
@@ -13,6 +13,7 @@ import MentorChatWindow from "@/components/MentorChatWindow";
 import Splitter from "@/components/Splitter";
 import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
 import { api } from "@/lib/api";
+import { registerSqlCompletion } from "@/lib/sqlCompletion";
 
 type LeftTab = "question" | "schema" | "data";
 type RightTab = "chat" | "review";
@@ -21,6 +22,66 @@ export default function TrackWorkbench() {
   const { id } = useParams<{ id: string }>();
   const [track, setTrack] = useState<any>(null);
   const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
+  // latest schema for the Monaco autocomplete provider (loads async after mount)
+  const schemaRef = useRef<any>({ tables: [] });
+  const completionRef = useRef<{ dispose: () => void } | null>(null);
+  useEffect(() => {
+    schemaRef.current = schema;
+  }, [schema]);
+  useEffect(() => () => completionRef.current?.dispose(), []);
+
+  // When a prompt is sent (from the floating prompt or elsewhere), reveal the
+  // agent panel and switch to the chat tab so the streaming reply is visible.
+  useEffect(() => {
+    const onSend = () => {
+      setShowRight(true);
+      setRightTab("chat");
+      localStorage.setItem("sqlforge_track_showRight", "1");
+    };
+    window.addEventListener("mentor:send", onSend);
+    return () => window.removeEventListener("mentor:send", onSend);
+  }, []);
+
+  // Keyboard shortcuts (routed via a ref so they always call the latest
+  // handlers with current state). Capture phase so they win over Monaco's
+  // built-in Cmd+[ / Cmd+] (indent) bindings.
+  const shortcutsRef = useRef<{
+    run: () => void;
+    submit: () => void;
+    togglePanel: (w: "left" | "right") => void;
+  } | null>(null);
+  useEffect(() => {
+    shortcutsRef.current = { run, submit, togglePanel };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const a = shortcutsRef.current;
+      if (!a) return;
+      switch (e.key) {
+        case "'": // Run
+          e.preventDefault();
+          a.run();
+          break;
+        case "Enter": // Submit
+          e.preventDefault();
+          a.submit();
+          break;
+        case "[": // toggle left (question) panel
+          e.preventDefault();
+          e.stopPropagation();
+          a.togglePanel("left");
+          break;
+        case "]": // toggle right (agent) panel
+          e.preventDefault();
+          e.stopPropagation();
+          a.togglePanel("right");
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
   const [leftTab, setLeftTab] = useState<LeftTab>("question");
   const [rightTab, setRightTab] = useState<RightTab>("chat");
 
@@ -96,15 +157,51 @@ export default function TrackWorkbench() {
   useEffect(() => {
     api
       .track(id)
-      .then((d) => {
+      .then(async (d) => {
         setTrack(d.track);
         setSchema(d.schema);
         setServerUp(d.track.status === "active");
-        generate(); // spin up + first question
+        // resume the active question (agent/curriculum) if there is one,
+        // otherwise generate a first one.
+        const cur = await api.trackQuestionCurrent(id).catch(() => null);
+        if (cur) {
+          setQuestion(cur);
+          setLeftTab("question");
+        } else {
+          generate(); // spin up + first question
+        }
       })
       .catch((e) => setErr(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Keep a ref of the shown question id so listeners can compare without stale
+  // closures; the agentic mentor may replace the active question mid-chat.
+  const questionIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    questionIdRef.current = question?.id ?? null;
+  }, [question]);
+
+  // Pull the mentor/curriculum's active question and, if it changed, show it.
+  const applyCurrentQuestion = useCallback(async () => {
+    try {
+      const cur = await api.trackQuestionCurrent(id);
+      if (cur && cur.id !== questionIdRef.current) {
+        setQuestion(cur);
+        setLeftTab("question");
+        setShowLeft(true);
+        localStorage.setItem("sqlforge_track_showLeft", "1");
+      }
+    } catch {
+      /* noop */
+    }
+  }, [id]);
+
+  // After each mentor turn, refresh the Question panel (agent may have set one).
+  useEffect(() => {
+    window.addEventListener("mentor:done", applyCurrentQuestion);
+    return () => window.removeEventListener("mentor:done", applyCurrentQuestion);
+  }, [applyCurrentQuestion]);
 
   async function generate() {
     setBusy("question");
@@ -144,9 +241,14 @@ export default function TrackWorkbench() {
     try {
       const ev = await api.trackSubmit(id, question.id, sql);
       setEvalResult(ev);
-      setRightTab("review"); // show the score after submitting
+      // reveal the agent panel on the review tab so the score/feedback is visible
+      setShowRight(true);
+      setRightTab("review");
+      localStorage.setItem("sqlforge_track_showRight", "1");
       if (ev.result) setResult(ev.result);
       if (ev.level) setTrack((t: any) => ({ ...t, level: ev.level }));
+      // on a pass the curriculum advances — load the next active question.
+      if (ev.passed) applyCurrentQuestion();
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -194,13 +296,13 @@ export default function TrackWorkbench() {
                 side="left"
                 active={showLeft}
                 onClick={() => togglePanel("left")}
-                title="Toggle question / schema / data panel"
+                title="Toggle question / schema / data panel (⌘ [)"
               />
               <PanelToggle
                 side="right"
                 active={showRight}
                 onClick={() => togglePanel("right")}
-                title="Toggle AI reviewer panel"
+                title="Toggle AI reviewer panel (⌘ ])"
               />
             </div>
             <span
@@ -231,10 +333,15 @@ export default function TrackWorkbench() {
 
         <div className="flex min-h-0 flex-1">
           {/* Left: Question / Schema / Data */}
-          {showLeft && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showLeft ? leftW : 0 }}
+          >
             <aside
               style={{ width: leftW }}
-              className="flex shrink-0 flex-col border-r border-line bg-white"
+              className={`flex h-full flex-col border-r border-line bg-white transition-transform duration-300 ease-in-out ${
+                showLeft ? "translate-x-0" : "-translate-x-full"
+              }`}
             >
               <div className="flex items-center gap-1 border-b border-line px-3">
                 {(["question", "schema", "data"] as LeftTab[]).map((t) => (
@@ -359,7 +466,7 @@ export default function TrackWorkbench() {
                 </div>
               )}
             </aside>
-          )}
+          </div>
           {showLeft && (
             <Splitter
               axis="x"
@@ -385,13 +492,19 @@ export default function TrackWorkbench() {
               </span>
               </div>
               <div className="flex items-center gap-2">
-                <button className="btn !py-1" onClick={run} disabled={!!busy}>
+                <button
+                  className="btn !py-1"
+                  onClick={run}
+                  disabled={!!busy}
+                  title="Run (⌘ ')"
+                >
                   {busy === "run" ? "Running…" : "▶ Run"}
                 </button>
                 <button
                   className="btn btn-primary !py-1"
                   onClick={submit}
                   disabled={!!busy || !question}
+                  title="Submit answer (⌘ ⏎)"
                 >
                   {busy === "submit" ? "Evaluating…" : "Submit answer"}
                 </button>
@@ -413,6 +526,13 @@ export default function TrackWorkbench() {
                 theme="vs"
                 value={sql}
                 onChange={(v) => setSql(v ?? "")}
+                onMount={(_editor, monaco) => {
+                  completionRef.current?.dispose();
+                  completionRef.current = registerSqlCompletion(
+                    monaco,
+                    () => schemaRef.current
+                  );
+                }}
                 options={{
                   fontSize: 13,
                   minimap: { enabled: false },
@@ -421,6 +541,8 @@ export default function TrackWorkbench() {
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                   renderLineHighlight: "none",
                   overviewRulerLanes: 0,
+                  quickSuggestions: { other: true, comments: false, strings: false },
+                  suggestOnTriggerCharacters: true,
                 }}
               />
             </div>
@@ -474,10 +596,15 @@ export default function TrackWorkbench() {
           )}
 
           {/* Right: agentic panel — chat window (messages) + review */}
-          {showRight && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showRight ? rightW : 0 }}
+          >
             <aside
               style={{ width: rightW }}
-              className="flex min-h-0 shrink-0 flex-col border-l border-line bg-white"
+              className={`flex h-full min-h-0 flex-col border-l border-line bg-white transition-transform duration-300 ease-in-out ${
+                showRight ? "translate-x-0" : "translate-x-full"
+              }`}
             >
               <div className="flex items-center gap-2 border-b border-line px-4 py-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
@@ -530,7 +657,7 @@ export default function TrackWorkbench() {
                 </div>
               </div>
             </aside>
-          )}
+          </div>
         </div>
       </div>
     </Shell>

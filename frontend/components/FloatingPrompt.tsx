@@ -28,6 +28,9 @@ export default function FloatingPrompt() {
   const [menu, setMenu] = useState<Pos | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [input, setInput] = useState("");
+  // while a drag/resize gesture is active we disable the morph transition so the
+  // panel tracks the cursor 1:1 instead of easing 0.5s behind it (the lag).
+  const [dragging, setDragging] = useState(false);
 
   const gesture = useRef<any>(null);
   const baseRef = useRef("");
@@ -95,10 +98,14 @@ export default function FloatingPrompt() {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
       if (mod && e.shiftKey && e.key.toLowerCase() === "k") {
+        // capture phase + stopPropagation so it fires even when Monaco (the SQL
+        // editor) has focus and would otherwise swallow the keydown.
         e.preventDefault();
+        e.stopPropagation();
         setOpen((o) => !o);
       } else if (open && mod && e.shiftKey && e.key.toLowerCase() === "v") {
         e.preventDefault();
+        e.stopPropagation();
         onMic();
       } else if (e.key === "Escape") {
         if (menu) setMenu(null);
@@ -106,8 +113,8 @@ export default function FloatingPrompt() {
         else if (open) setOpen(false);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, menu, showShortcuts, listening, input]);
 
@@ -126,6 +133,7 @@ export default function FloatingPrompt() {
     attach();
   }
   function attach() {
+    setDragging(true);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     document.body.style.userSelect = "none";
@@ -147,6 +155,7 @@ export default function FloatingPrompt() {
   }, []);
   const onUp = useCallback(() => {
     gesture.current = null;
+    setDragging(false);
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onUp);
     document.body.style.userSelect = "";
@@ -260,7 +269,7 @@ export default function FloatingPrompt() {
         } fixed z-[60] overflow-hidden text-white ${
           open ? "" : "cursor-pointer transition-transform hover:scale-105"
         }`}
-        style={geom}
+        style={dragging ? { ...geom, transition: "none" } : geom}
         onClick={() => {
           if (!open) setOpen(true);
         }}

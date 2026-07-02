@@ -205,7 +205,12 @@ async def provision(track_id: int) -> None:
                         await conn.copy_records_to_table(
                             t["table_name"], records=recs,
                             columns=[c["name"] for c in cols], schema_name=schema)
-                await conn.execute(f'ANALYZE "{schema}"')
+                # ANALYZE targets tables, not schemas — analyze each table we
+                # just created (ANALYZE "custom_N" would look for a *relation*
+                # named custom_N and fail with "relation does not exist").
+                for t in tables:
+                    await conn.execute(
+                        f'ANALYZE "{schema}"."{t["table_name"]}"')
         except Exception:
             await conn.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
             raise

@@ -146,6 +146,9 @@ export const api = {
     }),
   trackQuestion: (id: number | string) =>
     request<any>(`/tracks/${id}/question`, { method: "POST" }),
+  // the question the agentic mentor / curriculum wants shown (may be null)
+  trackQuestionCurrent: (id: number | string) =>
+    request<any>(`/tracks/${id}/question/current`),
   trackSubmit: (id: number | string, question_id: number, sql: string) =>
     request<any>(`/tracks/${id}/submit`, {
       method: "POST",

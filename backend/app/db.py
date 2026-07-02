@@ -221,3 +221,8 @@ CREATE INDEX IF NOT EXISTS custom_chat_track_idx
 async def _bootstrap(pool: asyncpg.Pool) -> None:
     async with pool.acquire() as conn:
         await conn.execute(APP_DDL)
+        # Pointer to the question currently shown in the workbench (the agentic
+        # mentor + curriculum progression set this). Idempotent for existing DBs.
+        await conn.execute(
+            "ALTER TABLE app.custom_tracks "
+            "ADD COLUMN IF NOT EXISTS active_question_id BIGINT")

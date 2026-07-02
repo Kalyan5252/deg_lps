@@ -53,6 +53,37 @@ app.add_middleware(
 )
 
 
+# Any DB-connection failure (tunnel down / Studio asleep) -> a clean 503 with a
+# helpful message, instead of a cryptic 500. CORS headers are still applied by
+# the middleware, so the frontend can read the error.
+import asyncpg  # noqa: E402
+from fastapi import Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+
+_DB_DOWN = (
+    OSError,
+    ConnectionError,
+    TimeoutError,
+    asyncpg.exceptions.InterfaceError,
+    asyncpg.exceptions.PostgresConnectionError,
+)
+
+
+@app.exception_handler(asyncpg.exceptions.PostgresConnectionError)
+@app.exception_handler(asyncpg.exceptions.InterfaceError)
+@app.exception_handler(ConnectionError)
+@app.exception_handler(TimeoutError)
+@app.exception_handler(OSError)
+async def _db_down_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "Database unavailable — the Studio DB/tunnel looks down. "
+            "Run infra/lightning-studio/connect.sh, then retry."
+        },
+    )
+
+
 # --------------------------------------------------------------------------
 # Schemas
 # --------------------------------------------------------------------------
@@ -594,6 +625,17 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
         "UPDATE app.custom_tracks SET level=$2 WHERE id=$1", track_id, new_level)
     await _update_skills(user["id"], q["skills"], result["score"], result["passed"])
 
+    # Curriculum progression: on a pass, advance the active question to the next
+    # still-open one (easiest first); clear the pointer when the plan is done.
+    if result["passed"]:
+        nxt = await db.pool().fetchval(
+            "SELECT id FROM app.custom_questions "
+            "WHERE track_id=$1 AND status='open' AND id<>$2 "
+            "ORDER BY level ASC, id ASC LIMIT 1", track_id, body.question_id)
+        await db.pool().execute(
+            "UPDATE app.custom_tracks SET active_question_id=$2 WHERE id=$1",
+            track_id, nxt)
+
     return {
         "ok": True, "passed": result["passed"], "score": result["score"],
         "expected_rows": result["expected_rows"], "got_rows": result["got_rows"],
@@ -659,12 +701,32 @@ async def track_chat_stream_ep(
         "WHERE track_id=$1 AND user_id=$2 ORDER BY id", track_id, user["id"])]
     schema_text = _schema_text(await custom.schema_graph(track_id))
 
+    # Agentic mentor: it can run queries + set the question/curriculum. Provision
+    # the sandbox first so the agent can execute/validate SQL against real data.
+    await _ensure_provisioned(track_id)
+    schema = custom.schema_for(track_id)
+    track = await _own_track(track_id, user["id"])
+
+    async def _run_sql(sql: str) -> dict:
+        try:
+            return _cap(await sandbox.run_in_schema(schema, sql))
+        except Exception as exc:  # noqa: BLE001 - surface as a tool error, don't crash
+            return {"ok": False, "error": str(exc)}
+
     async def gen():
         parts: list[str] = []
-        async for delta in ai.track_chat_stream(
-            schema_text, history, msg, body.current_sql):
-            parts.append(delta)
-            yield delta
+        questions: list[dict] = []
+        current_index = 0
+        async for kind, payload in ai.agent_chat_stream(
+            schema_text, history, msg, body.current_sql, _run_sql,
+            level=track["level"]):
+            if kind == "delta":
+                parts.append(payload)
+                yield payload
+            elif kind == "result":
+                questions, current_index = payload
+        await _apply_agent_questions(
+            track_id, user["id"], questions, current_index)
         full = "".join(parts).strip()
         if full:
             await db.pool().execute(
@@ -673,6 +735,40 @@ async def track_chat_stream_ep(
                 track_id, user["id"], full)
 
     return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
+
+
+async def _apply_agent_questions(
+    track_id: int, user_id: int, questions: list[dict], current_index: int
+) -> None:
+    """Persist questions the agent created and point the track at the active one."""
+    if not questions:
+        return
+    ids: list[int] = []
+    for q in questions:
+        row = await db.pool().fetchrow(
+            "INSERT INTO app.custom_questions "
+            "(track_id, user_id, level, prompt, reference_sql, skills, source) "
+            "VALUES ($1,$2,$3,$4,$5,$6,'ai') RETURNING id",
+            track_id, user_id, q["level"], q["prompt"], q["reference_sql"], q["skills"])
+        ids.append(row["id"])
+    active = ids[current_index] if 0 <= current_index < len(ids) else ids[0]
+    await db.pool().execute(
+        "UPDATE app.custom_tracks SET active_question_id=$2 WHERE id=$1",
+        track_id, active)
+
+
+@app.get("/api/tracks/{track_id}/question/current")
+async def track_question_current(track_id: int, user: dict = auth.CurrentUser):
+    """The question the workbench should show (set by the agent / curriculum)."""
+    await _own_track(track_id, user["id"])
+    aid = await db.pool().fetchval(
+        "SELECT active_question_id FROM app.custom_tracks WHERE id=$1", track_id)
+    if not aid:
+        return None
+    q = await db.pool().fetchrow(
+        "SELECT id, prompt, level, skills, source, status "
+        "FROM app.custom_questions WHERE id=$1 AND track_id=$2", aid, track_id)
+    return dict(q) if q else None
 
 
 @app.delete("/api/tracks/{track_id}/chat")
