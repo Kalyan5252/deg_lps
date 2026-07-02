@@ -665,6 +665,106 @@ async def agent_chat(schema_text, history, user_message, current_sql, run_sql, *
             "questions": questions, "current_index": current_index}
 
 
+def _split_fences(text: str) -> tuple[list[dict], str]:
+    """Split buffered text into (agent actions, visible text).
+
+    Fenced ```json blocks (and bare top-level JSON) that carry an "action" are
+    extracted and HIDDEN (they hold reference SQL). Any other fenced block (e.g.
+    a ```sql example) and all surrounding prose are kept as visible text.
+    """
+    actions: list[dict] = []
+    out: list[str] = []
+    last = 0
+    # closed fences ```lang\n ... ```
+    for m in re.finditer(r"```[ \t]*(\w*)[ \t]*\r?\n?(.*?)```", text, re.DOTALL):
+        out.append(text[last:m.start()])
+        body = m.group(2).strip()
+        obj = None
+        try:
+            obj = json.loads(body)
+        except Exception:
+            obj = None
+        if isinstance(obj, dict) and obj.get("action"):
+            actions.append(obj)          # hide the action block
+        else:
+            out.append(m.group(0))       # keep e.g. a ```sql example
+        last = m.end()
+    tail = text[last:]
+    # an UNCLOSED fence at the very end (model still had more to say / got cut):
+    # if it looks like the start of a json action, hide it; else show it.
+    open_fence = re.search(r"```[ \t]*json\b(.*)$", tail, re.DOTALL | re.IGNORECASE)
+    if open_fence:
+        body = open_fence.group(1).strip().rstrip("`").strip()
+        obj = _try_json(body)
+        if isinstance(obj, dict) and obj.get("action"):
+            actions.append(obj)
+            tail = tail[: open_fence.start()]
+    out.append(tail)
+    shown = "".join(out)
+    # bare top-level JSON action (no fence)
+    stripped = shown.strip()
+    if not actions and stripped.startswith("{"):
+        obj = _try_json(stripped)
+        if isinstance(obj, dict) and obj.get("action"):
+            actions.append(obj)
+            shown = ""
+    return actions, shown
+
+
+def _try_json(s: str):
+    try:
+        return json.loads(s)
+    except Exception:
+        return None
+
+
+async def _apply_agent_action(action, run_sql, questions, level, prose_emitted):
+    """Execute one action. Returns (followup_message_or_None, current_index_or_None,
+    is_run_query). Appends validated questions to `questions` in place."""
+    act = action.get("action")
+    if act == "run_query":
+        sql = (action.get("sql") or "").strip()
+        res = await run_sql(sql) if sql else {"ok": False, "error": "empty sql"}
+        return ("[query result]\n" + _fmt_run_result(res), None, True)
+    if act == "set_question":
+        q = _norm_question(action, level)
+        v = await run_sql(q["reference_sql"]) if q["reference_sql"] else {"ok": False, "error": "no reference_sql"}
+        if v.get("ok"):
+            questions.append(q)
+            idx = len(questions) - 1
+            follow = None if prose_emitted else (
+                f"[question set OK] The active challenge is now exactly:\n\"{q['prompt']}\"\n"
+                "Present THIS exact challenge to the learner in friendly Markdown "
+                "(keep the task identical — do NOT invent a different one). "
+                "Do NOT reveal the reference SQL. No json.")
+            return (follow, idx, False)
+        return (f"[reference_sql failed: {v.get('error')}] Send a corrected "
+                "set_question action.", None, False)
+    if act == "set_curriculum":
+        added = []
+        for rawq in (action.get("questions") or [])[:8]:
+            q = _norm_question(rawq, level)
+            if not q["reference_sql"]:
+                continue
+            v = await run_sql(q["reference_sql"])
+            if v.get("ok"):
+                added.append(q)
+        if added:
+            added.sort(key=lambda x: x["level"])
+            idx = len(questions)
+            questions.extend(added)
+            follow = None if prose_emitted else (
+                f"[curriculum of {len(added)} questions set, easy→hard] The first "
+                f"active challenge is now exactly:\n\"{added[0]['prompt']}\"\n"
+                "Present THIS exact challenge to the learner in friendly Markdown "
+                "(keep the task identical — do NOT invent a different one). "
+                "Mention there are more steps to come. No json.")
+            return (follow, idx, False)
+        return ("[all reference_sql failed] Re-send set_curriculum with corrected "
+                "SQL.", None, False)
+    return (None, None, False)
+
+
 async def agent_chat_stream(schema_text, history, user_message, current_sql, run_sql,
                             *, level: int = 1, max_steps: int = 5):
     """Streaming agentic mentor turn.
@@ -674,10 +774,12 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
       ("result", (questions, current_index)) — emitted once at the end so the
         caller can persist any questions the agent created.
 
-    Tool/action turns (run_query / set_question / set_curriculum) are detected by
-    peeking at the first non-whitespace char of each model response: JSON actions
-    start with `{` or a ``` fence, so they are buffered silently (never streamed),
-    executed, and the loop continues. Prose replies are streamed through live.
+    Prose streams to the client live. As soon as a ``` fence begins, we stop
+    emitting and buffer to end-of-turn, then extract & execute any json ACTION
+    blocks (they carry reference SQL and must never be shown) while still showing
+    non-action fences like ```sql examples. Actions can also be bare top-level
+    JSON. run_query loops (feeding results back); a set_* action that arrived
+    without accompanying prose triggers one more turn so the model presents it.
     """
     settings = get_settings()
     if not settings.ai_enabled:
@@ -702,103 +804,83 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
     current_index = 0
 
     for _ in range(max_steps):
-        buffer = ""
-        is_action: bool | None = None
-        streamed_any = False
+        raw = ""
+        emitted = 0          # chars of `raw` already streamed to the client
+        buffering = False    # once a ``` fence (or bare-json) starts, stop emitting
+        prose_emitted = False
         try:
             async for delta in _chat_stream(messages, max_tokens=1200):
-                buffer += delta
-                if is_action is None:
-                    stripped = buffer.lstrip()
-                    if not stripped:
-                        continue
-                    # decide once we have the first real character
-                    is_action = stripped[0] in ("{", "`")
-                    if not is_action:
-                        streamed_any = True
-                        yield ("delta", buffer)  # flush what we buffered so far
+                raw += delta
+                if buffering:
                     continue
-                if is_action is False:
-                    streamed_any = True
-                    yield ("delta", delta)
-                # is_action True -> keep buffering silently
+                # bare top-level JSON action -> hide the whole turn
+                lead = raw.lstrip()
+                if emitted == 0 and lead[:1] == "{":
+                    buffering = True
+                    continue
+                fence = raw.find("```", emitted)
+                if fence == -1:
+                    # emit everything except a small tail that might be a partial ```
+                    safe = len(raw) - 2
+                    if safe > emitted:
+                        yield ("delta", raw[emitted:safe])
+                        prose_emitted = True
+                        emitted = safe
+                else:
+                    if fence > emitted:
+                        yield ("delta", raw[emitted:fence])
+                        prose_emitted = True
+                    emitted = fence
+                    buffering = True
         except Exception as exc:
             logger.warning("agent stream failed: %s", _ai_error(exc))
-            if not streamed_any and is_action is not True:
+            if not prose_emitted and not buffering:
                 for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
                     yield ("delta", chunk)
             yield ("result", (questions, current_index))
             return
 
-        if not is_action:
-            # a plain prose reply was fully streamed — we're done
+        if not buffering:
+            # pure prose turn — flush the held tail and finish
+            if len(raw) > emitted:
+                yield ("delta", raw[emitted:])
             yield ("result", (questions, current_index))
             return
 
-        # buffered JSON action — parse + execute, then continue the loop
-        action = _parse_agent_action(buffer)
-        if not action:
-            # not valid JSON after all — surface it as text so nothing is lost
-            yield ("delta", buffer)
+        # process the buffered region (starts at the first fence / bare json)
+        actions, shown = _split_fences(raw[emitted:])
+        if shown.strip():
+            yield ("delta", shown)
+            prose_emitted = True
+
+        if not actions:
             yield ("result", (questions, current_index))
             return
 
-        messages.append({"role": "assistant", "content": buffer})
-        act = action.get("action")
+        messages.append({"role": "assistant", "content": raw})
+        had_run = False
+        followups: list[str] = []
+        for action in actions:
+            follow, idx, is_run = await _apply_agent_action(
+                action, run_sql, questions, level, prose_emitted)
+            if idx is not None:
+                current_index = idx
+            if is_run:
+                had_run = True
+            if follow:
+                followups.append(follow)
 
-        if act == "run_query":
-            sql = (action.get("sql") or "").strip()
-            res = await run_sql(sql) if sql else {"ok": False, "error": "empty sql"}
-            messages.append({"role": "user",
-                             "content": "[query result]\n" + _fmt_run_result(res)})
-        elif act == "set_question":
-            q = _norm_question(action, level)
-            v = await run_sql(q["reference_sql"]) if q["reference_sql"] else {"ok": False, "error": "no reference_sql"}
-            if v.get("ok"):
-                questions.append(q)
-                current_index = len(questions) - 1
-                messages.append({"role": "user", "content":
-                    f"[question set OK] The active challenge is now exactly:\n"
-                    f"\"{q['prompt']}\"\n"
-                    "Present THIS exact challenge to the learner in friendly Markdown "
-                    "(you may add warmth, but keep the task identical — do NOT invent "
-                    "a different challenge). Do NOT reveal the reference SQL. No json."})
-            else:
-                messages.append({"role": "user", "content":
-                    f"[reference_sql failed: {v.get('error')}] Send a corrected set_question action."})
-        elif act == "set_curriculum":
-            added = []
-            for rawq in (action.get("questions") or [])[:8]:
-                q = _norm_question(rawq, level)
-                if not q["reference_sql"]:
-                    continue
-                v = await run_sql(q["reference_sql"])
-                if v.get("ok"):
-                    added.append(q)
-            if added:
-                added.sort(key=lambda x: x["level"])
-                current_index = len(questions)
-                questions.extend(added)
-                messages.append({"role": "user", "content":
-                    f"[curriculum of {len(added)} questions set, easy→hard] The first "
-                    f"active challenge is now exactly:\n\"{added[0]['prompt']}\"\n"
-                    "Present THIS exact challenge to the learner in friendly Markdown "
-                    "(keep the task identical — do NOT invent a different one). "
-                    "Mention there are more steps to come. No json."})
-            else:
-                messages.append({"role": "user", "content":
-                    "[all reference_sql failed] Re-send set_curriculum with corrected SQL."})
-        else:
-            yield ("delta", buffer)
+        # continuation policy
+        if had_run:
+            for f in followups:
+                messages.append({"role": "user", "content": f})
+            continue  # loop so the model can use the query results
+        if prose_emitted or not followups:
+            # the model already presented (or nothing needs presenting) — done
             yield ("result", (questions, current_index))
             return
+        for f in followups:
+            messages.append({"role": "user", "content": f})
+        # loop once more so the model presents the freshly-set question
 
-    # exhausted steps without a prose turn — ask for a short wrap-up (streamed)
-    messages.append({"role": "user", "content":
-        "Wrap up in one or two friendly sentences. Plain markdown, no json."})
-    try:
-        async for delta in _chat_stream(messages, max_tokens=200):
-            yield ("delta", delta)
-    except Exception:
-        yield ("delta", "Your challenge is ready — give it a shot!")
     yield ("result", (questions, current_index))
