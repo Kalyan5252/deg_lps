@@ -226,3 +226,47 @@ async def _bootstrap(pool: asyncpg.Pool) -> None:
         await conn.execute(
             "ALTER TABLE app.custom_tracks "
             "ADD COLUMN IF NOT EXISTS active_question_id BIGINT")
+        await conn.execute(HUNT_DDL)
+
+
+# RegHunt — endless adaptive AI challenge mode. A session runs against a private
+# dataset replica; each question is a "checkpoint" with server-side timing so we
+# can analyse performance later (the timer is server-authoritative).
+HUNT_DDL = """
+CREATE TABLE IF NOT EXISTS app.hunt_sessions (
+    id           BIGSERIAL PRIMARY KEY,
+    user_id      BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    track_id     BIGINT NOT NULL REFERENCES app.custom_tracks(id) ON DELETE CASCADE,
+    dataset_key  TEXT,
+    dataset_name TEXT,
+    creativity   INT NOT NULL DEFAULT 2,   -- 1 low | 2 medium | 3 high | 4 great
+    difficulty   INT NOT NULL DEFAULT 3,   -- current adaptive difficulty (starts medium)
+    status       TEXT NOT NULL DEFAULT 'active',  -- active | finished
+    started_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at  TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS app.hunt_checkpoints (
+    id            BIGSERIAL PRIMARY KEY,
+    session_id    BIGINT NOT NULL REFERENCES app.hunt_sessions(id) ON DELETE CASCADE,
+    seq           INT NOT NULL,
+    prompt        TEXT NOT NULL,
+    reference_sql TEXT NOT NULL,
+    skills        JSONB NOT NULL DEFAULT '[]',
+    difficulty    INT NOT NULL,
+    multi_solution BOOLEAN NOT NULL DEFAULT false,
+    served_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    submitted_at  TIMESTAMPTZ,
+    duration_ms   DOUBLE PRECISION,
+    user_sql      TEXT,
+    passed        BOOLEAN,
+    score         INT,
+    attempts      INT NOT NULL DEFAULT 0,
+    hint_used     BOOLEAN NOT NULL DEFAULT false,
+    optimized     BOOLEAN NOT NULL DEFAULT false,
+    reasoning     TEXT,
+    reasoning_skipped BOOLEAN NOT NULL DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS hunt_checkpoints_session_idx
+    ON app.hunt_checkpoints (session_id, seq);
+"""

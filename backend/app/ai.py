@@ -884,3 +884,160 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
         # loop once more so the model presents the freshly-set question
 
     yield ("result", (questions, current_index))
+
+
+# ==========================================================================
+# RegHunt — endless adaptive challenge generator + coaching helpers
+# ==========================================================================
+
+_CREATIVITY = {
+    1: "LOW — clear, textbook questions. Straightforward wording, one obvious approach.",
+    2: "MEDIUM — realistic analytical questions with a light twist.",
+    3: "HIGH — creative, multi-step, story-driven scenarios that combine concepts "
+       "(joins + aggregation + filtering) in non-obvious ways.",
+    4: "GREAT — wild, ambitious, real-world puzzle-style challenges: multi-CTE, "
+       "window functions, self/cross joins, indexing reasoning, tricky edge cases. "
+       "Make the learner think hard and stretch.",
+}
+
+_DIFFICULTY = {
+    1: "basic SELECT / WHERE / COUNT",
+    2: "filters, ORDER BY, simple GROUP BY",
+    3: "GROUP BY + HAVING, single JOIN, aggregates",
+    4: "multi-table JOINs (incl. self/cross), subqueries, CASE",
+    5: "CTEs, window functions, ranking, complex multi-step analysis, indexing reasoning",
+}
+
+
+async def hunt_question(schema_text, creativity, difficulty, recent_prompts,
+                        run_sql, *, streak: str = "") -> dict | None:
+    """Generate ONE adaptive challenge, validated against the dataset.
+
+    `run_sql(sql)->result` validates the reference query. Returns
+    {prompt, reference_sql, skills, difficulty, multi_solution} or None.
+    """
+    if not get_settings().ai_enabled:
+        return None
+    avoid = "\n".join(f"- {p}" for p in recent_prompts[-8:]) or "(none yet)"
+    prompt = (
+        "You are the question-master of an endless SQL challenge hunt. Design the "
+        "NEXT single challenge over the learner's dataset.\n\n"
+        f"Creativity setting: {_CREATIVITY.get(creativity, _CREATIVITY[2])}\n"
+        f"Target difficulty: {difficulty}/5 — {_DIFFICULTY.get(difficulty, _DIFFICULTY[3])}\n"
+        f"Recent performance: {streak or 'just starting'}\n\n"
+        f"Dataset schema (PostgreSQL):\n{schema_text}\n\n"
+        f"Do NOT repeat these recent questions:\n{avoid}\n\n"
+        "Rules: use ONLY real table/column names above; make it solvable with a "
+        "single SQL query; escalate variety across joins (inner/left/self/cross), "
+        "aggregations, subqueries, CTEs, window functions and indexing reasoning.\n\n"
+        "Return STRICT JSON only:\n"
+        '{"prompt": "the challenge in vivid plain English", '
+        '"reference_sql": "a correct PostgreSQL query that answers it", '
+        '"skills": ["JOINS"|"GROUP BY"|"WINDOW FUNCTIONS"|"CTE"|"SUBQUERY"|"INDEXING"|...], '
+        '"multi_solution": true/false  (true if several genuinely different queries '
+        'could solve it)}'
+    )
+    for _ in range(3):
+        try:
+            raw = await _chat(
+                [{"role": "system", "content": "You output only valid JSON."},
+                 {"role": "user", "content": prompt}],
+                max_tokens=700, temperature=0.5 + 0.12 * creativity)
+            data = _extract_json(raw)
+        except Exception as exc:
+            logger.warning("hunt_question failed: %s", _ai_error(exc))
+            return None
+        if not data or not data.get("reference_sql") or not data.get("prompt"):
+            continue
+        check = await run_sql(data["reference_sql"])
+        if check.get("ok"):
+            skills = data.get("skills") or ["SELECT"]
+            if isinstance(skills, str):
+                skills = [skills]
+            return {
+                "prompt": data["prompt"].strip(),
+                "reference_sql": data["reference_sql"].strip(),
+                "skills": [str(s) for s in skills][:6],
+                "difficulty": difficulty,
+                "multi_solution": bool(data.get("multi_solution")),
+            }
+    return None
+
+
+async def hunt_hint(schema_text, prompt, user_sql) -> str:
+    """A nudge — never the full answer."""
+    if not get_settings().ai_enabled:
+        return ("Break it down: which tables hold the columns you need, how do they "
+                "join, and what do you group by? Try a small piece first.")
+    ctx = (f"Dataset schema:\n{schema_text}\n\nChallenge:\n{prompt}\n\n"
+           f"Learner's current SQL:\n```sql\n{user_sql or '(empty)'}\n```")
+    try:
+        return await _chat(
+            [{"role": "system", "content":
+              "You are a SQL coach. Give ONE concrete hint (2-3 sentences) that "
+              "moves the learner forward. NEVER write the full solution query."},
+             {"role": "user", "content": ctx}],
+            max_tokens=220, temperature=0.5)
+    except Exception:
+        return "Think about the join keys first, then the aggregation."
+
+
+async def hunt_optimize(schema_text, user_sql, run_result=None) -> str:
+    """Query-optimization coaching for the learner's own SQL."""
+    if not get_settings().ai_enabled:
+        return ("Check for missing WHERE filters, unnecessary DISTINCT, and whether an "
+                "index on your join/filter columns would help. Read the EXPLAIN plan.")
+    perf = ""
+    if run_result and run_result.get("ok"):
+        perf = (f"\nIt returned {run_result.get('row_count')} rows in "
+                f"{run_result.get('duration_ms')}ms.")
+    ctx = (f"Dataset schema:\n{schema_text}\n\nThe learner's SQL:\n"
+           f"```sql\n{user_sql}\n```{perf}")
+    try:
+        return await _chat(
+            [{"role": "system", "content":
+              "You are a senior SQL performance engineer. Review the query and give "
+              "concrete optimization advice (indexes, join order, avoiding scans, "
+              "rewrites). Be specific and reference their columns. Markdown."},
+             {"role": "user", "content": ctx}],
+            max_tokens=450, temperature=0.3)
+    except Exception:
+        return "Consider indexes on your join/filter columns and check the EXPLAIN plan."
+
+
+async def hunt_reason_feedback(prompt, user_sql, reasoning) -> str:
+    """React to WHY the learner chose their approach (for multi-solution questions)."""
+    if not get_settings().ai_enabled:
+        return "Good reasoning — weigh readability vs. performance and index usage."
+    ctx = (f"Challenge:\n{prompt}\n\nTheir query:\n```sql\n{user_sql}\n```\n\n"
+           f"Their stated reason for this approach:\n{reasoning}")
+    try:
+        return await _chat(
+            [{"role": "system", "content":
+              "The learner explained why they chose their approach among several "
+              "valid ones. In 2-3 sentences, affirm what's sound and add one "
+              "trade-off (performance/readability/index use) they should consider."},
+             {"role": "user", "content": ctx}],
+            max_tokens=200, temperature=0.5)
+    except Exception:
+        return "Solid choice — just weigh it against performance and index usage."
+
+
+async def hunt_optimized_sql(schema_text, prompt, user_sql) -> str:
+    """Reveal an optimized rewrite of the learner's query (returns SQL only)."""
+    if not get_settings().ai_enabled or not (user_sql or "").strip():
+        return user_sql or ""
+    ctx = (f"Dataset schema:\n{schema_text}\n\nChallenge:\n{prompt}\n\n"
+           f"The learner's working query:\n```sql\n{user_sql}\n```\n\n"
+           "Rewrite it to be more efficient and idiomatic while returning the SAME "
+           "result. Return ONLY the optimized SQL — no prose, no markdown fences.")
+    try:
+        out = await _chat(
+            [{"role": "system", "content": "You output only a single SQL query."},
+             {"role": "user", "content": ctx}],
+            max_tokens=400, temperature=0.2)
+    except Exception:
+        return user_sql
+    # strip any ```sql fences the model may add
+    m = re.search(r"```(?:sql)?\s*(.*?)```", out, re.DOTALL | re.IGNORECASE)
+    return (m.group(1) if m else out).strip()

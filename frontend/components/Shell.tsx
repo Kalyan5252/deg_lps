@@ -12,6 +12,7 @@ const NAV = [
   { href: "/tracks", label: "Custom Tracks", icon: "⬡" },
   { href: "/progress", label: "Progress", icon: "▲" },
   { href: "/history", label: "Scenario History", icon: "≣" },
+  { href: "/reghunt", label: "RegHunt", icon: "🎯", priority: true },
 ];
 
 const COLLAPSE_KEY = "sqlforge_nav_collapsed";
@@ -80,6 +81,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               item.href === "/"
                 ? pathname === "/"
                 : pathname.startsWith(item.href);
+            const priority = (item as any).priority;
             return (
               <Link
                 key={item.href}
@@ -87,13 +89,25 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 title={collapsed ? item.label : undefined}
                 className={`mb-0.5 flex items-center gap-3 rounded-md py-2 text-sm transition-colors ${
                   collapsed ? "justify-center px-0" : "px-3"
-                } ${
-                  active
+                } ${priority ? "mt-3" : ""} ${
+                  priority
+                    ? active
+                      ? "bg-canvas font-semibold text-ink"
+                      : "font-semibold text-ink hover:bg-canvas"
+                    : active
                     ? "bg-canvas font-medium text-ink"
                     : "text-sub hover:bg-canvas hover:text-ink"
                 }`}
               >
-                <span className="w-4 text-center text-xs">{item.icon}</span>
+                <span
+                  className={
+                    priority
+                      ? "w-5 text-center text-lg leading-none"
+                      : "w-4 text-center text-xs"
+                  }
+                >
+                  {item.icon}
+                </span>
                 {!collapsed && item.label}
               </Link>
             );

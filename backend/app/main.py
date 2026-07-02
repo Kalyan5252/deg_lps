@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -818,6 +819,443 @@ async def track_chat_clear(track_id: int, user: dict = auth.CurrentUser):
         "DELETE FROM app.custom_chat_messages WHERE track_id=$1 AND user_id=$2",
         track_id, user["id"])
     return {"ok": True}
+
+
+# ==========================================================================
+# RegHunt — endless adaptive AI challenge mode
+# ==========================================================================
+
+class HuntStartIn(BaseModel):
+    source: str = "global"          # "global" | "track"
+    key: str | None = None          # global dataset key
+    track_id: int | None = None     # existing track id (source="track")
+    creativity: int = 2             # 1 low | 2 medium | 3 high | 4 great
+
+
+class HuntSqlIn(BaseModel):
+    sql: str
+
+
+class HuntSubmitIn(BaseModel):
+    checkpoint_id: int
+    sql: str
+
+
+class HuntHintIn(BaseModel):
+    checkpoint_id: int
+    sql: str | None = None
+
+
+class HuntReasonIn(BaseModel):
+    checkpoint_id: int
+    reasoning: str | None = None
+    skip: bool = False
+
+
+async def _own_hunt(session_id: int, user_id: int) -> dict:
+    row = await db.pool().fetchrow(
+        "SELECT * FROM app.hunt_sessions WHERE id=$1 AND user_id=$2",
+        session_id, user_id)
+    if not row:
+        raise HTTPException(404, "Hunt session not found")
+    return dict(row)
+
+
+def _hunt_runner(track_id: int):
+    schema = custom.schema_for(track_id)
+
+    async def run_sql(sql: str) -> dict:
+        try:
+            return _cap(await sandbox.run_in_schema(schema, sql))
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": str(exc)}
+
+    return run_sql
+
+
+@app.post("/api/hunt/start")
+async def hunt_start(body: HuntStartIn, user: dict = auth.CurrentUser):
+    creativity = max(1, min(4, body.creativity))
+    if body.source == "track":
+        if not body.track_id:
+            raise HTTPException(400, "track_id required")
+        track = await _own_track(body.track_id, user["id"])
+        track_id, name, key = track["id"], track["name"], None
+    else:
+        ds = global_datasets.get(body.key or "")
+        if not ds:
+            raise HTTPException(404, "Dataset not found")
+        # clone a fresh private replica for this hunt
+        parsed = [custom.parse_csv(f"{t}.csv", txt)
+                  for t, txt in global_datasets.load_tables(ds["key"])]
+        row = await db.pool().fetchrow(
+            "INSERT INTO app.custom_tracks (user_id, name, level) VALUES ($1,$2,$3) "
+            "RETURNING id", user["id"], f"RegHunt · {ds['name']}", 1)
+        track_id = row["id"]
+        for p in parsed:
+            await db.pool().execute(
+                "INSERT INTO app.custom_tables "
+                "(track_id, table_name, columns, row_count, csv_text) "
+                "VALUES ($1,$2,$3,$4,$5)",
+                track_id, p["table_name"], p["columns"], p["row_count"], p["csv_text"])
+        name, key = ds["name"], ds["key"]
+
+    sess = await db.pool().fetchrow(
+        "INSERT INTO app.hunt_sessions "
+        "(user_id, track_id, dataset_key, dataset_name, creativity, difficulty) "
+        "VALUES ($1,$2,$3,$4,$5,3) RETURNING id, started_at",
+        user["id"], track_id, key, name, creativity)
+    return {"session_id": sess["id"], "track_id": track_id, "dataset_name": name,
+            "creativity": creativity, "difficulty": 3,
+            "started_at": sess["started_at"].isoformat()}
+
+
+# A fixed challenge for deterministic testing (mock=true). Reference is
+# validated against the dataset; if it doesn't fit, we fall back to AI.
+_MOCK_QUESTION = {
+    "prompt": (
+        "Identify the 'High-Volume Customers'. I need a list of company names and "
+        "the total number of orders they have placed, but only for those customers "
+        "who have placed more than 10 orders. Order the results by the number of "
+        "orders in descending order."
+    ),
+    "reference_sql": (
+        "SELECT c.company_name, count(*) AS total_orders "
+        "FROM customers c JOIN orders o ON c.customer_id = o.customer_id "
+        "GROUP BY c.company_name HAVING count(*) > 10 "
+        "ORDER BY total_orders DESC"
+    ),
+    "skills": ["JOINS", "GROUP BY", "HAVING"],
+    "difficulty": 3,
+    "multi_solution": True,
+}
+
+
+@app.post("/api/hunt/{session_id}/next")
+async def hunt_next(
+    session_id: int, mock: bool = False, user: dict = auth.CurrentUser
+):
+    sess = await _own_hunt(session_id, user["id"])
+    if sess["status"] != "active":
+        raise HTTPException(400, "Hunt already finished")
+    await _ensure_provisioned(sess["track_id"])
+
+    if mock:
+        chk = await _hunt_runner(sess["track_id"])(_MOCK_QUESTION["reference_sql"])
+        if chk.get("ok"):
+            seq = await db.pool().fetchval(
+                "SELECT coalesce(max(seq),0)+1 FROM app.hunt_checkpoints "
+                "WHERE session_id=$1", session_id)
+            cp = await db.pool().fetchrow(
+                "INSERT INTO app.hunt_checkpoints (session_id, seq, prompt, "
+                "reference_sql, skills, difficulty, multi_solution) "
+                "VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, served_at",
+                session_id, seq, _MOCK_QUESTION["prompt"],
+                _MOCK_QUESTION["reference_sql"], _MOCK_QUESTION["skills"],
+                _MOCK_QUESTION["difficulty"], _MOCK_QUESTION["multi_solution"])
+            return {"checkpoint_id": cp["id"], "seq": seq,
+                    "prompt": _MOCK_QUESTION["prompt"], "skills": _MOCK_QUESTION["skills"],
+                    "difficulty": _MOCK_QUESTION["difficulty"],
+                    "multi_solution": _MOCK_QUESTION["multi_solution"],
+                    "served_at": cp["served_at"].isoformat(), "mock": True}
+
+    # adapt difficulty from the previous checkpoint
+    last = await db.pool().fetchrow(
+        "SELECT passed, difficulty FROM app.hunt_checkpoints "
+        "WHERE session_id=$1 ORDER BY seq DESC LIMIT 1", session_id)
+    difficulty = sess["difficulty"]
+    streak = "just starting"
+    if last is not None:
+        if last["passed"]:
+            difficulty = min(5, sess["difficulty"] + 1)
+            streak = "solved the last one — push harder"
+        elif last["passed"] is False:
+            difficulty = max(1, sess["difficulty"] - 1)
+            streak = "missed the last one — ease off slightly then rebuild"
+
+    graph = await custom.schema_graph(sess["track_id"])
+    recent = [r["prompt"] for r in await db.pool().fetch(
+        "SELECT prompt FROM app.hunt_checkpoints WHERE session_id=$1 "
+        "ORDER BY seq DESC LIMIT 8", session_id)]
+    q = await ai.hunt_question(
+        _schema_text(graph), sess["creativity"], difficulty, recent,
+        _hunt_runner(sess["track_id"]), streak=streak)
+    if not q:
+        raise HTTPException(422, "Could not generate a challenge — try again.")
+
+    seq = (await db.pool().fetchval(
+        "SELECT coalesce(max(seq),0)+1 FROM app.hunt_checkpoints WHERE session_id=$1",
+        session_id))
+    cp = await db.pool().fetchrow(
+        "INSERT INTO app.hunt_checkpoints "
+        "(session_id, seq, prompt, reference_sql, skills, difficulty, multi_solution) "
+        "VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, served_at",
+        session_id, seq, q["prompt"], q["reference_sql"], q["skills"],
+        q["difficulty"], q["multi_solution"])
+    await db.pool().execute(
+        "UPDATE app.hunt_sessions SET difficulty=$2 WHERE id=$1",
+        session_id, difficulty)
+    return {"checkpoint_id": cp["id"], "seq": seq, "prompt": q["prompt"],
+            "skills": q["skills"], "difficulty": q["difficulty"],
+            "multi_solution": q["multi_solution"],
+            "served_at": cp["served_at"].isoformat()}
+
+
+@app.post("/api/hunt/{session_id}/run")
+async def hunt_run(session_id: int, body: HuntSqlIn, user: dict = auth.CurrentUser):
+    sess = await _own_hunt(session_id, user["id"])
+    await _ensure_provisioned(sess["track_id"])
+    return _cap(await sandbox.run_in_schema(custom.schema_for(sess["track_id"]), body.sql))
+
+
+@app.post("/api/hunt/{session_id}/submit")
+async def hunt_submit(session_id: int, body: HuntSubmitIn, user: dict = auth.CurrentUser):
+    sess = await _own_hunt(session_id, user["id"])
+    cp = await db.pool().fetchrow(
+        "SELECT * FROM app.hunt_checkpoints WHERE id=$1 AND session_id=$2",
+        body.checkpoint_id, session_id)
+    if not cp:
+        raise HTTPException(404, "Checkpoint not found")
+    await _ensure_provisioned(sess["track_id"])
+    result = await custom.evaluate(sess["track_id"], cp["reference_sql"], body.sql)
+    if not result["ok"]:
+        await db.pool().execute(
+            "UPDATE app.hunt_checkpoints SET user_sql=$2, attempts=attempts+1 "
+            "WHERE id=$1", cp["id"], body.sql)
+        return {"ok": False, "passed": False, "score": 0, "error": result["error"]}
+
+    await db.pool().execute(
+        "UPDATE app.hunt_checkpoints SET user_sql=$2, passed=$3, score=$4, "
+        "attempts=attempts+1, submitted_at=now(), "
+        "duration_ms=EXTRACT(EPOCH FROM (now()-served_at))*1000 WHERE id=$1",
+        cp["id"], body.sql, result["passed"], result["score"])
+    # adapt session difficulty
+    delta = 1 if result["passed"] else -1
+    await db.pool().execute(
+        "UPDATE app.hunt_sessions SET difficulty=greatest(1,least(5,difficulty+$2)) "
+        "WHERE id=$1", session_id, delta)
+    return {
+        "ok": True, "passed": result["passed"], "score": result["score"],
+        "expected_rows": result["expected_rows"], "got_rows": result["got_rows"],
+        "expected_columns": result["expected_columns"],
+        "expected_preview": result["expected_preview"], "result": _cap(result["result"]),
+        # ask the learner to justify their approach on rich, multi-solution wins
+        "ask_reason": bool(cp["multi_solution"] and result["passed"]),
+        # only sometimes invite an optimization round — more often at higher
+        # creativity, and only after a correct solve
+        "optimize_challenge": bool(
+            result["passed"]
+            and random.random() < {1: 0.0, 2: 0.3, 3: 0.55, 4: 0.85}[sess["creativity"]]),
+    }
+
+
+class HuntCreativityIn(BaseModel):
+    creativity: int
+
+
+@app.post("/api/hunt/{session_id}/creativity")
+async def hunt_set_creativity(
+    session_id: int, body: HuntCreativityIn, user: dict = auth.CurrentUser
+):
+    await _own_hunt(session_id, user["id"])
+    c = max(1, min(4, body.creativity))
+    await db.pool().execute(
+        "UPDATE app.hunt_sessions SET creativity=$2 WHERE id=$1", session_id, c)
+    return {"creativity": c}
+
+
+@app.post("/api/hunt/{session_id}/optimized-query")
+async def hunt_optimized_query(
+    session_id: int, body: HuntHintIn, user: dict = auth.CurrentUser
+):
+    """Reveal an AI-optimized rewrite of the learner's query."""
+    sess = await _own_hunt(session_id, user["id"])
+    cp = await db.pool().fetchrow(
+        "SELECT prompt FROM app.hunt_checkpoints WHERE id=$1 AND session_id=$2",
+        body.checkpoint_id, session_id)
+    if not cp:
+        raise HTTPException(404, "Checkpoint not found")
+    graph = await custom.schema_graph(sess["track_id"])
+    optimized = await ai.hunt_optimized_sql(_schema_text(graph), cp["prompt"], body.sql)
+    await db.pool().execute(
+        "UPDATE app.hunt_checkpoints SET optimized=true WHERE id=$1", body.checkpoint_id)
+    return {"sql": optimized}
+
+
+@app.post("/api/hunt/{session_id}/hint")
+async def hunt_hint_ep(session_id: int, body: HuntHintIn, user: dict = auth.CurrentUser):
+    sess = await _own_hunt(session_id, user["id"])
+    cp = await db.pool().fetchrow(
+        "SELECT prompt FROM app.hunt_checkpoints WHERE id=$1 AND session_id=$2",
+        body.checkpoint_id, session_id)
+    if not cp:
+        raise HTTPException(404, "Checkpoint not found")
+    graph = await custom.schema_graph(sess["track_id"])
+    hint = await ai.hunt_hint(_schema_text(graph), cp["prompt"], body.sql)
+    await db.pool().execute(
+        "UPDATE app.hunt_checkpoints SET hint_used=true WHERE id=$1", body.checkpoint_id)
+    return {"hint": hint}
+
+
+@app.post("/api/hunt/{session_id}/optimize")
+async def hunt_optimize_ep(session_id: int, body: HuntSqlIn, user: dict = auth.CurrentUser):
+    sess = await _own_hunt(session_id, user["id"])
+    await _ensure_provisioned(sess["track_id"])
+    run = _cap(await sandbox.run_in_schema(custom.schema_for(sess["track_id"]), body.sql))
+    graph = await custom.schema_graph(sess["track_id"])
+    advice = await ai.hunt_optimize(_schema_text(graph), body.sql, run)
+    await db.pool().execute(
+        "UPDATE app.hunt_checkpoints SET optimized=true "
+        "WHERE session_id=$1 AND seq=(SELECT max(seq) FROM app.hunt_checkpoints WHERE session_id=$1)",
+        session_id)
+    return {"advice": advice, "result": run}
+
+
+@app.post("/api/hunt/{session_id}/reason")
+async def hunt_reason(session_id: int, body: HuntReasonIn, user: dict = auth.CurrentUser):
+    await _own_hunt(session_id, user["id"])
+    cp = await db.pool().fetchrow(
+        "SELECT prompt, user_sql FROM app.hunt_checkpoints WHERE id=$1 AND session_id=$2",
+        body.checkpoint_id, session_id)
+    if not cp:
+        raise HTTPException(404, "Checkpoint not found")
+    if body.skip or not (body.reasoning or "").strip():
+        await db.pool().execute(
+            "UPDATE app.hunt_checkpoints SET reasoning_skipped=true WHERE id=$1",
+            body.checkpoint_id)
+        return {"skipped": True, "feedback": None}
+    await db.pool().execute(
+        "UPDATE app.hunt_checkpoints SET reasoning=$2 WHERE id=$1",
+        body.checkpoint_id, body.reasoning.strip())
+    fb = await ai.hunt_reason_feedback(cp["prompt"], cp["user_sql"], body.reasoning.strip())
+    return {"skipped": False, "feedback": fb}
+
+
+async def _hunt_lifetime(user_id: int, exclude_session: int | None = None) -> dict:
+    """Cross-hunt (lifetime) stats for a user — used for the reasoning analytic
+    and overall trends across previous RegHunts."""
+    rows = [dict(r) for r in await db.pool().fetch(
+        "SELECT c.*, s.dataset_name, s.started_at AS session_started "
+        "FROM app.hunt_checkpoints c JOIN app.hunt_sessions s ON s.id=c.session_id "
+        "WHERE s.user_id=$1", user_id)]
+    answered = [c for c in rows if c["passed"] is not None]
+    solved = [c for c in answered if c["passed"]]
+    reasoned = [c for c in rows if c["reasoning"]]
+    sessions = await db.pool().fetchval(
+        "SELECT count(*) FROM app.hunt_sessions WHERE user_id=$1", user_id)
+    # skill-level reasoning coverage: of multi-solution questions, how often the
+    # learner articulated their choice (a senior-analyst signal of intent).
+    multi = [c for c in rows if c["multi_solution"] and c["passed"]]
+    return {
+        "total_hunts": sessions,
+        "total_questions": len(rows),
+        "answered": len(answered),
+        "solved": len(solved),
+        "accuracy": round(100 * len(solved) / len(answered)) if answered else 0,
+        "reasons_given": len(reasoned),
+        "reason_opportunities": len(multi),
+        "reason_rate": round(100 * len(reasoned) / len(multi)) if multi else 0,
+        "recent_reasonings": [
+            {"prompt": c["prompt"][:120], "reasoning": c["reasoning"],
+             "dataset": c["dataset_name"],
+             "when": c["session_started"].isoformat()}
+            for c in sorted(reasoned, key=lambda x: x["id"], reverse=True)[:8]
+        ],
+    }
+
+
+async def _hunt_analysis(session_id: int, user_id: int | None = None) -> dict:
+    sess = await db.pool().fetchrow(
+        "SELECT * FROM app.hunt_sessions WHERE id=$1", session_id)
+    cps = [dict(r) for r in await db.pool().fetch(
+        "SELECT * FROM app.hunt_checkpoints WHERE session_id=$1 ORDER BY seq", session_id)]
+    answered = [c for c in cps if c["passed"] is not None]
+    solved = [c for c in answered if c["passed"]]
+    durations = [c["duration_ms"] for c in answered if c["duration_ms"]]
+    active_ms = sum(durations)
+    skills: dict[str, dict] = {}
+    for c in answered:
+        for s in (c["skills"] or []):
+            d = skills.setdefault(s, {"seen": 0, "solved": 0})
+            d["seen"] += 1
+            if c["passed"]:
+                d["solved"] += 1
+    started = sess["started_at"]
+    ended = sess["finished_at"] or started
+    return {
+        "session_id": session_id,
+        "dataset_name": sess["dataset_name"],
+        "creativity": sess["creativity"],
+        "status": sess["status"],
+        "started_at": started.isoformat(),
+        "finished_at": sess["finished_at"].isoformat() if sess["finished_at"] else None,
+        "wall_seconds": (ended - started).total_seconds(),
+        "total_questions": len(cps),
+        "answered": len(answered),
+        "solved": len(solved),
+        "accuracy": round(100 * len(solved) / len(answered)) if answered else 0,
+        "active_seconds": round(active_ms / 1000, 1),
+        "avg_seconds": round(active_ms / 1000 / len(answered), 1) if answered else 0,
+        "hints_used": sum(1 for c in cps if c["hint_used"]),
+        "optimizations": sum(1 for c in cps if c["optimized"]),
+        "reasons_given": sum(1 for c in cps if c["reasoning"]),
+        "peak_difficulty": max((c["difficulty"] for c in cps), default=0),
+        "skills": [{"skill": k, **v} for k, v in sorted(skills.items())],
+        "reasonings": [
+            {"seq": c["seq"], "prompt": c["prompt"][:120], "reasoning": c["reasoning"]}
+            for c in cps if c["reasoning"]
+        ],
+        "lifetime": await _hunt_lifetime(user_id) if user_id else None,
+        "timeline": [
+            {"seq": c["seq"], "difficulty": c["difficulty"],
+             "passed": c["passed"], "seconds": round((c["duration_ms"] or 0) / 1000, 1),
+             "skills": c["skills"], "hint_used": c["hint_used"],
+             "prompt": c["prompt"][:120]}
+            for c in cps
+        ],
+    }
+
+
+@app.post("/api/hunt/{session_id}/finish")
+async def hunt_finish(session_id: int, user: dict = auth.CurrentUser):
+    await _own_hunt(session_id, user["id"])
+    await db.pool().execute(
+        "UPDATE app.hunt_sessions SET status='finished', finished_at=now() "
+        "WHERE id=$1 AND status='active'", session_id)
+    return await _hunt_analysis(session_id, user["id"])
+
+
+@app.get("/api/hunt/{session_id}/analysis")
+async def hunt_analysis_ep(session_id: int, user: dict = auth.CurrentUser):
+    await _own_hunt(session_id, user["id"])
+    return await _hunt_analysis(session_id, user["id"])
+
+
+@app.get("/api/hunt/history")
+async def hunt_history(user: dict = auth.CurrentUser):
+    """Every RegHunt the user has run, with per-session analytics for trends."""
+    sessions = [dict(r) for r in await db.pool().fetch(
+        "SELECT id, dataset_name, creativity, status, started_at, finished_at "
+        "FROM app.hunt_sessions WHERE user_id=$1 ORDER BY id DESC", user["id"])]
+    out = []
+    for s in sessions:
+        cps = await db.pool().fetch(
+            "SELECT passed, difficulty, duration_ms FROM app.hunt_checkpoints "
+            "WHERE session_id=$1", s["id"])
+        answered = [c for c in cps if c["passed"] is not None]
+        solved = [c for c in answered if c["passed"]]
+        active = sum(c["duration_ms"] or 0 for c in answered) / 1000
+        out.append({
+            "session_id": s["id"], "dataset_name": s["dataset_name"],
+            "creativity": s["creativity"], "status": s["status"],
+            "started_at": s["started_at"].isoformat(),
+            "finished_at": s["finished_at"].isoformat() if s["finished_at"] else None,
+            "questions": len(cps), "solved": len(solved),
+            "accuracy": round(100 * len(solved) / len(answered)) if answered else 0,
+            "active_seconds": round(active, 1),
+            "peak_difficulty": max((c["difficulty"] for c in cps), default=0),
+        })
+    return {"hunts": out, "lifetime": await _hunt_lifetime(user["id"])}
 
 
 @app.get("/api/health")

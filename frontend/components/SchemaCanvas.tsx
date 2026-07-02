@@ -30,15 +30,67 @@ function cardWidth(t: Table): number {
   return Math.max(CARD_MIN, Math.min(CARD_MAX, Math.ceil(Math.max(title, cols))));
 }
 
-function layout(tables: Table[]): Record<string, { x: number; y: number }> {
-  // Two-column masonry so cards stay visible even in a narrow panel; users
-  // can drag from here to build their own graph view.
-  const pos: Record<string, { x: number; y: number }> = {};
-  let y = 36;
-  tables.forEach((t) => {
-    pos[t.name] = { x: 36, y };
-    y += HEAD_H + t.columns.length * ROW_H + 6 + 56;
+// Professional layered ER layout: rank tables by their foreign-key depth
+// (pure lookup/parent tables on the left, tables that reference them flowing
+// right), then stack each rank in its own column. No overlap, relations read
+// left-to-right — so users don't have to hand-arrange every schema.
+function layout(
+  tables: Table[],
+  relations: Relation[] = []
+): Record<string, { x: number; y: number }> {
+  const X0 = 40;
+  const Y0 = 32;
+  const H_GAP = 90; // horizontal gap between columns
+  const V_GAP = 36; // vertical gap between stacked cards
+
+  const byName = new Set(tables.map((t) => t.name));
+  const refs: Record<string, Set<string>> = {};
+  tables.forEach((t) => (refs[t.name] = new Set()));
+  relations.forEach((r) => {
+    if (
+      byName.has(r.from_table) &&
+      byName.has(r.to_table) &&
+      r.from_table !== r.to_table
+    ) {
+      refs[r.from_table].add(r.to_table); // child references parent
+    }
   });
+
+  // depth = 1 + max depth of the parents it references (cycle-safe)
+  const level: Record<string, number> = {};
+  const visiting = new Set<string>();
+  const depth = (name: string): number => {
+    if (level[name] !== undefined) return level[name];
+    if (visiting.has(name)) return 0; // break any relation cycle
+    visiting.add(name);
+    let m = -1;
+    refs[name].forEach((p) => (m = Math.max(m, depth(p))));
+    visiting.delete(name);
+    return (level[name] = m + 1);
+  };
+  tables.forEach((t) => depth(t.name));
+
+  // group tables by column (level)
+  const cols: Record<number, Table[]> = {};
+  tables.forEach((t) => (cols[level[t.name]] ||= []).push(t));
+
+  const cardH = (t: Table) => HEAD_H + t.columns.length * ROW_H + 6;
+  const pos: Record<string, { x: number; y: number }> = {};
+  let x = X0;
+  Object.keys(cols)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .forEach((lv) => {
+      const group = cols[lv].slice().sort((a, b) => a.name.localeCompare(b.name));
+      let y = Y0;
+      let colW = 0;
+      group.forEach((t) => {
+        pos[t.name] = { x, y };
+        y += cardH(t) + V_GAP;
+        colW = Math.max(colW, cardWidth(t));
+      });
+      x += colW + H_GAP;
+    });
   return pos;
 }
 
@@ -112,15 +164,37 @@ export default function SchemaCanvas({
     } catch {
       /* noop */
     }
-    const base = layout(tables);
+    const base = layout(tables, relations);
     setPos(saved ? { ...base, ...saved } : base);
-  }, [tables, storageKey]);
+    // restore last pan/zoom so switching tabs keeps the view where you left it
+    try {
+      const v = JSON.parse(localStorage.getItem(`${storageKey}:view`) || "null");
+      if (v) {
+        if (v.pan) setPan(v.pan);
+        if (typeof v.zoom === "number") setZoom(v.zoom);
+      }
+    } catch {
+      /* noop */
+    }
+  }, [tables, relations, storageKey]);
 
   useEffect(() => {
     if (Object.keys(pos).length) {
       localStorage.setItem(storageKey, JSON.stringify(pos));
     }
   }, [pos, storageKey]);
+
+  // persist the viewport (pan + zoom) too, so it survives a full reload. Skip
+  // the first run so the initial default {0,0}/1 doesn't clobber a saved view
+  // before the restore above has committed.
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) {
+      firstView.current = false;
+      return;
+    }
+    localStorage.setItem(`${storageKey}:view`, JSON.stringify({ pan, zoom }));
+  }, [pan, zoom, storageKey]);
 
   const cardHeight = (t: Table) => HEAD_H + t.columns.length * ROW_H + 6;
 
@@ -222,11 +296,11 @@ export default function SchemaCanvas({
           onClick={() => {
             setPan({ x: 0, y: 0 });
             setZoom(1);
-            setPos(layout(tables));
+            setPos(layout(tables, relations));
           }}
-          title="Reset view"
+          title="Auto-arrange tables & reset view"
         >
-          Reset
+          Arrange
         </button>
       </div>
 
