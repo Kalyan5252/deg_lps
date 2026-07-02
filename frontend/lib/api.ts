@@ -104,6 +104,11 @@ export const api = {
   progress: () => request<any>("/progress"),
   attempts: () => request<any[]>("/history"),
 
+  // ---- Global (public) datasets ----
+  globalDatasets: () => request<any[]>("/global-datasets"),
+  useGlobalDataset: (key: string) =>
+    request<any>(`/global-datasets/${key}/use`, { method: "POST" }),
+
   // ---- Custom Tracks ----
   tracks: () => request<any[]>("/tracks"),
   track: (id: number | string) => request<any>(`/tracks/${id}`),

@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from . import ai, auth, custom, db, sandbox
+from . import ai, auth, custom, db, global_datasets, sandbox
 from .config import get_settings
 from .scenarios import PATHS, all_scenarios, get_scenario
 
@@ -488,6 +488,46 @@ async def create_track(
             "VALUES ($1,$2,$3,$4,$5)",
             track_id, tn, t["columns"], t["row_count"], t["csv_text"])
     return dict(track) | {"tables": len(parsed)}
+
+
+# ---- Global (public) datasets -------------------------------------------
+
+@app.get("/api/global-datasets")
+async def list_global_datasets(user: dict = auth.CurrentUser):
+    """Public dataset catalog users can spin up their own replica of."""
+    return global_datasets.listing()
+
+
+@app.post("/api/global-datasets/{key}/use")
+async def use_global_dataset(key: str, user: dict = auth.CurrentUser):
+    """Clone a global dataset into a fresh private track (the user's replica)."""
+    ds = global_datasets.get(key)
+    if not ds:
+        raise HTTPException(404, "Dataset not found")
+    try:
+        tables = global_datasets.load_tables(key)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, f"Could not load dataset: {exc}")
+
+    parsed = []
+    for tname, text in tables:
+        try:
+            parsed.append(custom.parse_csv(f"{tname}.csv", text))
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(400, f"Could not parse {tname}: {exc}")
+
+    track = await db.pool().fetchrow(
+        "INSERT INTO app.custom_tracks (user_id, name, level) VALUES ($1,$2,$3) "
+        "RETURNING id, name, status, level, created_at",
+        user["id"], ds["name"], 1)
+    track_id = track["id"]
+    for p in parsed:
+        await db.pool().execute(
+            "INSERT INTO app.custom_tables "
+            "(track_id, table_name, columns, row_count, csv_text) "
+            "VALUES ($1,$2,$3,$4,$5)",
+            track_id, p["table_name"], p["columns"], p["row_count"], p["csv_text"])
+    return dict(track) | {"tables": len(parsed), "source": "global", "dataset": key}
 
 
 @app.get("/api/tracks")

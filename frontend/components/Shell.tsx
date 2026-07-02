@@ -8,6 +8,7 @@ import { clearSession, getUser, getToken, User } from "@/lib/api";
 const NAV = [
   { href: "/", label: "Dashboard", icon: "▦" },
   { href: "/paths", label: "Learning Paths", icon: "◆" },
+  { href: "/datasets", label: "Global Datasets", icon: "◍" },
   { href: "/tracks", label: "Custom Tracks", icon: "⬡" },
   { href: "/progress", label: "Progress", icon: "▲" },
   { href: "/history", label: "Scenario History", icon: "≣" },
