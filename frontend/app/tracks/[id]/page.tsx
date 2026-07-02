@@ -3,7 +3,7 @@
 import Editor from "@monaco-editor/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
@@ -13,6 +13,7 @@ import MentorChatWindow from "@/components/MentorChatWindow";
 import Splitter from "@/components/Splitter";
 import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
 import { api } from "@/lib/api";
+import { registerSqlCompletion } from "@/lib/sqlCompletion";
 
 type LeftTab = "question" | "schema" | "data";
 type RightTab = "chat" | "review";
@@ -21,6 +22,13 @@ export default function TrackWorkbench() {
   const { id } = useParams<{ id: string }>();
   const [track, setTrack] = useState<any>(null);
   const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
+  // latest schema for the Monaco autocomplete provider (loads async after mount)
+  const schemaRef = useRef<any>({ tables: [] });
+  const completionRef = useRef<{ dispose: () => void } | null>(null);
+  useEffect(() => {
+    schemaRef.current = schema;
+  }, [schema]);
+  useEffect(() => () => completionRef.current?.dispose(), []);
   const [leftTab, setLeftTab] = useState<LeftTab>("question");
   const [rightTab, setRightTab] = useState<RightTab>("chat");
 
@@ -413,6 +421,13 @@ export default function TrackWorkbench() {
                 theme="vs"
                 value={sql}
                 onChange={(v) => setSql(v ?? "")}
+                onMount={(_editor, monaco) => {
+                  completionRef.current?.dispose();
+                  completionRef.current = registerSqlCompletion(
+                    monaco,
+                    () => schemaRef.current
+                  );
+                }}
                 options={{
                   fontSize: 13,
                   minimap: { enabled: false },
@@ -421,6 +436,8 @@ export default function TrackWorkbench() {
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                   renderLineHighlight: "none",
                   overviewRulerLanes: 0,
+                  quickSuggestions: { other: true, comments: false, strings: false },
+                  suggestOnTriggerCharacters: true,
                 }}
               />
             </div>
