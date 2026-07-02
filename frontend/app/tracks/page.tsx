@@ -25,10 +25,41 @@ export default function TracksPage() {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // custom (CSV upload) vs public (pick from the global catalog)
+  const [mode, setMode] = useState<"custom" | "public">("custom");
+  const [datasets, setDatasets] = useState<any[]>([]);
+  const [selectedKey, setSelectedKey] = useState("");
+
   function load() {
     api.tracks().then(setTracks).catch((e) => setErr(e.message));
   }
   useEffect(load, []);
+
+  // load the public catalog once, when the panel is first opened
+  useEffect(() => {
+    if (creating && datasets.length === 0) {
+      api
+        .globalDatasets()
+        .then((d) => {
+          setDatasets(d);
+          if (d.length) setSelectedKey((k) => k || d[0].key);
+        })
+        .catch(() => {});
+    }
+  }, [creating, datasets.length]);
+
+  async function usePublic() {
+    if (!selectedKey) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const t = await api.useGlobalDataset(selectedKey);
+      router.push(`/tracks/${t.id}`);
+    } catch (e: any) {
+      setErr(e.message);
+      setBusy(false);
+    }
+  }
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
@@ -69,8 +100,98 @@ export default function TracksPage() {
         {err && <p className="text-sm text-bad">{err}</p>}
 
         {creating && (
-          <form onSubmit={create} className="card space-y-4 p-5">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="card space-y-4 p-5">
+            {/* dataset source: custom upload vs public catalog */}
+            <div className="flex flex-wrap gap-4">
+              {(
+                [
+                  ["custom", "Custom dataset", "Upload your own CSV files"],
+                  ["public", "Public datasets", "Pick a ready-made global dataset"],
+                ] as const
+              ).map(([val, label, hint]) => (
+                <label
+                  key={val}
+                  className={`flex flex-1 cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
+                    mode === val
+                      ? "border-accent bg-accent/5"
+                      : "border-line hover:border-accent/50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="dataset-source"
+                    checked={mode === val}
+                    onChange={() => setMode(val)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-xs text-sub">{hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {mode === "public" ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    Choose a dataset
+                  </label>
+                  <select
+                    value={selectedKey}
+                    onChange={(e) => setSelectedKey(e.target.value)}
+                    className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-accent"
+                  >
+                    {datasets.length === 0 && (
+                      <option value="">Loading catalog…</option>
+                    )}
+                    {datasets.map((d) => (
+                      <option key={d.key} value={d.key}>
+                        {d.name} — {d.category} ({d.table_count} table
+                        {d.table_count === 1 ? "" : "s"}, {d.total_rows.toLocaleString()} rows)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {(() => {
+                  const d = datasets.find((x) => x.key === selectedKey);
+                  if (!d) return null;
+                  return (
+                    <div className="rounded-md border border-line bg-canvas p-3">
+                      <p className="text-sm text-sub">{d.description}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {d.tables.map((t: any) => (
+                          <span
+                            key={t.name}
+                            title={t.columns.join(", ")}
+                            className="rounded-md border border-line bg-white px-2 py-1 font-mono text-xs"
+                          >
+                            {t.name}
+                            <span className="ml-1.5 text-sub">{t.row_count}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <button
+                  className="btn btn-primary"
+                  onClick={usePublic}
+                  disabled={busy || !selectedKey}
+                >
+                  {busy ? "Cloning…" : "Use dataset & start"}
+                </button>
+                <p className="text-xs text-sub">
+                  A private copy is ingested into fresh tables just for you — your
+                  work never affects the shared dataset.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={create} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium">
                   Track name
@@ -122,10 +243,12 @@ export default function TracksPage() {
                 relations are inferred automatically.
               </p>
             </div>
-            <button className="btn btn-primary" disabled={busy}>
-              {busy ? "Importing…" : "Import & start learning"}
-            </button>
-          </form>
+                <button className="btn btn-primary" disabled={busy}>
+                  {busy ? "Importing…" : "Import & start learning"}
+                </button>
+              </form>
+            )}
+          </div>
         )}
 
         {tracks.length === 0 && !creating && (

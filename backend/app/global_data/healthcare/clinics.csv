@@ -1,0 +1,51 @@
+clinic_id,clinic_name,address,city,state,phone,opening_hours,clinic_type
+C1,Medical Group Smithfurt,5634 Anderson Drives,East Mistybury,Washington,(698) 442-3059,9AM-5PM,Private
+C2,Medical Group Mathewshaven,51735 Michael Loaf,North Juliafort,Oklahoma,(647) 141-2718,9AM-5PM,Public
+C3,Family Health Clinic New Ritaview,0369 Scott Village,West Jennifertown,Colorado,(423) 942-6210,9AM-5PM,Private
+C4,HealthCare Center Brettstad,038 Karla Lock Apt. 332,Robertbury,Missouri,(306) 551-4039,9AM-5PM,Private
+C5,Medical Group Nataliestad,261 Robin Cliffs,Jamesville,Missouri,(010) 922-1520,9AM-5PM,Public
+C6,Medical Group Ballchester,69179 Miller Falls,Woodardmouth,Missouri,(576) 368-8447,9AM-5PM,Public
+C7,Family Health Clinic North Kristenton,9444 Young Cape,Gomezstad,Texas,(137) 456-5785,9AM-5PM,Public
+C8,Medical Group Houseport,118 Munoz Springs,Johnchester,New Hampshire,(529) 771-0753,9AM-5PM,Public
+C9,Medical Group Wilkinsonville,18234 Holder Falls,South Nicholas,South Dakota,(450) 681-9482,9AM-5PM,Public
+C10,HealthCare Center East Matthewshire,70455 Andrews Club Suite 786,West Ryan,Texas,(154) 725-8285,9AM-5PM,Private
+C11,HealthCare Center East Scottstad,0573 Bryan Loaf,South Christinaburgh,West Virginia,(827) 501-3896,9AM-5PM,Public
+C12,Family Health Clinic Butlerchester,2278 Harris Coves,Jenniferborough,Delaware,(074) 659-8878,9AM-5PM,Public
+C13,HealthCare Center East Lauraport,76056 Robert Flat Apt. 362,West Stevenhaven,Arkansas,(444) 072-7254,9AM-5PM,Private
+C14,HealthCare Center New Juliebury,440 Duran Extensions Suite 515,Jennifermouth,Illinois,(616) 907-0985,9AM-5PM,Public
+C15,Family Health Clinic Romerotown,35826 Justin Vista Apt. 964,East Ronald,Alaska,(029) 336-9264,9AM-5PM,Private
+C16,Family Health Clinic Masseybury,1457 Haas Underpass,East Tony,New Hampshire,(978) 680-7743,9AM-5PM,Public
+C17,Family Health Clinic Rosalesville,839 Anita Island,Floresmouth,Illinois,(312) 212-7696,9AM-5PM,Private
+C18,HealthCare Center Lucasmouth,722 Brown Mount,Lake Gregorystad,South Dakota,(131) 136-7300,9AM-5PM,Public
+C19,Medical Group Whitechester,9758 Travis Pike,Port Richard,Kentucky,(856) 309-2016,9AM-5PM,Private
+C20,HealthCare Center Johaven,58315 Chang Park Suite 723,Port Miranda,Washington,(990) 409-6794,9AM-5PM,Public
+C21,HealthCare Center Frazierchester,951 Nicole Fall Apt. 672,Robertfurt,Colorado,(683) 846-8374,9AM-5PM,Private
+C22,Family Health Clinic Williamsshire,47898 Ray Summit,Richardview,Florida,(189) 868-1457,9AM-5PM,Public
+C23,Family Health Clinic New Victoriatown,59256 Cindy Fall Suite 867,South Johnnyburgh,Maine,(875) 990-7211,9AM-5PM,Private
+C24,Family Health Clinic West Andrew,2187 Carter Walk,Lindseystad,Arizona,(788) 002-4920,9AM-5PM,Public
+C25,Medical Group Williamton,3648 Romero Wells,Reyeschester,New York,(778) 590-7025,9AM-5PM,Public
+C26,Family Health Clinic Alejandroburgh,630 Patrick Crest Suite 199,Williamstad,Vermont,(999) 979-7268,9AM-5PM,Private
+C27,Medical Group New Rachelhaven,782 Turner Locks,North Anthony,South Dakota,(371) 699-5617,9AM-5PM,Private
+C28,Family Health Clinic Chavezchester,161 Murray Road Apt. 540,Martinburgh,Delaware,(215) 536-7562,9AM-5PM,Public
+C29,Medical Group Brownstad,5848 Christine Pass Suite 161,Port Patrick,North Dakota,(138) 501-7973,9AM-5PM,Private
+C30,Medical Group Juliachester,152 Moran Isle,Hendersonchester,South Dakota,(260) 302-9450,9AM-5PM,Private
+C31,Family Health Clinic Wagnerberg,6612 Cynthia Knoll,Port Robert,Minnesota,(151) 369-1664,9AM-5PM,Public
+C32,Family Health Clinic New Andreaton,95391 Lopez Shore Suite 447,North Christineton,Texas,(437) 540-8254,9AM-5PM,Public
+C33,Medical Group East Taylor,628 John Trail,Jillmouth,Texas,(114) 568-7968,9AM-5PM,Public
+C34,Medical Group Port Alfred,7597 Martinez Vista Apt. 101,Browntown,Massachusetts,(960) 278-3489,9AM-5PM,Public
+C35,Medical Group Port Stephanie,946 Shawn Pines,East Laura,New Jersey,(747) 697-0240,9AM-5PM,Private
+C36,HealthCare Center Michaelton,1449 Brittany Stream Suite 473,Port Natalieshire,Maine,(897) 811-1959,9AM-5PM,Public
+C37,HealthCare Center Jamesfurt,002 Jackson Ridges Apt. 708,East Scott,Connecticut,(916) 983-2470,9AM-5PM,Private
+C38,Medical Group Hayesland,7577 Brown Hills,New Lisaberg,Florida,(707) 547-3551,9AM-5PM,Public
+C39,Family Health Clinic Ferrellton,65775 Derek Drives Suite 413,Goodmantown,New Jersey,(528) 968-7492,9AM-5PM,Private
+C40,HealthCare Center New Henryfurt,5671 Sophia Dale Suite 249,Underwoodburgh,Hawaii,(038) 894-2254,9AM-5PM,Private
+C41,Medical Group Shermanhaven,831 Jason Village Apt. 222,West Brandontown,Nebraska,(964) 286-1233,9AM-5PM,Public
+C42,Medical Group West Walterberg,73135 Harris Loop,South Alexander,Iowa,(328) 636-5494,9AM-5PM,Public
+C43,Family Health Clinic West Kurt,8628 Sandra Circle Apt. 121,Porterfurt,New York,(011) 587-8455,9AM-5PM,Private
+C44,Medical Group East Michaelport,4738 Bennett Ford,Patrickview,Oklahoma,(717) 863-9226,9AM-5PM,Public
+C45,HealthCare Center Larsenfurt,93807 Connie Crossing Apt. 836,New Kathleen,Missouri,(162) 369-9699,9AM-5PM,Public
+C46,Medical Group West Gabriel,576 Heather Run Apt. 800,Stephaniestad,Wyoming,(859) 155-6518,9AM-5PM,Public
+C47,HealthCare Center New Amanda,8066 Daniel Square Suite 501,Evanschester,California,(855) 887-6974,9AM-5PM,Public
+C48,Medical Group Garnerland,50206 Lisa Lakes Apt. 102,New Michael,Iowa,(218) 638-2895,9AM-5PM,Public
+C49,Family Health Clinic North Robert,765 Fischer Extensions Apt. 522,Lake Victoriaside,West Virginia,(333) 307-1986,9AM-5PM,Public
+C50,HealthCare Center Lake Joshua,50501 Mary Forges Suite 384,West Derekberg,Vermont,(583) 622-9553,9AM-5PM,Private

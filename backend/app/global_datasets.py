@@ -43,6 +43,110 @@ CATALOG: list[dict] = [
         ],
     },
     {
+        "key": "healthcare",
+        "name": "Healthcare Clinic",
+        "category": "Healthcare",
+        "description": (
+            "A clinic network: patients, doctors, clinics and staff, plus "
+            "appointments and their payments, prescriptions and treatments. Fully "
+            "linked by foreign keys — a strong playground for multi-table JOINs, "
+            "patient histories, and revenue/treatment analysis."
+        ),
+        "tables": [
+            ("clinics", "clinics.csv"),
+            ("doctors", "doctors.csv"),
+            ("staff", "staff.csv"),
+            ("patients", "patients.csv"),
+            ("appointments", "appointments.csv"),
+            ("payments", "payments.csv"),
+            ("prescriptions", "prescriptions.csv"),
+            ("treatments", "treatments.csv"),
+        ],
+    },
+    {
+        "key": "finance_fraud",
+        "name": "Retail Bank — Accounts, Loans & Transactions",
+        "category": "Banking",
+        "description": (
+            "A retail bank schema: customers and addresses, accounts and their "
+            "types/statuses, loans, branches, and ~12k transactions. Highly "
+            "relational — ideal for balances, transaction flows, loan portfolios "
+            "and fraud-style anomaly queries."
+        ),
+        "tables": [
+            ("customer_types", "customer_types.csv"),
+            ("account_types", "account_types.csv"),
+            ("account_statuses", "account_statuses.csv"),
+            ("loan_statuses", "loan_statuses.csv"),
+            ("transaction_types", "transaction_types.csv"),
+            ("addresses", "addresses.csv"),
+            ("customers", "customers.csv"),
+            ("branches", "branches.csv"),
+            ("accounts", "accounts.csv"),
+            ("loans", "loans.csv"),
+            ("transactions", "transactions.csv"),
+        ],
+    },
+    {
+        "key": "coffee_shop",
+        "name": "Coffee Shop Operations",
+        "category": "Retail / F&B",
+        "description": (
+            "A coffee shop's operational database: menu items and recipes, "
+            "ingredients and inventory, staff, shifts and rota, and customer "
+            "orders. Small but richly linked — great for JOINs across sales, "
+            "recipes and staffing."
+        ),
+        "tables": [
+            ("ingredients", "ingredients.csv"),
+            ("items", "items.csv"),
+            ("staff", "staff.csv"),
+            ("shift", "shift.csv"),
+            ("recipe", "recipe.csv"),
+            ("inventory", "inventory.csv"),
+            ("rota", "rota.csv"),
+            ("orders", "orders.csv"),
+        ],
+    },
+    {
+        "key": "wwe",
+        "name": "WWE Events & Match Ratings (2015–2025)",
+        "category": "Sports & Entertainment",
+        "description": (
+            "A decade of WWE programming: events (date, promotion, venue) and "
+            "individual match ratings (CageMatch and Wrestling Observer star "
+            "ratings). Good for time trends, rating distributions, and event "
+            "vs. match analysis."
+        ),
+        "tables": [
+            ("events", "events.csv"),
+            ("match_ratings", "match_ratings.csv"),
+        ],
+    },
+    {
+        "key": "olympics",
+        "name": "Olympic Games Medals (1994–2024)",
+        "category": "Sports",
+        "description": (
+            "Nation-level medal tallies (gold/silver/bronze/total) across every "
+            "Summer and Winter Games from 1994 to 2024, combined into one table "
+            "with a `games` column. Great for GROUP BY, ranking, and trends by "
+            "country over time."
+        ),
+        "tables": [("nation_medals", "nation_medals.csv")],
+    },
+    {
+        "key": "gym",
+        "name": "Gym Member Activity",
+        "category": "Fitness",
+        "description": (
+            "Per-visit gym attendance: member, date, age, gender, membership "
+            "type, workout type and duration, calories burned, and attendance "
+            "status. Good for aggregations by membership tier and workout type."
+        ),
+        "tables": [("attendance", "attendance.csv")],
+    },
+    {
         "key": "automobiles",
         "name": "Automobile Fuel Economy",
         "category": "Automotive",

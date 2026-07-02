@@ -1,0 +1,2601 @@
+member_id,visit_date,age,gender,membership_type,workout_type,workout_duration_minutes,calories_burned,attendance_status,check_in_time
+548,2024-07-01,18,Other,Annual,Strength Training,110,980,Absent,06:48:00
+2578,2024-06-30,18,Male,Annual,CrossFit,77,417,Present,13:19:00
+2100,2024-10-07,18,Other,Annual,Yoga,96,771,Absent,05:26:00
+2264,2024-11-21,18,Female,Annual,Yoga,103,597,Absent,11:00:00
+55,2024-05-07,18,Male,Annual,Cardio,53,483,Absent,15:03:00
+129,2024-12-20,18,Male,Annual,Strength Training,53,415,Present,15:30:00
+378,2024-10-21,18,Other,Annual,Cardio,27,158,Absent,08:44:00
+1994,2024-06-07,18,Male,Annual,Cardio,22,209,Present,10:48:00
+1500,2024-10-08,18,Female,Annual,Yoga,27,248,Present,15:26:00
+1332,2024-04-05,18,Female,Annual,Strength Training,47,264,Absent,18:32:00
+776,2024-11-19,18,Female,Annual,Yoga,93,860,Absent,21:08:00
+1220,2024-12-18,18,Female,Annual,CrossFit,25,176,Present,08:16:00
+1758,2024-02-28,18,Female,Annual,Strength Training,66,341,Absent,09:08:00
+1204,2024-04-12,18,Male,Annual,Strength Training,50,488,Present,12:44:00
+1461,2024-09-16,18,Other,Annual,CrossFit,26,242,Present,18:39:00
+1876,2024-02-18,18,Male,Annual,Yoga,64,607,Absent,12:25:00
+246,2024-01-27,18,Male,Annual,HIIT,36,328,Present,05:12:00
+814,2024-11-01,18,Female,Annual,HIIT,102,723,Present,07:30:00
+234,2024-12-02,18,Other,Annual,Cardio,42,248,Present,11:51:00
+457,2024-11-21,18,Male,Annual,Yoga,24,125,Present,10:25:00
+128,2024-09-14,18,Other,Monthly,Yoga,28,266,Absent,14:38:00
+1988,2024-09-14,18,Other,Monthly,Yoga,65,495,Present,20:55:00
+1826,2024-01-08,18,Other,Monthly,HIIT,42,291,Present,18:16:00
+31,2024-03-10,18,Male,Monthly,Cardio,52,455,Present,09:43:00
+1214,2024-11-08,18,Female,Monthly,Yoga,87,562,Present,14:54:00
+1784,2024-08-05,18,Other,Monthly,Cardio,72,365,Absent,15:59:00
+839,2024-09-23,18,Other,Monthly,CrossFit,100,665,Absent,20:49:00
+1056,2024-08-13,18,Other,Monthly,Strength Training,74,637,Absent,09:14:00
+1881,2024-09-17,18,Other,Monthly,Strength Training,111,938,Absent,08:26:00
+1072,2024-11-14,18,Other,Monthly,Strength Training,75,690,Absent,18:09:00
+1767,2024-02-29,18,Male,Monthly,HIIT,110,718,Absent,18:14:00
+838,2024-04-04,18,Other,Monthly,Strength Training,72,643,Present,09:40:00
+396,2024-02-19,18,Other,Monthly,CrossFit,109,634,Present,07:17:00
+1400,2024-12-11,18,Other,Monthly,HIIT,66,638,Absent,18:34:00
+1567,2024-09-14,18,Female,Monthly,HIIT,55,479,Present,12:45:00
+1659,2024-01-30,18,Female,Monthly,Yoga,82,707,Present,07:16:00
+1728,2024-09-30,18,Female,Monthly,HIIT,66,396,Present,17:30:00
+518,2024-04-24,18,Female,Monthly,Yoga,108,800,Present,18:30:00
+1360,2024-02-29,18,Male,Monthly,CrossFit,80,406,Present,10:33:00
+2463,2024-04-20,18,Female,Monthly,HIIT,69,351,Present,08:58:00
+149,2024-05-25,18,Male,Monthly,Strength Training,83,823,Absent,13:11:00
+1940,2024-04-10,18,Other,Monthly,Strength Training,68,637,Absent,20:25:00
+498,2024-02-16,18,Other,Monthly,HIIT,20,170,Present,08:27:00
+1170,2024-10-17,18,Other,Monthly,Cardio,32,188,Absent,11:10:00
+1579,2024-09-11,18,Male,Monthly,CrossFit,83,567,Present,07:17:00
+1338,2024-07-04,18,Male,Quarterly,HIIT,72,366,Absent,11:22:00
+2208,2024-08-28,18,Female,Quarterly,HIIT,102,909,Present,13:27:00
+111,2024-07-13,18,Male,Quarterly,HIIT,62,429,Absent,18:40:00
+1006,2024-12-29,18,Female,Quarterly,HIIT,37,327,Absent,07:03:00
+830,2024-10-16,18,Female,Quarterly,CrossFit,95,637,Present,19:16:00
+1226,2024-09-07,18,Other,Quarterly,Cardio,108,886,Present,10:25:00
+1230,2024-07-31,18,Female,Quarterly,CrossFit,66,434,Absent,11:46:00
+90,2024-05-24,18,Male,Quarterly,Cardio,41,342,Absent,10:41:00
+2402,2024-04-20,18,Other,Quarterly,Yoga,49,402,Present,10:10:00
+132,2024-04-15,18,Male,Quarterly,Cardio,88,828,Absent,06:25:00
+1239,2024-08-27,18,Male,Quarterly,Strength Training,74,736,Absent,08:10:00
+1617,2024-08-26,18,Male,Quarterly,Strength Training,100,559,Present,16:10:00
+826,2024-10-21,18,Female,Quarterly,HIIT,112,911,Absent,20:03:00
+876,2024-07-01,18,Female,Quarterly,Strength Training,98,898,Present,17:05:00
+1166,2024-09-01,18,Other,Quarterly,Strength Training,92,693,Absent,09:46:00
+783,2024-03-26,18,Male,Quarterly,Yoga,118,717,Present,10:45:00
+274,2024-04-18,18,Other,Quarterly,Cardio,85,499,Absent,12:55:00
+1871,2024-12-01,18,Other,Quarterly,CrossFit,76,484,Present,12:43:00
+2433,2024-10-24,19,Other,Annual,Cardio,29,208,Absent,06:59:00
+254,2024-06-26,19,Male,Annual,Strength Training,40,362,Absent,10:13:00
+1856,2024-11-22,19,Male,Annual,CrossFit,106,691,Present,10:07:00
+746,2024-11-10,19,Other,Annual,HIIT,45,439,Present,20:52:00
+1557,2024-09-15,19,Other,Annual,HIIT,57,568,Present,13:22:00
+403,2024-12-27,19,Female,Annual,HIIT,113,663,Absent,09:09:00
+1749,2024-01-23,19,Female,Annual,HIIT,73,433,Absent,22:29:00
+88,2024-12-14,19,Male,Annual,HIIT,104,713,Absent,06:35:00
+286,2024-06-11,19,Female,Annual,Cardio,98,931,Absent,16:39:00
+1850,2024-10-17,19,Other,Annual,Yoga,55,456,Present,14:28:00
+2404,2024-01-02,19,Other,Annual,CrossFit,23,227,Absent,09:09:00
+1607,2024-09-21,19,Female,Annual,Yoga,23,164,Present,11:24:00
+2471,2024-11-02,19,Other,Annual,CrossFit,59,353,Absent,21:27:00
+1959,2024-12-28,19,Other,Annual,Yoga,97,604,Present,06:14:00
+2174,2024-01-26,19,Male,Annual,Yoga,55,490,Absent,20:51:00
+122,2024-11-19,19,Female,Monthly,Cardio,120,1072,Absent,20:51:00
+32,2024-12-19,19,Male,Monthly,CrossFit,59,374,Present,19:23:00
+510,2024-10-11,19,Other,Monthly,Strength Training,105,778,Absent,12:55:00
+1091,2024-12-02,19,Female,Monthly,HIIT,114,1042,Present,05:47:00
+1307,2024-08-29,19,Male,Monthly,HIIT,63,494,Present,05:12:00
+2175,2024-07-29,19,Male,Monthly,Strength Training,77,512,Absent,10:42:00
+1545,2024-12-02,19,Female,Monthly,Cardio,38,311,Absent,13:31:00
+1061,2024-03-26,19,Male,Monthly,CrossFit,50,345,Present,12:24:00
+1039,2024-03-11,19,Male,Monthly,CrossFit,88,445,Absent,21:51:00
+2340,2024-05-18,19,Male,Monthly,CrossFit,107,809,Absent,10:42:00
+2060,2024-02-09,19,Other,Monthly,Strength Training,52,392,Absent,12:14:00
+586,2024-04-10,19,Male,Monthly,Cardio,64,499,Absent,06:24:00
+1750,2024-02-04,19,Male,Monthly,Cardio,77,708,Absent,20:17:00
+315,2024-02-13,19,Male,Monthly,CrossFit,79,535,Present,19:03:00
+2416,2024-12-19,19,Female,Monthly,Yoga,91,670,Present,12:45:00
+1326,2024-04-23,19,Female,Monthly,Cardio,33,329,Absent,17:34:00
+170,2024-11-01,19,Male,Monthly,CrossFit,77,402,Absent,13:29:00
+309,2024-07-19,19,Other,Monthly,Cardio,76,669,Present,08:30:00
+1783,2024-03-22,19,Other,Monthly,CrossFit,22,145,Absent,08:42:00
+1573,2024-07-02,19,Other,Monthly,Cardio,54,402,Present,15:17:00
+2462,2024-08-22,19,Other,Monthly,Cardio,111,827,Absent,07:16:00
+44,2024-03-22,19,Male,Monthly,Cardio,81,570,Absent,20:36:00
+655,2024-12-05,19,Female,Quarterly,Yoga,61,419,Absent,16:03:00
+2071,2024-08-22,19,Female,Quarterly,HIIT,61,599,Present,13:43:00
+2104,2024-02-10,19,Male,Quarterly,Strength Training,59,562,Present,18:11:00
+1820,2024-12-27,19,Other,Quarterly,Cardio,43,308,Absent,07:07:00
+2460,2024-10-29,19,Male,Quarterly,Strength Training,120,1137,Absent,11:59:00
+848,2024-10-03,19,Female,Quarterly,Cardio,70,684,Present,21:57:00
+310,2024-06-09,19,Female,Quarterly,Strength Training,46,380,Absent,12:44:00
+2334,2024-10-08,19,Male,Quarterly,Cardio,51,431,Absent,08:18:00
+680,2024-07-30,19,Male,Quarterly,Cardio,67,615,Present,18:52:00
+2123,2024-10-10,19,Other,Quarterly,Strength Training,69,444,Present,09:40:00
+1439,2024-03-21,19,Female,Quarterly,Yoga,86,654,Absent,15:13:00
+771,2024-02-24,19,Male,Quarterly,HIIT,79,694,Absent,17:56:00
+897,2024-06-11,19,Female,Quarterly,Yoga,54,369,Present,05:27:00
+153,2024-10-17,19,Other,Quarterly,CrossFit,65,472,Absent,17:58:00
+571,2024-07-18,19,Other,Quarterly,Yoga,63,357,Absent,13:42:00
+1132,2024-01-03,19,Other,Quarterly,Yoga,97,925,Absent,14:23:00
+284,2024-08-30,19,Other,Quarterly,CrossFit,89,848,Absent,20:00:00
+2384,2024-08-31,20,Male,Annual,CrossFit,113,968,Present,09:09:00
+1887,2024-09-24,20,Male,Annual,Cardio,58,546,Absent,07:18:00
+143,2024-04-20,20,Other,Annual,Strength Training,80,403,Absent,07:40:00
+1426,2024-08-09,20,Other,Annual,Yoga,85,646,Absent,06:24:00
+1686,2024-01-26,20,Female,Annual,CrossFit,80,788,Present,09:23:00
+1008,2024-07-14,20,Other,Annual,Strength Training,56,540,Present,08:36:00
+1437,2024-12-18,20,Female,Annual,CrossFit,71,538,Present,12:25:00
+707,2024-10-18,20,Male,Annual,Strength Training,64,562,Present,21:58:00
+2482,2024-01-21,20,Male,Annual,Yoga,31,271,Absent,08:05:00
+2369,2024-11-23,20,Male,Annual,HIIT,36,220,Present,10:33:00
+1556,2024-03-04,20,Female,Annual,CrossFit,33,252,Present,12:34:00
+1572,2024-01-13,20,Other,Annual,CrossFit,75,678,Present,09:00:00
+1684,2024-05-16,20,Male,Annual,CrossFit,55,354,Absent,16:03:00
+1083,2024-06-02,20,Other,Annual,Strength Training,56,294,Present,10:02:00
+155,2024-06-16,20,Male,Annual,CrossFit,52,488,Absent,13:11:00
+103,2024-03-10,20,Female,Annual,Yoga,89,714,Present,06:34:00
+146,2024-01-11,20,Other,Monthly,Cardio,56,405,Present,08:19:00
+2290,2024-11-23,20,Male,Monthly,Yoga,56,454,Present,05:44:00
+338,2024-04-10,20,Female,Monthly,Cardio,116,1075,Present,12:14:00
+1608,2024-11-26,20,Male,Monthly,Yoga,56,326,Absent,15:06:00
+1543,2024-11-03,20,Female,Monthly,Strength Training,42,379,Absent,11:07:00
+895,2024-03-03,20,Male,Monthly,Strength Training,73,578,Absent,20:11:00
+2567,2024-02-13,20,Male,Monthly,Strength Training,47,442,Absent,12:43:00
+1035,2024-06-23,20,Other,Monthly,HIIT,90,713,Present,18:10:00
+354,2024-10-28,20,Male,Monthly,Cardio,116,997,Present,19:31:00
+92,2024-07-29,20,Other,Monthly,CrossFit,26,148,Present,09:25:00
+590,2024-11-17,20,Other,Monthly,Yoga,86,751,Present,15:48:00
+2022,2024-05-08,20,Male,Monthly,Cardio,91,889,Absent,05:36:00
+2267,2024-08-23,20,Male,Monthly,Yoga,100,641,Present,16:14:00
+290,2024-01-05,20,Female,Monthly,HIIT,113,1049,Absent,07:49:00
+2235,2024-11-07,20,Female,Monthly,Yoga,54,470,Absent,20:25:00
+2270,2024-09-20,20,Male,Monthly,Strength Training,80,668,Absent,09:00:00
+2218,2024-07-19,20,Male,Monthly,Yoga,32,285,Absent,19:05:00
+1448,2024-12-21,20,Other,Monthly,Cardio,31,164,Absent,17:33:00
+1909,2024-08-31,20,Male,Monthly,CrossFit,97,729,Present,19:24:00
+1774,2024-01-02,20,Other,Monthly,Strength Training,46,424,Absent,17:56:00
+2042,2024-10-30,20,Male,Monthly,Cardio,37,263,Absent,07:34:00
+24,2024-07-31,20,Male,Monthly,CrossFit,104,589,Present,21:37:00
+384,2024-12-02,20,Other,Monthly,Cardio,85,835,Absent,05:18:00
+2130,2024-02-01,20,Male,Quarterly,Strength Training,44,362,Absent,06:24:00
+1034,2024-07-11,20,Other,Quarterly,CrossFit,75,466,Present,13:00:00
+815,2024-08-31,20,Male,Quarterly,Strength Training,68,376,Absent,22:28:00
+1534,2024-12-23,20,Other,Quarterly,HIIT,52,428,Absent,18:28:00
+931,2024-09-23,20,Other,Quarterly,Strength Training,117,826,Present,16:47:00
+235,2024-11-30,20,Female,Quarterly,Strength Training,78,619,Present,11:09:00
+469,2024-12-10,20,Male,Quarterly,Strength Training,119,695,Present,18:15:00
+1554,2024-07-22,20,Other,Quarterly,Yoga,84,805,Present,06:16:00
+1811,2024-03-11,20,Other,Quarterly,Strength Training,84,831,Absent,09:33:00
+559,2024-09-24,20,Other,Quarterly,HIIT,94,598,Absent,10:20:00
+1198,2024-05-31,20,Other,Quarterly,Strength Training,75,697,Absent,05:00:00
+1751,2024-09-25,20,Other,Quarterly,CrossFit,115,1115,Absent,16:16:00
+1114,2024-04-28,20,Male,Quarterly,Cardio,40,237,Present,19:41:00
+1126,2024-08-14,20,Male,Quarterly,CrossFit,95,743,Present,12:36:00
+1428,2024-11-23,20,Other,Quarterly,Strength Training,107,1069,Absent,14:04:00
+660,2024-11-18,21,Male,Annual,Strength Training,88,867,Absent,16:18:00
+2339,2024-09-08,21,Other,Annual,Strength Training,104,890,Present,13:34:00
+279,2024-11-08,21,Female,Annual,HIIT,44,302,Absent,16:00:00
+2444,2024-12-08,21,Female,Annual,CrossFit,87,864,Present,16:40:00
+1547,2024-04-03,21,Other,Annual,Strength Training,67,398,Present,16:19:00
+817,2024-07-10,21,Male,Annual,Yoga,22,145,Absent,21:15:00
+26,2024-09-23,21,Female,Annual,Yoga,40,358,Absent,14:09:00
+2019,2024-10-27,21,Male,Annual,Yoga,116,937,Absent,10:14:00
+727,2024-10-30,21,Other,Annual,Strength Training,111,1002,Absent,07:04:00
+1279,2024-10-20,21,Other,Annual,Cardio,94,882,Present,22:36:00
+591,2024-09-28,21,Male,Annual,HIIT,85,568,Present,18:14:00
+2555,2024-09-09,21,Male,Annual,Strength Training,28,152,Absent,05:41:00
+1907,2024-06-27,21,Female,Annual,Cardio,87,665,Present,11:58:00
+1365,2024-08-03,21,Male,Annual,HIIT,75,509,Absent,09:11:00
+1821,2024-03-31,21,Male,Annual,Cardio,87,497,Present,08:05:00
+816,2024-04-19,21,Male,Annual,HIIT,86,548,Present,21:20:00
+2161,2024-04-02,21,Other,Annual,CrossFit,26,142,Absent,05:00:00
+1621,2024-04-26,21,Other,Annual,Yoga,82,440,Present,08:14:00
+758,2024-02-17,21,Male,Annual,Cardio,116,1059,Absent,12:14:00
+2282,2024-12-11,21,Other,Annual,HIIT,23,197,Present,07:05:00
+1847,2024-02-01,21,Female,Annual,HIIT,102,742,Absent,16:04:00
+1584,2024-04-20,21,Other,Annual,Strength Training,27,225,Absent,16:21:00
+946,2024-06-04,21,Female,Annual,Yoga,37,197,Present,06:13:00
+667,2024-09-21,21,Male,Monthly,HIIT,31,272,Absent,17:56:00
+1241,2024-02-20,21,Male,Monthly,Cardio,63,525,Absent,10:04:00
+964,2024-08-25,21,Other,Monthly,Yoga,68,370,Absent,13:27:00
+1631,2024-06-09,21,Female,Monthly,HIIT,105,614,Present,08:26:00
+910,2024-12-09,21,Other,Monthly,Cardio,69,674,Absent,17:45:00
+905,2024-05-13,21,Other,Monthly,Cardio,112,706,Present,21:07:00
+1705,2024-02-05,21,Male,Monthly,CrossFit,87,820,Absent,18:58:00
+1766,2024-05-08,21,Female,Monthly,Strength Training,64,465,Present,12:23:00
+467,2024-06-30,21,Female,Monthly,Strength Training,76,526,Absent,09:48:00
+1910,2024-11-02,21,Male,Monthly,CrossFit,23,208,Absent,18:15:00
+607,2024-04-19,21,Male,Quarterly,Cardio,67,418,Absent,16:21:00
+1627,2024-07-12,21,Female,Quarterly,CrossFit,120,921,Present,09:39:00
+2438,2024-04-07,21,Female,Quarterly,Strength Training,118,1037,Absent,12:39:00
+1111,2024-06-08,21,Female,Quarterly,HIIT,37,204,Present,14:37:00
+896,2024-11-04,21,Other,Quarterly,HIIT,22,163,Absent,20:52:00
+1725,2024-12-25,21,Other,Quarterly,HIIT,43,315,Absent,06:09:00
+1539,2024-04-30,21,Other,Quarterly,Strength Training,81,550,Absent,19:09:00
+1207,2024-03-23,21,Male,Quarterly,HIIT,38,323,Absent,10:07:00
+1741,2024-01-13,21,Female,Quarterly,Yoga,27,142,Absent,16:18:00
+2062,2024-06-19,21,Other,Quarterly,CrossFit,87,761,Absent,07:44:00
+2225,2024-12-27,21,Other,Quarterly,Strength Training,74,408,Absent,05:20:00
+630,2024-04-14,21,Female,Quarterly,Strength Training,89,840,Absent,14:30:00
+740,2024-03-20,21,Male,Quarterly,CrossFit,32,175,Present,09:25:00
+1632,2024-07-30,21,Other,Quarterly,Yoga,111,589,Absent,16:59:00
+2387,2024-02-03,21,Female,Quarterly,Cardio,51,364,Present,07:57:00
+1757,2024-07-18,21,Male,Quarterly,Yoga,110,579,Present,15:47:00
+648,2024-12-28,22,Male,Annual,CrossFit,31,266,Present,17:42:00
+2357,2024-05-31,22,Female,Annual,Cardio,34,235,Absent,07:35:00
+574,2024-11-08,22,Other,Annual,Yoga,29,183,Absent,16:19:00
+2582,2024-09-10,22,Female,Annual,CrossFit,118,1037,Present,20:32:00
+2454,2024-05-21,22,Female,Annual,Yoga,56,516,Present,07:19:00
+1384,2024-01-10,22,Other,Annual,HIIT,79,507,Present,07:52:00
+1714,2024-09-23,22,Other,Annual,HIIT,65,633,Absent,15:23:00
+287,2024-04-13,22,Other,Annual,Strength Training,114,939,Present,05:36:00
+462,2024-08-01,22,Female,Annual,Yoga,44,299,Absent,21:53:00
+1982,2024-04-16,22,Male,Annual,Yoga,60,525,Present,11:43:00
+249,2024-09-22,22,Male,Annual,Yoga,65,428,Absent,12:41:00
+71,2024-06-23,22,Female,Annual,Strength Training,92,715,Absent,07:12:00
+534,2024-06-18,22,Female,Annual,CrossFit,109,663,Absent,05:52:00
+2234,2024-04-14,22,Other,Annual,Strength Training,116,611,Present,10:48:00
+1136,2024-09-18,22,Other,Annual,Yoga,65,474,Absent,12:10:00
+2048,2024-12-18,22,Male,Annual,HIIT,65,571,Present,17:03:00
+1265,2024-03-10,22,Female,Annual,Strength Training,29,168,Present,22:45:00
+2376,2024-05-14,22,Female,Annual,Yoga,42,214,Present,16:51:00
+1537,2024-07-22,22,Other,Monthly,CrossFit,70,535,Present,19:54:00
+521,2024-06-20,22,Female,Monthly,Yoga,35,309,Present,13:51:00
+2186,2024-10-12,22,Other,Monthly,HIIT,108,1055,Absent,11:44:00
+2375,2024-02-29,22,Female,Monthly,Strength Training,73,404,Present,07:56:00
+367,2024-08-11,22,Male,Monthly,Yoga,80,659,Present,22:05:00
+886,2024-11-06,22,Female,Monthly,CrossFit,101,909,Absent,05:00:00
+348,2024-04-17,22,Male,Monthly,Strength Training,53,396,Absent,11:21:00
+1055,2024-07-21,22,Other,Monthly,Yoga,55,508,Absent,15:36:00
+506,2024-12-11,22,Male,Monthly,Yoga,78,502,Absent,13:42:00
+2590,2024-12-23,22,Female,Monthly,CrossFit,57,340,Absent,09:33:00
+1858,2024-07-31,22,Female,Monthly,CrossFit,24,231,Present,19:31:00
+174,2024-03-18,22,Other,Monthly,HIIT,109,965,Present,11:53:00
+105,2024-06-13,22,Other,Monthly,Strength Training,64,590,Absent,19:39:00
+1449,2024-07-10,22,Other,Monthly,CrossFit,109,705,Absent,06:11:00
+1495,2024-03-15,22,Male,Monthly,HIIT,37,219,Present,11:51:00
+431,2024-12-14,22,Female,Quarterly,HIIT,116,1087,Present,12:40:00
+56,2024-03-02,22,Other,Quarterly,Cardio,44,423,Present,18:47:00
+1059,2024-05-25,22,Female,Quarterly,Cardio,95,883,Present,19:57:00
+1846,2024-01-18,22,Male,Quarterly,Strength Training,43,367,Absent,16:08:00
+809,2024-05-30,22,Female,Quarterly,CrossFit,108,1011,Absent,08:58:00
+1679,2024-11-22,22,Female,Quarterly,Strength Training,34,245,Absent,05:26:00
+531,2024-12-09,22,Male,Quarterly,HIIT,28,180,Present,11:33:00
+2141,2024-11-24,22,Male,Quarterly,HIIT,23,194,Present,05:54:00
+1467,2024-02-16,22,Other,Quarterly,CrossFit,74,731,Present,16:42:00
+981,2024-09-12,22,Male,Quarterly,Strength Training,23,195,Absent,07:57:00
+1770,2024-03-07,22,Male,Quarterly,Strength Training,82,413,Present,16:09:00
+1123,2024-05-26,22,Female,Quarterly,Yoga,68,420,Present,06:27:00
+1253,2024-01-05,22,Other,Quarterly,Yoga,49,345,Present,06:23:00
+2597,2024-05-13,22,Other,Quarterly,CrossFit,32,282,Present,08:39:00
+1595,2024-05-15,23,Female,Annual,Cardio,109,660,Absent,20:25:00
+1119,2024-05-29,23,Other,Annual,CrossFit,87,867,Present,21:02:00
+2459,2024-06-23,23,Male,Annual,Yoga,70,690,Absent,22:21:00
+861,2024-02-10,23,Female,Annual,Yoga,23,211,Present,12:54:00
+733,2024-09-14,23,Other,Annual,HIIT,30,282,Present,10:48:00
+756,2024-02-24,23,Female,Annual,CrossFit,37,286,Present,07:04:00
+538,2024-07-16,23,Other,Annual,Strength Training,103,1018,Absent,22:40:00
+124,2024-12-31,23,Male,Annual,CrossFit,83,748,Present,16:54:00
+738,2024-02-12,23,Male,Annual,Yoga,70,350,Absent,20:44:00
+2149,2024-06-12,23,Male,Annual,Strength Training,28,169,Absent,11:19:00
+1347,2024-08-09,23,Other,Annual,Yoga,93,837,Absent,05:59:00
+1936,2024-03-14,23,Female,Annual,Yoga,24,157,Absent,18:31:00
+2083,2024-04-10,23,Female,Annual,Yoga,106,1007,Present,17:23:00
+1167,2024-12-31,23,Female,Monthly,Cardio,64,557,Present,11:37:00
+2268,2024-11-07,23,Male,Monthly,Cardio,55,354,Present,12:15:00
+2317,2024-06-16,23,Male,Monthly,CrossFit,93,586,Absent,13:24:00
+1270,2024-05-24,23,Female,Monthly,Cardio,94,553,Present,07:10:00
+2304,2024-03-02,23,Male,Monthly,Strength Training,43,296,Absent,18:12:00
+840,2024-02-10,23,Female,Monthly,Yoga,62,611,Absent,08:12:00
+1247,2024-04-22,23,Other,Monthly,Strength Training,115,739,Present,21:10:00
+923,2024-02-14,23,Other,Monthly,Yoga,74,721,Absent,08:56:00
+54,2024-12-02,23,Female,Monthly,CrossFit,115,1086,Absent,21:11:00
+941,2024-04-09,23,Female,Monthly,CrossFit,27,239,Absent,06:44:00
+1487,2024-10-16,23,Male,Monthly,Cardio,85,564,Present,18:43:00
+2538,2024-05-04,23,Female,Monthly,Yoga,107,891,Absent,11:49:00
+2579,2024-01-26,23,Female,Monthly,Yoga,52,327,Absent,13:01:00
+307,2024-04-09,23,Other,Monthly,Yoga,83,481,Present,05:58:00
+852,2024-11-09,23,Female,Monthly,Cardio,64,500,Present,12:36:00
+1444,2024-12-08,23,Female,Monthly,CrossFit,118,1127,Absent,18:28:00
+2554,2024-05-26,23,Female,Monthly,CrossFit,27,180,Absent,11:56:00
+1103,2024-01-11,23,Female,Monthly,Strength Training,32,239,Absent,16:48:00
+2159,2024-03-30,23,Female,Monthly,Yoga,21,122,Absent,13:10:00
+1420,2024-08-03,23,Other,Monthly,Cardio,70,638,Present,21:18:00
+1415,2024-08-26,23,Female,Monthly,CrossFit,60,374,Present,16:42:00
+2184,2024-06-24,23,Male,Monthly,Strength Training,48,428,Present,07:54:00
+1744,2024-03-01,23,Male,Quarterly,Yoga,110,1077,Absent,10:50:00
+164,2024-04-01,23,Female,Quarterly,Cardio,113,645,Absent,15:36:00
+272,2024-11-19,23,Female,Quarterly,Strength Training,35,210,Absent,21:41:00
+1597,2024-12-20,23,Female,Quarterly,Cardio,37,245,Absent,11:05:00
+383,2024-04-29,23,Other,Quarterly,Strength Training,35,203,Absent,07:42:00
+2165,2024-02-27,23,Male,Quarterly,Cardio,97,805,Absent,22:42:00
+2424,2024-07-28,23,Other,Quarterly,Yoga,115,972,Present,20:14:00
+652,2024-02-19,23,Female,Quarterly,HIIT,105,724,Absent,17:09:00
+603,2024-09-01,23,Female,Quarterly,Yoga,85,439,Present,08:20:00
+1702,2024-10-06,23,Male,Quarterly,Strength Training,110,1057,Absent,08:24:00
+494,2024-01-20,23,Male,Quarterly,Yoga,59,304,Absent,19:15:00
+1165,2024-05-28,23,Female,Quarterly,HIIT,51,266,Absent,19:04:00
+82,2024-06-03,23,Other,Quarterly,Strength Training,43,228,Absent,06:52:00
+1842,2024-05-03,23,Male,Quarterly,Cardio,81,809,Absent,16:31:00
+763,2024-02-10,24,Male,Annual,Cardio,44,319,Absent,12:45:00
+1591,2024-12-25,24,Male,Annual,CrossFit,104,548,Absent,15:38:00
+766,2024-07-31,24,Male,Annual,Cardio,23,171,Present,10:12:00
+1996,2024-06-21,24,Female,Annual,Yoga,94,791,Absent,10:11:00
+1697,2024-11-12,24,Female,Annual,Cardio,69,520,Present,16:55:00
+1894,2024-03-27,24,Male,Annual,Yoga,48,478,Absent,09:09:00
+465,2024-09-02,24,Other,Annual,Strength Training,47,349,Present,10:31:00
+260,2024-12-23,24,Female,Annual,Strength Training,80,512,Absent,21:10:00
+921,2024-08-05,24,Male,Annual,Strength Training,74,431,Absent,22:33:00
+1531,2024-02-11,24,Other,Annual,HIIT,24,187,Present,09:20:00
+1262,2024-09-07,24,Other,Annual,HIIT,30,226,Absent,10:36:00
+2310,2024-12-23,24,Female,Annual,Strength Training,60,429,Present,16:40:00
+1805,2024-11-11,24,Male,Annual,Cardio,93,709,Present,07:34:00
+1969,2024-02-12,24,Male,Annual,Strength Training,75,732,Absent,12:50:00
+1377,2024-12-24,24,Female,Monthly,CrossFit,21,152,Absent,08:15:00
+778,2024-09-15,24,Other,Monthly,Yoga,116,693,Present,07:08:00
+2280,2024-02-17,24,Female,Monthly,Yoga,64,631,Present,22:38:00
+2190,2024-02-27,24,Female,Monthly,Yoga,63,353,Absent,08:59:00
+2352,2024-04-02,24,Female,Monthly,Cardio,57,309,Present,11:31:00
+298,2024-03-22,24,Male,Monthly,Yoga,116,871,Absent,14:57:00
+283,2024-09-09,24,Female,Monthly,Cardio,50,366,Absent,14:26:00
+1835,2024-08-06,24,Other,Monthly,HIIT,103,709,Absent,08:42:00
+1526,2024-12-04,24,Female,Monthly,Strength Training,87,676,Present,07:02:00
+1898,2024-08-11,24,Female,Monthly,Cardio,46,365,Absent,15:33:00
+2585,2024-01-13,24,Other,Monthly,Strength Training,51,344,Absent,11:47:00
+2049,2024-01-09,24,Female,Monthly,Cardio,107,544,Present,20:39:00
+204,2024-07-12,24,Male,Monthly,Cardio,51,275,Absent,11:41:00
+2018,2024-08-27,24,Other,Monthly,Yoga,40,212,Absent,13:08:00
+700,2024-09-29,24,Other,Monthly,Cardio,86,524,Absent,22:05:00
+1256,2024-05-29,24,Male,Monthly,Cardio,61,396,Absent,22:16:00
+2052,2024-04-11,24,Other,Monthly,Cardio,22,120,Absent,12:25:00
+1255,2024-08-31,24,Male,Monthly,Strength Training,85,688,Present,16:44:00
+1674,2024-01-11,24,Female,Quarterly,Cardio,30,165,Present,16:40:00
+227,2024-05-09,24,Male,Quarterly,Strength Training,53,489,Present,07:04:00
+2044,2024-03-23,24,Male,Quarterly,HIIT,57,365,Absent,22:46:00
+1912,2024-09-12,24,Male,Quarterly,Cardio,29,145,Present,20:11:00
+925,2024-10-21,24,Other,Quarterly,HIIT,73,640,Present,05:22:00
+2449,2024-02-18,24,Male,Quarterly,Strength Training,26,134,Absent,06:26:00
+503,2024-09-21,24,Female,Quarterly,Yoga,99,647,Present,16:14:00
+2115,2024-12-21,24,Other,Quarterly,Cardio,92,768,Present,09:07:00
+2362,2024-12-16,24,Female,Quarterly,Cardio,44,245,Present,07:04:00
+1687,2024-07-18,24,Female,Quarterly,CrossFit,92,614,Absent,07:59:00
+1673,2024-03-01,24,Male,Quarterly,Strength Training,80,558,Present,10:05:00
+1026,2024-04-29,24,Other,Quarterly,Strength Training,104,525,Present,13:10:00
+646,2024-09-27,24,Female,Quarterly,HIIT,118,595,Present,16:07:00
+1319,2024-05-05,24,Male,Quarterly,HIIT,95,674,Present,08:00:00
+1976,2024-12-10,24,Other,Quarterly,HIIT,119,912,Absent,22:06:00
+1197,2024-06-10,24,Other,Quarterly,Strength Training,77,749,Absent,19:32:00
+2500,2024-11-10,25,Female,Annual,Cardio,78,714,Absent,06:46:00
+232,2024-05-13,25,Female,Annual,HIIT,45,404,Absent,12:57:00
+1121,2024-08-06,25,Male,Annual,Yoga,83,681,Present,16:18:00
+85,2024-01-23,25,Female,Annual,Yoga,40,364,Present,13:59:00
+1213,2024-04-23,25,Other,Annual,HIIT,97,833,Absent,16:34:00
+2241,2024-01-11,25,Male,Annual,HIIT,80,681,Absent,14:51:00
+2047,2024-03-28,25,Female,Annual,Yoga,54,531,Absent,06:48:00
+1903,2024-01-13,25,Other,Annual,Cardio,90,486,Present,20:32:00
+1155,2024-09-25,25,Other,Annual,Yoga,78,390,Present,18:05:00
+1814,2024-03-05,25,Male,Annual,HIIT,80,673,Absent,05:21:00
+472,2024-11-29,25,Other,Annual,Strength Training,99,705,Present,22:23:00
+1158,2024-05-10,25,Other,Annual,Strength Training,52,508,Present,05:55:00
+1729,2024-08-14,25,Other,Annual,Yoga,82,769,Absent,13:30:00
+1502,2024-10-02,25,Male,Annual,HIIT,32,185,Present,14:43:00
+1070,2024-02-15,25,Other,Monthly,CrossFit,35,337,Absent,08:47:00
+1960,2024-05-25,25,Male,Monthly,Cardio,41,343,Absent,16:02:00
+1838,2024-08-21,25,Other,Monthly,HIIT,49,348,Present,20:58:00
+621,2024-07-26,25,Male,Monthly,CrossFit,93,599,Absent,19:46:00
+688,2024-12-31,25,Other,Monthly,Strength Training,55,448,Absent,15:30:00
+1422,2024-01-20,25,Female,Monthly,Yoga,110,933,Present,08:29:00
+706,2024-09-23,25,Male,Monthly,CrossFit,72,380,Present,14:04:00
+613,2024-05-15,25,Female,Monthly,HIIT,96,726,Absent,19:09:00
+1841,2024-02-20,25,Female,Monthly,Yoga,46,400,Absent,13:43:00
+1888,2024-02-02,25,Female,Monthly,HIIT,22,114,Absent,22:50:00
+2530,2024-07-25,25,Male,Monthly,Strength Training,110,763,Present,09:24:00
+1709,2024-09-06,25,Male,Monthly,Yoga,62,376,Absent,19:52:00
+2056,2024-08-26,25,Other,Monthly,Yoga,76,759,Absent,05:17:00
+1385,2024-06-26,25,Female,Monthly,HIIT,92,502,Absent,22:02:00
+2286,2024-11-15,25,Female,Monthly,Strength Training,74,377,Absent,14:46:00
+620,2024-12-14,25,Female,Quarterly,Strength Training,118,1130,Absent,21:12:00
+1951,2024-10-30,25,Other,Quarterly,Strength Training,106,925,Absent,05:25:00
+166,2024-02-27,25,Other,Quarterly,Cardio,81,572,Present,16:00:00
+277,2024-02-04,25,Female,Quarterly,HIIT,106,640,Present,22:52:00
+1005,2024-07-20,25,Female,Quarterly,Yoga,114,961,Absent,14:34:00
+2176,2024-12-16,25,Female,Quarterly,Cardio,33,171,Present,08:15:00
+1823,2024-08-20,25,Male,Quarterly,Yoga,56,385,Present,20:06:00
+209,2024-08-21,25,Male,Quarterly,Cardio,106,766,Absent,19:32:00
+2448,2024-07-04,25,Female,Quarterly,CrossFit,104,1023,Present,16:14:00
+1568,2024-08-30,25,Other,Quarterly,Strength Training,88,467,Present,09:07:00
+177,2024-12-06,25,Female,Quarterly,Strength Training,107,821,Present,16:27:00
+1872,2024-06-08,25,Female,Quarterly,HIIT,93,705,Present,10:02:00
+1868,2024-04-13,26,Male,Annual,HIIT,68,410,Absent,19:18:00
+1517,2024-01-10,26,Male,Annual,CrossFit,26,173,Present,16:00:00
+267,2024-10-09,26,Other,Annual,Strength Training,78,500,Absent,15:38:00
+557,2024-05-25,26,Other,Annual,Yoga,64,380,Absent,16:06:00
+293,2024-10-12,26,Male,Annual,Strength Training,97,876,Present,21:35:00
+1048,2024-03-29,26,Female,Annual,Strength Training,38,236,Present,12:16:00
+42,2024-10-01,26,Male,Annual,HIIT,94,859,Present,07:04:00
+949,2024-01-10,26,Other,Annual,CrossFit,97,698,Present,11:41:00
+540,2024-04-13,26,Female,Annual,Cardio,74,464,Absent,20:49:00
+2370,2024-08-27,26,Female,Annual,Yoga,116,769,Present,21:29:00
+2274,2024-07-07,26,Other,Annual,HIIT,58,519,Absent,10:45:00
+516,2024-03-27,26,Male,Annual,HIIT,81,568,Present,17:57:00
+161,2024-10-04,26,Female,Annual,Strength Training,100,984,Absent,13:25:00
+357,2024-02-27,26,Female,Annual,Cardio,52,462,Absent,07:12:00
+589,2024-07-03,26,Female,Annual,HIIT,83,765,Absent,05:10:00
+1058,2024-10-21,26,Female,Monthly,HIIT,44,431,Absent,08:30:00
+12,2024-12-25,26,Female,Monthly,HIIT,86,547,Absent,08:17:00
+871,2024-02-18,26,Male,Monthly,Strength Training,42,235,Absent,20:49:00
+452,2024-11-26,26,Female,Monthly,Yoga,98,584,Present,07:37:00
+968,2024-01-09,26,Female,Monthly,Cardio,37,365,Absent,18:38:00
+1382,2024-12-19,26,Female,Monthly,Yoga,105,734,Absent,09:25:00
+2087,2024-04-13,26,Female,Monthly,HIIT,27,193,Present,06:16:00
+867,2024-11-11,26,Male,Monthly,HIIT,95,576,Present,18:11:00
+1661,2024-09-20,26,Other,Monthly,Yoga,111,802,Present,16:40:00
+1183,2024-02-17,26,Female,Monthly,CrossFit,84,706,Present,18:54:00
+491,2024-12-19,26,Female,Monthly,Yoga,23,118,Present,17:44:00
+618,2024-05-07,26,Female,Monthly,HIIT,81,571,Absent,22:45:00
+276,2024-07-26,26,Female,Monthly,Cardio,53,429,Present,20:38:00
+1731,2024-04-08,26,Other,Monthly,Cardio,82,512,Present,08:14:00
+40,2024-05-25,26,Other,Monthly,Yoga,100,562,Present,05:16:00
+1901,2024-10-12,26,Female,Quarterly,CrossFit,97,823,Absent,14:41:00
+2447,2024-12-29,26,Other,Quarterly,HIIT,103,575,Present,05:35:00
+1676,2024-08-27,26,Male,Quarterly,Cardio,91,474,Absent,17:50:00
+990,2024-02-07,26,Other,Quarterly,CrossFit,62,542,Present,14:25:00
+5,2024-07-13,26,Female,Quarterly,Yoga,31,262,Absent,11:22:00
+2353,2024-04-17,26,Other,Quarterly,Yoga,78,469,Present,16:40:00
+955,2024-04-27,26,Other,Quarterly,Yoga,63,410,Absent,19:07:00
+777,2024-11-11,26,Male,Quarterly,CrossFit,120,1093,Present,12:04:00
+1314,2024-12-28,26,Female,Quarterly,Strength Training,56,401,Absent,08:16:00
+1216,2024-04-25,26,Female,Quarterly,Strength Training,73,397,Present,05:36:00
+638,2024-02-25,26,Male,Quarterly,CrossFit,120,1184,Absent,06:09:00
+346,2024-01-08,26,Female,Quarterly,Cardio,118,813,Present,12:44:00
+1937,2024-05-21,26,Male,Quarterly,Cardio,24,220,Present,20:31:00
+2405,2024-12-12,26,Female,Quarterly,Cardio,90,814,Absent,07:13:00
+1030,2024-04-03,27,Female,Annual,Strength Training,113,1008,Present,08:48:00
+1804,2024-01-24,27,Male,Annual,Cardio,44,262,Absent,07:05:00
+1971,2024-10-11,27,Female,Annual,Strength Training,36,354,Absent,10:03:00
+1551,2024-06-21,27,Other,Annual,Cardio,23,193,Present,16:38:00
+433,2024-05-22,27,Other,Annual,CrossFit,114,992,Absent,20:46:00
+671,2024-01-17,27,Male,Annual,Yoga,68,676,Present,08:10:00
+78,2024-10-17,27,Female,Annual,Cardio,80,549,Absent,21:01:00
+2145,2024-09-08,27,Male,Annual,Cardio,75,590,Absent,13:10:00
+1899,2024-04-25,27,Female,Annual,Strength Training,64,367,Absent,08:36:00
+464,2024-09-19,27,Other,Annual,Yoga,52,279,Absent,15:57:00
+890,2024-03-08,27,Other,Annual,Strength Training,59,443,Absent,20:52:00
+1288,2024-12-08,27,Other,Annual,CrossFit,32,251,Present,05:28:00
+2367,2024-12-21,27,Other,Annual,CrossFit,93,857,Absent,17:12:00
+1911,2024-12-18,27,Male,Annual,HIIT,107,663,Absent,21:05:00
+2205,2024-04-28,27,Female,Annual,Strength Training,41,398,Absent,12:30:00
+1857,2024-10-31,27,Female,Annual,Cardio,57,354,Present,18:11:00
+426,2024-07-07,27,Female,Annual,HIIT,75,477,Present,13:11:00
+578,2024-03-16,27,Male,Annual,CrossFit,61,399,Absent,07:31:00
+1651,2024-09-27,27,Female,Annual,CrossFit,31,277,Absent,22:44:00
+2532,2024-01-24,27,Other,Annual,Cardio,49,446,Absent,16:51:00
+1649,2024-12-11,27,Female,Annual,CrossFit,86,647,Absent,10:34:00
+115,2024-06-09,27,Other,Annual,HIIT,27,203,Present,12:15:00
+2038,2024-12-11,27,Male,Annual,HIIT,86,440,Absent,17:01:00
+33,2024-03-21,27,Female,Annual,Strength Training,23,127,Present,22:44:00
+282,2024-08-29,27,Other,Annual,Cardio,32,310,Present,13:27:00
+51,2024-08-11,27,Male,Monthly,Yoga,60,337,Present,09:43:00
+77,2024-02-20,27,Other,Monthly,HIIT,84,476,Present,22:34:00
+692,2024-04-19,27,Female,Monthly,HIIT,22,110,Present,08:56:00
+1921,2024-02-21,27,Male,Monthly,Strength Training,65,450,Present,14:39:00
+1178,2024-03-25,27,Male,Monthly,Strength Training,79,719,Absent,08:51:00
+2097,2024-04-27,27,Other,Monthly,Yoga,30,235,Absent,07:00:00
+1042,2024-04-25,27,Other,Monthly,Yoga,62,329,Present,16:31:00
+343,2024-12-14,27,Female,Monthly,Strength Training,48,354,Absent,21:09:00
+2183,2024-04-23,27,Other,Monthly,Strength Training,96,542,Present,17:19:00
+1147,2024-01-16,27,Male,Monthly,Strength Training,42,281,Present,05:33:00
+2365,2024-03-21,27,Other,Monthly,Strength Training,68,391,Absent,09:19:00
+2246,2024-12-13,27,Other,Monthly,HIIT,41,382,Present,12:33:00
+216,2024-04-07,27,Male,Monthly,Cardio,70,540,Absent,14:34:00
+225,2024-03-19,27,Male,Monthly,Yoga,116,816,Present,22:37:00
+588,2024-10-30,27,Male,Monthly,CrossFit,74,463,Absent,05:21:00
+2586,2024-10-25,27,Male,Monthly,HIIT,26,183,Present,12:37:00
+1032,2024-08-21,27,Female,Monthly,HIIT,116,684,Present,09:52:00
+2059,2024-07-07,27,Female,Monthly,Yoga,118,622,Absent,22:18:00
+1143,2024-04-13,27,Other,Monthly,HIIT,96,513,Absent,20:12:00
+793,2024-02-13,27,Other,Monthly,Yoga,82,604,Present,05:16:00
+882,2024-07-21,27,Male,Monthly,Strength Training,57,359,Absent,20:18:00
+1130,2024-07-29,27,Other,Monthly,Yoga,85,838,Absent,09:34:00
+2077,2024-04-03,27,Female,Quarterly,CrossFit,25,191,Present,13:32:00
+2025,2024-12-03,27,Other,Quarterly,Yoga,64,351,Present,18:51:00
+791,2024-01-27,27,Other,Quarterly,Cardio,60,410,Absent,22:17:00
+1950,2024-03-05,27,Female,Quarterly,HIIT,99,956,Absent,16:48:00
+500,2024-08-19,27,Other,Quarterly,Cardio,30,286,Absent,09:57:00
+454,2024-05-26,27,Other,Quarterly,Strength Training,97,957,Present,21:06:00
+1653,2024-01-28,27,Male,Quarterly,HIIT,84,460,Absent,10:25:00
+1052,2024-06-05,27,Male,Quarterly,Strength Training,105,697,Absent,13:05:00
+880,2024-06-20,27,Female,Quarterly,Strength Training,81,602,Absent,06:46:00
+1482,2024-04-29,27,Male,Quarterly,Strength Training,118,675,Absent,20:16:00
+556,2024-08-10,27,Other,Quarterly,Cardio,78,504,Absent,18:21:00
+965,2024-09-29,27,Female,Quarterly,Yoga,37,321,Absent,14:58:00
+904,2024-01-24,27,Female,Quarterly,Cardio,111,1004,Absent,16:31:00
+340,2024-02-14,27,Female,Quarterly,HIIT,100,750,Present,15:38:00
+1224,2024-09-27,27,Male,Quarterly,Yoga,42,341,Present,06:15:00
+328,2024-06-25,27,Male,Quarterly,CrossFit,90,551,Absent,07:48:00
+1391,2024-10-04,27,Male,Quarterly,CrossFit,33,238,Present,14:25:00
+1980,2024-10-11,27,Other,Quarterly,CrossFit,104,683,Present,06:48:00
+664,2024-10-21,27,Female,Quarterly,Cardio,62,335,Present,06:39:00
+1866,2024-07-16,27,Other,Quarterly,Cardio,104,808,Absent,05:27:00
+154,2024-01-08,27,Male,Quarterly,CrossFit,66,469,Present,10:50:00
+2297,2024-04-17,27,Male,Quarterly,CrossFit,98,815,Present,14:24:00
+2428,2024-11-14,27,Other,Quarterly,Cardio,63,598,Present,09:27:00
+536,2024-09-13,28,Other,Annual,Yoga,86,827,Absent,14:12:00
+2266,2024-04-24,28,Other,Annual,HIIT,40,233,Absent,17:34:00
+1374,2024-05-11,28,Other,Annual,CrossFit,51,313,Present,18:34:00
+2308,2024-08-09,28,Female,Annual,HIIT,38,257,Absent,07:47:00
+2481,2024-12-25,28,Other,Annual,Yoga,40,382,Absent,09:49:00
+1043,2024-07-15,28,Female,Annual,Yoga,72,687,Absent,14:35:00
+785,2024-05-31,28,Other,Annual,Cardio,106,1025,Present,17:41:00
+1215,2024-02-10,28,Male,Annual,Yoga,85,561,Present,17:30:00
+1028,2024-03-26,28,Male,Annual,Cardio,77,448,Present,20:28:00
+2002,2024-06-11,28,Female,Annual,CrossFit,115,1060,Present,12:51:00
+1084,2024-03-18,28,Other,Annual,Yoga,74,672,Absent,09:07:00
+220,2024-10-21,28,Male,Annual,HIIT,26,169,Present,15:20:00
+2544,2024-03-09,28,Male,Annual,Cardio,35,251,Present,09:08:00
+1883,2024-06-10,28,Other,Annual,Yoga,40,226,Absent,10:07:00
+1504,2024-03-16,28,Other,Annual,Cardio,87,839,Present,11:38:00
+1606,2024-01-16,28,Other,Annual,Strength Training,58,350,Absent,10:55:00
+2330,2024-12-29,28,Other,Annual,Yoga,97,770,Absent,13:36:00
+2574,2024-04-06,28,Other,Annual,HIIT,66,501,Absent,06:00:00
+411,2024-08-07,28,Female,Annual,HIIT,48,282,Present,08:13:00
+479,2024-04-05,28,Other,Annual,Cardio,96,537,Present,22:17:00
+1454,2024-08-17,28,Other,Annual,Yoga,118,600,Absent,17:37:00
+1031,2024-06-30,28,Female,Monthly,Strength Training,86,589,Present,09:23:00
+490,2024-02-02,28,Female,Monthly,Cardio,81,607,Absent,06:02:00
+583,2024-09-07,28,Other,Monthly,Strength Training,88,527,Absent,06:35:00
+477,2024-03-01,28,Male,Monthly,Yoga,89,728,Absent,14:30:00
+573,2024-08-25,28,Other,Monthly,CrossFit,28,230,Present,06:36:00
+857,2024-02-14,28,Male,Monthly,CrossFit,27,176,Absent,14:41:00
+17,2024-12-01,28,Other,Monthly,Yoga,34,244,Present,09:13:00
+987,2024-10-13,28,Other,Monthly,Yoga,27,167,Absent,18:12:00
+351,2024-11-19,28,Female,Monthly,Cardio,35,203,Present,07:10:00
+2194,2024-02-02,28,Other,Monthly,CrossFit,21,122,Absent,08:25:00
+2001,2024-04-09,28,Other,Monthly,Cardio,34,249,Absent,08:49:00
+2523,2024-12-28,28,Other,Monthly,CrossFit,29,231,Present,05:19:00
+1855,2024-06-16,28,Female,Monthly,Yoga,79,471,Absent,06:09:00
+1747,2024-06-29,28,Other,Monthly,Cardio,62,474,Absent,21:57:00
+470,2024-04-14,28,Female,Monthly,CrossFit,96,545,Present,22:35:00
+2006,2024-09-03,28,Other,Quarterly,CrossFit,90,853,Present,11:14:00
+316,2024-07-21,28,Other,Quarterly,Cardio,75,422,Absent,22:21:00
+1776,2024-11-25,28,Female,Quarterly,Yoga,75,484,Present,20:16:00
+2007,2024-05-09,28,Male,Quarterly,HIIT,40,316,Absent,09:29:00
+1162,2024-11-22,28,Female,Quarterly,Yoga,55,278,Absent,08:52:00
+450,2024-02-06,28,Male,Quarterly,Strength Training,40,335,Present,12:43:00
+2396,2024-05-23,28,Male,Quarterly,Strength Training,117,1131,Absent,08:51:00
+1424,2024-12-26,28,Female,Quarterly,Cardio,83,514,Absent,13:32:00
+1508,2024-08-11,28,Other,Quarterly,Yoga,45,241,Present,12:04:00
+1004,2024-12-21,28,Female,Quarterly,HIIT,108,790,Present,16:29:00
+1628,2024-04-01,29,Female,Annual,Cardio,94,604,Absent,12:15:00
+1515,2024-04-28,29,Female,Annual,CrossFit,93,521,Present,12:03:00
+844,2024-08-11,29,Male,Annual,HIIT,88,600,Present,19:30:00
+2468,2024-06-08,29,Female,Annual,CrossFit,114,882,Absent,18:28:00
+1017,2024-07-29,29,Female,Annual,CrossFit,34,205,Present,16:55:00
+1662,2024-10-16,29,Other,Annual,Strength Training,101,617,Present,11:13:00
+509,2024-06-13,29,Male,Annual,Yoga,55,347,Present,18:29:00
+253,2024-04-05,29,Male,Annual,Strength Training,52,431,Present,14:57:00
+1293,2024-11-29,29,Female,Annual,CrossFit,116,707,Absent,13:27:00
+1644,2024-04-10,29,Female,Annual,CrossFit,74,686,Present,19:54:00
+2028,2024-05-28,29,Other,Annual,Cardio,117,861,Absent,21:35:00
+1038,2024-06-16,29,Other,Annual,HIIT,48,375,Present,11:49:00
+2146,2024-10-19,29,Other,Annual,HIIT,108,611,Present,08:48:00
+2323,2024-10-15,29,Male,Annual,HIIT,93,761,Present,05:22:00
+151,2024-01-13,29,Other,Annual,Yoga,31,268,Absent,15:57:00
+243,2024-10-12,29,Other,Annual,Strength Training,112,654,Present,16:57:00
+1229,2024-03-20,29,Female,Annual,Strength Training,91,579,Present,19:47:00
+1134,2024-11-25,29,Female,Annual,Cardio,102,938,Present,12:11:00
+681,2024-08-19,29,Male,Annual,HIIT,49,360,Present,10:38:00
+1622,2024-02-23,29,Female,Annual,Strength Training,45,261,Absent,20:29:00
+1875,2024-09-28,29,Male,Monthly,Cardio,60,513,Absent,13:08:00
+623,2024-09-24,29,Female,Monthly,Strength Training,37,220,Absent,14:03:00
+600,2024-05-06,29,Other,Monthly,CrossFit,65,471,Present,11:40:00
+2506,2024-12-16,29,Female,Monthly,Cardio,99,783,Absent,22:30:00
+1991,2024-08-03,29,Male,Monthly,CrossFit,48,301,Present,12:52:00
+2110,2024-07-01,29,Other,Monthly,Cardio,82,642,Absent,08:37:00
+2034,2024-11-15,29,Other,Monthly,HIIT,37,190,Absent,12:07:00
+677,2024-09-18,29,Female,Monthly,HIIT,66,421,Present,14:59:00
+944,2024-03-31,29,Female,Monthly,CrossFit,54,305,Absent,05:53:00
+1436,2024-01-20,29,Other,Monthly,Yoga,81,529,Present,17:19:00
+2568,2024-12-06,29,Other,Monthly,Strength Training,50,316,Absent,16:54:00
+1861,2024-09-26,29,Male,Monthly,Strength Training,110,551,Present,18:23:00
+1300,2024-03-25,29,Other,Monthly,HIIT,63,583,Absent,09:46:00
+694,2024-09-19,29,Other,Monthly,HIIT,112,1010,Absent,15:30:00
+967,2024-07-19,29,Other,Quarterly,HIIT,96,628,Present,19:32:00
+2198,2024-04-11,29,Other,Quarterly,Strength Training,81,667,Absent,21:25:00
+2167,2024-06-17,29,Male,Quarterly,Cardio,71,495,Absent,14:23:00
+1619,2024-09-15,29,Female,Quarterly,CrossFit,20,165,Absent,10:36:00
+1053,2024-11-04,29,Male,Quarterly,Strength Training,38,218,Present,06:10:00
+2263,2024-11-21,29,Male,Quarterly,Strength Training,69,683,Present,06:43:00
+66,2024-11-29,29,Male,Quarterly,Cardio,83,683,Absent,22:12:00
+1027,2024-12-28,29,Male,Quarterly,HIIT,29,186,Present,21:53:00
+1236,2024-07-26,29,Other,Quarterly,CrossFit,66,463,Present,14:33:00
+879,2024-08-01,29,Female,Quarterly,Strength Training,110,723,Present,10:17:00
+1699,2024-06-23,29,Male,Quarterly,Strength Training,89,476,Absent,18:02:00
+2144,2024-11-11,29,Female,Quarterly,CrossFit,111,1073,Present,22:12:00
+639,2024-02-19,29,Male,Quarterly,Strength Training,41,370,Absent,07:27:00
+1209,2024-12-17,29,Other,Quarterly,Strength Training,64,384,Present,13:05:00
+427,2024-05-10,29,Female,Quarterly,Yoga,57,462,Present,11:21:00
+1339,2024-09-30,29,Male,Quarterly,CrossFit,26,201,Absent,17:57:00
+107,2024-03-04,30,Other,Annual,HIIT,80,596,Absent,09:01:00
+2114,2024-03-04,30,Other,Annual,Strength Training,95,585,Absent,11:20:00
+72,2024-12-26,30,Male,Annual,Cardio,49,378,Absent,11:52:00
+508,2024-12-07,30,Other,Annual,Strength Training,78,701,Absent,21:28:00
+1013,2024-09-05,30,Male,Annual,Cardio,55,320,Absent,12:35:00
+1878,2024-01-28,30,Male,Annual,Yoga,102,726,Present,17:39:00
+1968,2024-07-13,30,Other,Annual,Yoga,68,663,Present,16:32:00
+195,2024-01-09,30,Male,Annual,Cardio,25,212,Present,14:50:00
+983,2024-05-11,30,Female,Annual,Strength Training,85,589,Absent,19:14:00
+2490,2024-06-14,30,Other,Annual,CrossFit,81,469,Present,05:21:00
+2359,2024-04-23,30,Other,Annual,CrossFit,42,227,Present,20:23:00
+1195,2024-04-24,30,Other,Annual,Strength Training,87,704,Present,05:29:00
+1465,2024-04-28,30,Male,Annual,Yoga,111,1091,Absent,20:28:00
+240,2024-02-23,30,Other,Annual,CrossFit,48,437,Absent,10:40:00
+883,2024-09-14,30,Female,Annual,Strength Training,96,807,Absent,10:45:00
+741,2024-11-14,30,Female,Annual,Cardio,75,436,Absent,19:56:00
+366,2024-01-20,30,Male,Monthly,HIIT,80,611,Present,18:32:00
+291,2024-04-22,30,Male,Monthly,Yoga,95,668,Present,11:28:00
+764,2024-02-15,30,Other,Monthly,CrossFit,95,774,Absent,17:10:00
+2338,2024-06-20,30,Other,Monthly,Cardio,25,245,Present,06:26:00
+2037,2024-07-12,30,Other,Monthly,HIIT,51,450,Present,07:39:00
+1503,2024-05-22,30,Male,Monthly,Cardio,53,523,Present,06:52:00
+73,2024-08-29,30,Female,Monthly,HIIT,26,233,Present,17:42:00
+2122,2024-06-13,30,Male,Monthly,Cardio,87,572,Present,05:09:00
+1561,2024-01-26,30,Other,Monthly,HIIT,89,707,Present,09:53:00
+2556,2024-03-15,30,Male,Monthly,Strength Training,78,582,Absent,19:50:00
+112,2024-10-24,30,Female,Monthly,HIIT,65,555,Present,19:39:00
+678,2024-08-18,30,Male,Monthly,CrossFit,109,815,Absent,16:43:00
+439,2024-05-18,30,Other,Monthly,Strength Training,55,319,Present,07:06:00
+961,2024-09-15,30,Male,Monthly,CrossFit,102,582,Present,09:07:00
+1638,2024-03-19,30,Male,Monthly,Strength Training,91,517,Present,21:58:00
+401,2024-07-17,30,Male,Monthly,Strength Training,54,418,Absent,13:13:00
+1859,2024-09-27,30,Other,Monthly,CrossFit,91,599,Absent,19:46:00
+487,2024-11-09,30,Female,Monthly,Yoga,110,856,Present,14:17:00
+2337,2024-07-19,30,Female,Monthly,Strength Training,107,1033,Present,12:17:00
+2309,2024-06-05,30,Male,Monthly,Yoga,38,300,Present,12:14:00
+1189,2024-11-26,30,Male,Monthly,HIIT,107,873,Present,17:54:00
+673,2024-02-09,30,Female,Monthly,Strength Training,22,206,Present,20:29:00
+185,2024-10-30,30,Other,Quarterly,Yoga,72,608,Present,20:50:00
+125,2024-12-28,30,Other,Quarterly,HIIT,86,774,Present,21:09:00
+7,2024-02-22,30,Other,Quarterly,CrossFit,50,404,Absent,18:17:00
+1737,2024-09-02,30,Male,Quarterly,CrossFit,70,532,Absent,21:57:00
+1308,2024-11-13,30,Male,Quarterly,Strength Training,32,221,Absent,07:31:00
+2148,2024-05-13,30,Other,Quarterly,Cardio,100,798,Present,16:54:00
+1669,2024-03-17,30,Female,Quarterly,Strength Training,96,838,Absent,08:15:00
+604,2024-08-05,30,Male,Quarterly,CrossFit,48,249,Present,17:40:00
+1947,2024-07-28,30,Male,Quarterly,Cardio,67,606,Absent,16:00:00
+953,2024-05-15,30,Female,Quarterly,CrossFit,99,628,Present,10:58:00
+417,2024-04-03,30,Male,Quarterly,Cardio,96,947,Present,16:48:00
+507,2024-02-24,30,Male,Quarterly,HIIT,115,678,Present,16:44:00
+1862,2024-04-09,30,Female,Quarterly,HIIT,72,612,Absent,19:18:00
+486,2024-10-14,30,Female,Quarterly,Strength Training,39,244,Present,18:34:00
+1131,2024-10-29,30,Male,Quarterly,Yoga,76,456,Absent,21:38:00
+23,2024-05-06,30,Male,Quarterly,HIIT,98,577,Absent,20:49:00
+1490,2024-05-29,30,Male,Quarterly,Cardio,58,506,Absent,18:44:00
+1801,2024-08-17,30,Male,Quarterly,Strength Training,77,589,Present,19:16:00
+767,2024-07-08,31,Other,Annual,Cardio,105,803,Present,11:48:00
+2070,2024-06-26,31,Female,Annual,Cardio,43,409,Absent,19:06:00
+929,2024-12-16,31,Male,Annual,Strength Training,118,787,Absent,09:13:00
+749,2024-12-13,31,Other,Annual,Strength Training,48,314,Absent,09:06:00
+920,2024-07-07,31,Other,Annual,CrossFit,109,889,Present,19:07:00
+2245,2024-08-23,31,Male,Annual,Strength Training,23,213,Present,06:54:00
+554,2024-09-20,31,Other,Annual,Cardio,110,739,Absent,13:50:00
+2412,2024-07-17,31,Male,Annual,CrossFit,76,504,Present,17:55:00
+2354,2024-05-16,31,Other,Annual,Strength Training,35,207,Present,13:02:00
+1520,2024-02-22,31,Female,Annual,Cardio,53,437,Absent,11:20:00
+1367,2024-02-03,31,Male,Annual,CrossFit,48,453,Absent,06:49:00
+784,2024-11-13,31,Other,Annual,HIIT,25,242,Absent,14:15:00
+691,2024-08-29,31,Male,Annual,Strength Training,62,477,Present,16:51:00
+109,2024-10-30,31,Female,Annual,Cardio,28,236,Absent,10:08:00
+863,2024-06-12,31,Male,Annual,CrossFit,72,400,Absent,19:04:00
+860,2024-07-01,31,Male,Annual,Strength Training,101,612,Absent,08:31:00
+447,2024-03-12,31,Other,Monthly,CrossFit,86,485,Absent,11:55:00
+984,2024-01-07,31,Male,Monthly,CrossFit,89,459,Absent,17:15:00
+1364,2024-01-19,31,Other,Monthly,Cardio,24,132,Present,07:05:00
+1999,2024-01-21,31,Male,Monthly,Yoga,86,571,Absent,09:32:00
+1348,2024-09-13,31,Female,Monthly,Strength Training,97,882,Absent,18:38:00
+2055,2024-10-11,31,Male,Monthly,HIIT,104,573,Absent,19:42:00
+2046,2024-12-10,31,Male,Monthly,Strength Training,85,800,Absent,09:39:00
+988,2024-02-27,31,Female,Monthly,Yoga,58,392,Absent,10:36:00
+569,2024-12-05,31,Female,Monthly,Cardio,21,182,Absent,15:42:00
+818,2024-05-06,31,Other,Monthly,HIIT,91,765,Present,20:05:00
+413,2024-09-06,31,Other,Monthly,CrossFit,74,714,Present,18:01:00
+1840,2024-02-07,31,Other,Monthly,Strength Training,61,559,Absent,12:08:00
+1003,2024-09-08,31,Other,Monthly,HIIT,36,263,Absent,11:38:00
+198,2024-11-15,31,Male,Quarterly,HIIT,33,206,Present,10:45:00
+1945,2024-11-29,31,Other,Quarterly,Cardio,100,570,Present,14:44:00
+945,2024-10-10,31,Female,Quarterly,Cardio,80,411,Absent,08:39:00
+68,2024-01-16,31,Other,Quarterly,Yoga,42,243,Present,10:34:00
+1698,2024-11-24,31,Female,Quarterly,Strength Training,88,574,Absent,10:32:00
+650,2024-12-23,31,Other,Quarterly,Cardio,77,665,Present,21:20:00
+1344,2024-09-20,31,Male,Quarterly,CrossFit,49,485,Absent,14:04:00
+441,2024-03-19,31,Male,Quarterly,Cardio,22,165,Absent,11:19:00
+1864,2024-11-26,31,Male,Quarterly,Cardio,111,612,Present,17:11:00
+2098,2024-06-14,31,Female,Quarterly,Strength Training,56,280,Absent,17:58:00
+1196,2024-10-11,31,Other,Quarterly,Strength Training,58,500,Present,12:49:00
+312,2024-01-24,31,Other,Quarterly,Cardio,54,441,Absent,17:00:00
+643,2024-11-02,31,Female,Quarterly,Strength Training,36,216,Absent,10:28:00
+1337,2024-10-21,31,Other,Quarterly,Strength Training,41,276,Absent,22:26:00
+899,2024-06-11,31,Other,Quarterly,Strength Training,34,222,Present,14:41:00
+616,2024-11-26,32,Female,Annual,Cardio,51,457,Absent,07:29:00
+1346,2024-01-31,32,Female,Annual,HIIT,37,317,Present,19:31:00
+1692,2024-01-30,32,Male,Annual,Cardio,20,142,Present,14:48:00
+1593,2024-03-29,32,Male,Annual,Cardio,86,738,Absent,14:59:00
+1764,2024-01-20,32,Other,Annual,Yoga,51,332,Present,19:21:00
+1920,2024-04-23,32,Male,Annual,HIIT,109,674,Absent,09:15:00
+718,2024-03-23,32,Other,Annual,CrossFit,117,666,Present,05:07:00
+482,2024-01-15,32,Male,Annual,CrossFit,95,816,Absent,18:45:00
+1002,2024-11-22,32,Female,Annual,HIIT,30,152,Absent,21:34:00
+2528,2024-06-06,32,Other,Annual,HIIT,58,374,Absent,08:15:00
+19,2024-10-31,32,Female,Annual,CrossFit,55,402,Present,09:06:00
+1291,2024-08-03,32,Female,Annual,HIIT,20,133,Present,08:04:00
+2187,2024-07-07,32,Female,Annual,Strength Training,89,535,Present,11:27:00
+1670,2024-11-22,32,Male,Annual,HIIT,72,593,Present,18:49:00
+1614,2024-09-08,32,Male,Annual,Yoga,26,191,Absent,09:02:00
+344,2024-05-22,32,Other,Annual,CrossFit,119,1118,Absent,15:13:00
+2199,2024-02-15,32,Other,Annual,Cardio,25,178,Absent,12:28:00
+2045,2024-04-30,32,Female,Annual,Yoga,57,518,Present,08:02:00
+1753,2024-10-30,32,Female,Annual,CrossFit,101,668,Present,21:12:00
+2480,2024-07-10,32,Other,Annual,HIIT,70,551,Present,16:12:00
+1939,2024-05-10,32,Other,Annual,Cardio,111,1007,Present,15:54:00
+2558,2024-08-12,32,Other,Annual,HIIT,75,502,Absent,05:07:00
+93,2024-04-15,32,Female,Annual,Yoga,64,562,Present,22:15:00
+2119,2024-07-18,32,Other,Monthly,Strength Training,41,249,Present,17:34:00
+1458,2024-08-05,32,Male,Monthly,CrossFit,61,430,Absent,19:42:00
+20,2024-07-31,32,Female,Monthly,CrossFit,48,330,Present,10:35:00
+144,2024-01-28,32,Female,Monthly,Yoga,48,476,Absent,10:24:00
+2347,2024-08-09,32,Female,Monthly,Yoga,98,843,Absent,06:39:00
+1294,2024-02-19,32,Other,Monthly,HIIT,43,425,Absent,14:05:00
+885,2024-09-16,32,Male,Monthly,CrossFit,108,619,Absent,12:23:00
+438,2024-05-15,32,Other,Monthly,Strength Training,28,223,Absent,10:43:00
+1825,2024-07-19,32,Other,Monthly,Strength Training,70,552,Present,06:02:00
+48,2024-10-18,32,Female,Monthly,Cardio,63,546,Absent,18:26:00
+1891,2024-01-21,32,Female,Monthly,Strength Training,26,189,Present,07:06:00
+637,2024-06-07,32,Female,Monthly,HIIT,83,599,Present,16:42:00
+986,2024-08-17,32,Other,Quarterly,Cardio,67,601,Absent,06:24:00
+1340,2024-06-21,32,Female,Quarterly,Strength Training,39,308,Absent,11:18:00
+1321,2024-10-12,32,Female,Quarterly,HIIT,46,333,Present,05:40:00
+1626,2024-08-30,32,Other,Quarterly,Cardio,68,451,Absent,15:28:00
+657,2024-11-24,32,Other,Quarterly,Yoga,89,466,Present,17:24:00
+1427,2024-03-03,32,Other,Quarterly,Yoga,41,244,Present,08:38:00
+1341,2024-10-20,32,Other,Quarterly,CrossFit,94,910,Present,12:08:00
+1109,2024-10-12,32,Other,Quarterly,Strength Training,53,422,Present,21:51:00
+1398,2024-12-26,32,Female,Quarterly,Strength Training,102,871,Present,08:04:00
+900,2024-03-27,32,Female,Quarterly,Cardio,20,104,Absent,11:15:00
+1953,2024-04-10,32,Male,Quarterly,CrossFit,100,531,Present,11:39:00
+2026,2024-10-08,32,Other,Quarterly,Cardio,66,546,Absent,15:59:00
+123,2024-06-19,32,Male,Quarterly,CrossFit,50,498,Absent,05:42:00
+523,2024-04-12,32,Other,Quarterly,Cardio,112,1053,Absent,10:42:00
+2332,2024-05-24,32,Other,Quarterly,HIIT,36,337,Absent,07:26:00
+1914,2024-08-23,32,Female,Quarterly,Yoga,70,533,Absent,16:22:00
+2520,2024-04-24,33,Female,Annual,HIIT,93,630,Present,17:26:00
+1185,2024-01-20,33,Other,Annual,Cardio,54,361,Absent,16:46:00
+2381,2024-08-01,33,Other,Annual,Yoga,112,573,Absent,07:31:00
+1227,2024-07-04,33,Female,Annual,HIIT,47,380,Absent,08:56:00
+1609,2024-01-24,33,Other,Annual,Yoga,97,920,Absent,16:09:00
+2147,2024-07-11,33,Other,Annual,Cardio,61,586,Absent,18:12:00
+99,2024-01-21,33,Female,Annual,Yoga,49,465,Absent,10:14:00
+2565,2024-02-12,33,Male,Annual,Strength Training,91,787,Absent,19:41:00
+1592,2024-05-24,33,Other,Annual,HIIT,38,284,Absent,08:20:00
+493,2024-03-15,33,Male,Annual,Yoga,32,282,Present,10:23:00
+1284,2024-06-01,33,Other,Annual,Cardio,90,654,Present,08:13:00
+1839,2024-04-28,33,Female,Annual,HIIT,41,303,Present,12:28:00
+1172,2024-09-07,33,Female,Annual,Yoga,20,144,Absent,14:38:00
+2181,2024-10-13,33,Male,Annual,Strength Training,45,416,Present,09:46:00
+2455,2024-07-14,33,Male,Annual,Strength Training,43,378,Absent,09:52:00
+579,2024-04-12,33,Female,Annual,CrossFit,76,737,Present,06:44:00
+241,2024-04-03,33,Male,Annual,Yoga,101,714,Present,11:18:00
+1263,2024-03-12,33,Female,Annual,Cardio,26,257,Absent,08:23:00
+2162,2024-11-22,33,Other,Annual,Yoga,67,582,Absent,06:10:00
+1701,2024-01-05,33,Male,Annual,Strength Training,71,686,Present,21:35:00
+640,2024-03-27,33,Other,Annual,Cardio,32,224,Absent,09:51:00
+1356,2024-03-15,33,Female,Annual,Strength Training,51,351,Absent,12:27:00
+1775,2024-12-30,33,Other,Annual,Strength Training,21,160,Present,05:39:00
+2417,2024-04-26,33,Male,Annual,Cardio,51,368,Absent,21:12:00
+1984,2024-08-30,33,Female,Annual,Strength Training,45,233,Absent,17:51:00
+2541,2024-02-06,33,Female,Annual,Strength Training,50,472,Present,07:32:00
+907,2024-11-12,33,Other,Monthly,HIIT,60,354,Present,22:32:00
+268,2024-06-26,33,Female,Monthly,CrossFit,31,164,Absent,22:28:00
+1296,2024-06-11,33,Male,Monthly,Strength Training,119,1007,Present,13:28:00
+75,2024-02-11,33,Female,Monthly,CrossFit,53,340,Absent,05:22:00
+1634,2024-03-09,33,Male,Monthly,CrossFit,64,435,Present,06:03:00
+1228,2024-05-19,33,Female,Monthly,CrossFit,58,479,Present,05:56:00
+46,2024-07-01,33,Male,Monthly,CrossFit,56,336,Absent,21:50:00
+1171,2024-03-12,33,Female,Monthly,HIIT,53,306,Absent,22:19:00
+169,2024-03-19,33,Other,Monthly,CrossFit,39,299,Present,15:27:00
+1927,2024-07-30,33,Male,Monthly,HIIT,111,834,Absent,09:55:00
+1168,2024-06-20,33,Female,Monthly,CrossFit,63,410,Absent,08:42:00
+2074,2024-04-15,33,Male,Monthly,Yoga,58,415,Present,10:26:00
+364,2024-05-04,33,Other,Monthly,HIIT,108,813,Present,08:12:00
+1908,2024-04-28,33,Female,Monthly,Yoga,91,525,Absent,16:33:00
+1470,2024-08-06,33,Other,Monthly,Strength Training,102,663,Absent,10:45:00
+425,2024-09-16,33,Female,Monthly,Strength Training,101,767,Absent,18:34:00
+1970,2024-03-17,33,Male,Monthly,Yoga,107,1033,Present,15:34:00
+2135,2024-11-11,33,Female,Monthly,Strength Training,53,301,Present,14:46:00
+415,2024-12-31,33,Female,Monthly,HIIT,53,442,Absent,21:00:00
+2581,2024-05-11,33,Other,Monthly,CrossFit,104,626,Absent,10:09:00
+611,2024-11-29,33,Other,Quarterly,Cardio,115,576,Present,15:41:00
+1704,2024-10-09,33,Male,Quarterly,HIIT,72,475,Present,07:39:00
+1175,2024-12-11,33,Male,Quarterly,Cardio,73,578,Absent,05:57:00
+934,2024-09-19,33,Other,Quarterly,HIIT,96,814,Present,20:49:00
+347,2024-01-24,33,Female,Quarterly,HIIT,104,814,Absent,17:55:00
+1401,2024-10-21,33,Other,Quarterly,HIIT,94,870,Present,12:40:00
+2171,2024-06-26,33,Other,Quarterly,Yoga,73,502,Absent,19:31:00
+2451,2024-08-23,33,Male,Quarterly,Yoga,24,189,Absent,18:12:00
+435,2024-03-25,33,Other,Quarterly,CrossFit,78,761,Absent,21:47:00
+1105,2024-05-28,33,Female,Quarterly,CrossFit,80,582,Absent,22:15:00
+2321,2024-01-26,33,Male,Quarterly,CrossFit,46,307,Absent,19:43:00
+1254,2024-01-20,33,Other,Quarterly,Yoga,71,494,Present,07:49:00
+1202,2024-04-18,33,Male,Quarterly,CrossFit,27,164,Absent,15:52:00
+1610,2024-12-03,33,Female,Quarterly,CrossFit,108,887,Absent,19:52:00
+65,2024-11-09,33,Other,Quarterly,HIIT,37,251,Present,10:56:00
+1336,2024-08-20,33,Female,Quarterly,CrossFit,115,1133,Present,07:16:00
+1594,2024-02-24,33,Other,Quarterly,HIIT,82,557,Absent,05:32:00
+533,2024-09-08,33,Other,Quarterly,Strength Training,111,708,Present,15:42:00
+86,2024-02-10,33,Female,Quarterly,Cardio,104,997,Present,07:43:00
+1311,2024-06-28,34,Other,Annual,Strength Training,108,967,Present,12:36:00
+1404,2024-01-30,34,Other,Annual,CrossFit,112,670,Absent,11:26:00
+2016,2024-10-25,34,Male,Annual,CrossFit,42,384,Present,19:02:00
+1827,2024-10-11,34,Male,Annual,Strength Training,39,359,Absent,06:15:00
+478,2024-01-09,34,Male,Annual,Cardio,41,300,Present,20:48:00
+2134,2024-04-18,34,Male,Annual,Strength Training,72,624,Present,12:48:00
+473,2024-04-17,34,Male,Annual,Cardio,118,685,Present,06:41:00
+139,2024-11-03,34,Male,Annual,Cardio,42,214,Present,20:37:00
+1354,2024-01-13,34,Other,Annual,Yoga,71,490,Absent,14:33:00
+406,2024-02-07,34,Other,Annual,Cardio,62,539,Present,09:29:00
+1127,2024-11-02,34,Female,Annual,CrossFit,65,575,Present,17:35:00
+1450,2024-08-05,34,Other,Annual,Cardio,30,192,Absent,19:12:00
+2039,2024-04-27,34,Male,Annual,CrossFit,52,510,Present,05:42:00
+2495,2024-03-31,34,Female,Annual,Yoga,38,237,Absent,13:55:00
+2169,2024-12-01,34,Female,Annual,CrossFit,112,895,Absent,14:50:00
+1149,2024-02-10,34,Female,Annual,Strength Training,56,533,Absent,16:30:00
+1342,2024-09-07,34,Male,Monthly,Strength Training,88,811,Absent,20:46:00
+1762,2024-09-18,34,Female,Monthly,Strength Training,100,735,Absent,20:03:00
+2464,2024-01-15,34,Female,Monthly,HIIT,26,248,Present,16:22:00
+651,2024-06-17,34,Male,Monthly,Yoga,38,274,Absent,12:42:00
+656,2024-12-29,34,Female,Monthly,Cardio,95,673,Present,19:41:00
+2088,2024-09-13,34,Other,Monthly,HIIT,34,281,Absent,16:10:00
+975,2024-01-22,34,Other,Monthly,Strength Training,102,535,Absent,08:00:00
+866,2024-03-14,34,Male,Monthly,Cardio,50,485,Present,09:06:00
+2577,2024-09-16,34,Male,Monthly,CrossFit,99,933,Present,07:42:00
+696,2024-11-02,34,Other,Monthly,HIIT,42,366,Absent,07:35:00
+625,2024-10-22,34,Other,Monthly,Yoga,120,948,Absent,16:57:00
+543,2024-03-01,34,Male,Monthly,HIIT,55,341,Present,09:51:00
+186,2024-06-05,34,Male,Monthly,Yoga,94,690,Absent,06:17:00
+336,2024-01-26,34,Other,Monthly,Cardio,29,210,Absent,10:34:00
+374,2024-01-29,34,Male,Monthly,Strength Training,21,107,Absent,06:46:00
+1393,2024-09-30,34,Female,Monthly,Strength Training,99,706,Absent,22:52:00
+1782,2024-10-01,34,Female,Monthly,Cardio,48,478,Present,21:30:00
+2177,2024-11-24,34,Female,Monthly,CrossFit,97,762,Present,21:14:00
+542,2024-03-27,34,Male,Monthly,CrossFit,47,443,Absent,05:50:00
+1303,2024-03-17,34,Other,Quarterly,Cardio,119,984,Absent,10:58:00
+1218,2024-04-06,34,Female,Quarterly,HIIT,28,142,Absent,16:01:00
+74,2024-04-01,34,Male,Quarterly,HIIT,58,561,Present,19:50:00
+466,2024-10-27,34,Female,Quarterly,Yoga,22,159,Present,20:22:00
+2231,2024-06-15,34,Other,Quarterly,CrossFit,104,771,Absent,14:44:00
+877,2024-09-03,34,Male,Quarterly,Yoga,40,236,Present,19:43:00
+976,2024-02-09,34,Female,Quarterly,HIIT,100,830,Absent,12:24:00
+1605,2024-01-14,34,Other,Quarterly,CrossFit,69,506,Absent,08:07:00
+719,2024-01-19,34,Male,Quarterly,HIIT,99,967,Present,12:43:00
+69,2024-06-12,34,Male,Quarterly,Cardio,54,515,Absent,20:05:00
+1187,2024-10-09,34,Female,Quarterly,Strength Training,78,434,Absent,09:18:00
+2513,2024-06-13,34,Other,Quarterly,Yoga,91,619,Present,07:45:00
+2124,2024-09-27,34,Male,Quarterly,Cardio,28,142,Absent,22:48:00
+2419,2024-04-06,34,Male,Quarterly,Cardio,62,533,Absent,21:05:00
+2509,2024-09-30,34,Male,Quarterly,Yoga,64,605,Absent,06:08:00
+1217,2024-02-05,34,Male,Quarterly,Yoga,100,916,Absent,13:13:00
+1208,2024-12-29,34,Female,Quarterly,CrossFit,116,603,Present,13:35:00
+759,2024-05-10,35,Other,Annual,HIIT,91,762,Present,15:57:00
+476,2024-04-01,35,Female,Annual,Strength Training,82,538,Present,19:53:00
+2069,2024-06-12,35,Female,Annual,Yoga,21,207,Absent,05:41:00
+257,2024-02-20,35,Male,Annual,Yoga,108,785,Present,12:31:00
+1624,2024-09-27,35,Other,Annual,HIIT,87,504,Absent,22:55:00
+535,2024-03-23,35,Male,Annual,Strength Training,73,481,Absent,08:38:00
+993,2024-07-21,35,Male,Annual,Cardio,104,715,Absent,16:35:00
+1343,2024-12-25,35,Male,Annual,Cardio,115,582,Absent,05:22:00
+2368,2024-05-05,35,Male,Annual,Cardio,57,395,Absent,15:19:00
+708,2024-09-01,35,Other,Annual,CrossFit,64,541,Absent,09:28:00
+1822,2024-06-13,35,Female,Annual,Strength Training,80,789,Present,11:12:00
+18,2024-06-27,35,Other,Annual,CrossFit,25,211,Present,18:38:00
+1800,2024-04-18,35,Female,Annual,HIIT,109,849,Present,22:41:00
+807,2024-04-17,35,Female,Annual,Cardio,103,715,Present,14:33:00
+963,2024-04-01,35,Male,Annual,Strength Training,80,765,Absent,09:32:00
+2441,2024-03-01,35,Male,Annual,Cardio,115,720,Absent,21:58:00
+605,2024-09-14,35,Other,Annual,Yoga,43,243,Absent,22:05:00
+1477,2024-12-20,35,Male,Annual,Yoga,53,336,Present,06:05:00
+711,2024-05-17,35,Male,Annual,CrossFit,114,694,Present,14:00:00
+713,2024-02-06,35,Male,Monthly,Yoga,68,590,Absent,21:30:00
+320,2024-05-14,35,Female,Monthly,Cardio,107,543,Absent,19:37:00
+4,2024-02-05,35,Female,Monthly,CrossFit,64,362,Absent,07:18:00
+662,2024-03-02,35,Female,Monthly,Cardio,29,251,Present,06:27:00
+2298,2024-03-28,35,Male,Monthly,CrossFit,47,432,Absent,16:27:00
+1361,2024-11-16,35,Male,Monthly,HIIT,83,604,Present,21:15:00
+2496,2024-09-17,35,Other,Monthly,Cardio,42,214,Present,07:22:00
+1322,2024-01-16,35,Other,Monthly,Yoga,26,166,Present,17:55:00
+329,2024-07-26,35,Female,Monthly,HIIT,51,453,Present,14:58:00
+2350,2024-03-15,35,Female,Monthly,Yoga,58,572,Present,15:52:00
+2106,2024-08-01,35,Other,Monthly,HIIT,45,347,Present,13:07:00
+2043,2024-07-10,35,Female,Monthly,HIIT,74,676,Present,10:11:00
+1799,2024-02-27,35,Male,Monthly,HIIT,36,285,Absent,12:10:00
+732,2024-04-01,35,Other,Monthly,Strength Training,89,709,Absent,10:54:00
+2401,2024-06-15,35,Male,Quarterly,HIIT,65,566,Absent,05:00:00
+1586,2024-09-08,35,Female,Quarterly,Cardio,59,422,Present,08:03:00
+281,2024-08-16,35,Female,Quarterly,HIIT,88,618,Present,19:08:00
+592,2024-08-25,35,Other,Quarterly,HIIT,74,661,Absent,13:22:00
+597,2024-09-11,35,Female,Quarterly,Strength Training,44,435,Present,22:46:00
+1833,2024-12-19,35,Other,Quarterly,Strength Training,91,689,Absent,18:56:00
+1678,2024-12-11,35,Male,Quarterly,Cardio,46,338,Present,17:20:00
+1672,2024-09-06,35,Other,Quarterly,CrossFit,63,487,Present,05:44:00
+1643,2024-11-08,35,Other,Quarterly,HIIT,111,922,Absent,17:21:00
+2344,2024-03-13,35,Male,Quarterly,HIIT,116,615,Present,12:26:00
+1184,2024-05-16,36,Female,Annual,Yoga,110,918,Present,21:18:00
+773,2024-10-16,36,Female,Annual,Yoga,94,563,Present,07:49:00
+1457,2024-06-26,36,Male,Annual,CrossFit,29,179,Present,21:20:00
+1455,2024-11-30,36,Female,Annual,Strength Training,38,200,Present,09:52:00
+1625,2024-05-24,36,Female,Annual,CrossFit,117,1039,Absent,12:54:00
+1176,2024-03-08,36,Male,Annual,Cardio,20,198,Present,09:41:00
+1772,2024-01-15,36,Female,Annual,Cardio,33,325,Present,12:16:00
+594,2024-08-15,36,Other,Annual,HIIT,97,514,Absent,06:37:00
+2326,2024-03-18,36,Female,Annual,CrossFit,35,214,Absent,19:49:00
+1306,2024-02-27,36,Female,Annual,HIIT,59,321,Present,18:17:00
+927,2024-10-21,36,Male,Annual,Cardio,84,765,Absent,05:52:00
+239,2024-01-07,36,Other,Annual,Cardio,94,735,Present,15:39:00
+567,2024-08-14,36,Other,Annual,CrossFit,109,981,Absent,10:19:00
+1156,2024-11-22,36,Female,Annual,Strength Training,117,911,Present,11:06:00
+102,2024-02-27,36,Male,Annual,CrossFit,48,459,Absent,07:03:00
+1685,2024-12-11,36,Female,Monthly,CrossFit,21,181,Present,21:06:00
+737,2024-02-05,36,Female,Monthly,HIIT,95,587,Present,07:38:00
+1399,2024-03-10,36,Other,Monthly,Strength Training,99,824,Present,15:12:00
+517,2024-10-22,36,Other,Monthly,Yoga,44,235,Absent,14:15:00
+468,2024-03-01,36,Female,Monthly,Strength Training,37,338,Absent,16:12:00
+1074,2024-05-02,36,Female,Monthly,Strength Training,50,348,Present,21:08:00
+2166,2024-12-06,36,Female,Monthly,Yoga,50,258,Present,15:27:00
+1409,2024-08-02,36,Male,Monthly,HIIT,83,451,Present,17:15:00
+693,2024-09-12,36,Female,Monthly,Cardio,66,389,Present,17:37:00
+545,2024-01-01,36,Male,Monthly,HIIT,91,828,Present,08:21:00
+2255,2024-05-27,36,Female,Monthly,CrossFit,114,676,Present,20:09:00
+2553,2024-04-08,36,Other,Monthly,Strength Training,60,495,Present,06:27:00
+587,2024-03-02,36,Other,Monthly,Cardio,66,445,Absent,15:38:00
+1304,2024-11-23,36,Female,Monthly,CrossFit,114,570,Absent,21:19:00
+918,2024-09-15,36,Male,Monthly,Cardio,63,429,Present,19:27:00
+787,2024-10-05,36,Male,Monthly,HIIT,59,340,Absent,08:36:00
+317,2024-01-07,36,Other,Monthly,Yoga,74,528,Present,12:43:00
+349,2024-08-13,36,Male,Monthly,Cardio,84,756,Present,06:51:00
+1948,2024-04-07,36,Other,Monthly,Yoga,79,422,Present,09:26:00
+2551,2024-11-01,36,Other,Monthly,Cardio,22,151,Absent,09:49:00
+341,2024-12-08,36,Male,Monthly,CrossFit,46,257,Absent,11:09:00
+1299,2024-04-10,36,Female,Monthly,Strength Training,39,267,Absent,05:14:00
+881,2024-05-13,36,Male,Monthly,CrossFit,63,514,Absent,12:21:00
+2564,2024-09-04,36,Male,Monthly,CrossFit,74,402,Absent,21:29:00
+822,2024-01-29,36,Male,Quarterly,HIIT,33,193,Present,08:40:00
+1629,2024-10-25,36,Female,Quarterly,CrossFit,32,222,Absent,18:05:00
+854,2024-12-20,36,Other,Quarterly,CrossFit,119,1072,Present,10:18:00
+954,2024-02-07,36,Other,Quarterly,CrossFit,60,466,Absent,07:09:00
+1985,2024-01-15,36,Female,Quarterly,HIIT,78,446,Present,06:52:00
+10,2024-08-14,36,Other,Quarterly,Strength Training,94,643,Absent,11:29:00
+1086,2024-09-09,36,Female,Quarterly,CrossFit,106,661,Absent,10:34:00
+1014,2024-10-21,36,Female,Quarterly,Cardio,94,891,Present,07:21:00
+455,2024-10-05,36,Other,Quarterly,Cardio,119,1186,Present,19:07:00
+552,2024-03-29,36,Other,Quarterly,Cardio,55,284,Present,21:03:00
+1210,2024-12-05,36,Female,Quarterly,CrossFit,77,751,Absent,22:18:00
+2248,2024-12-07,36,Other,Quarterly,Cardio,99,698,Present,13:48:00
+1468,2024-08-07,36,Female,Quarterly,HIIT,110,895,Absent,11:22:00
+1141,2024-08-13,36,Female,Quarterly,HIIT,64,586,Absent,06:32:00
+236,2024-12-22,36,Female,Quarterly,Yoga,87,725,Absent,20:26:00
+1548,2024-03-19,37,Male,Annual,Yoga,87,615,Present,14:18:00
+1353,2024-01-26,37,Male,Annual,Yoga,82,437,Present,18:00:00
+762,2024-07-29,37,Other,Annual,Yoga,80,677,Present,18:08:00
+966,2024-11-06,37,Other,Annual,CrossFit,85,629,Absent,13:49:00
+1587,2024-03-11,37,Female,Annual,HIIT,44,404,Present,05:21:00
+1498,2024-01-12,37,Other,Annual,HIIT,71,506,Present,10:06:00
+2103,2024-08-26,37,Other,Annual,HIIT,120,685,Absent,13:23:00
+2343,2024-02-18,37,Other,Annual,HIIT,67,575,Present,09:47:00
+601,2024-05-31,37,Male,Annual,HIIT,56,510,Present,16:03:00
+739,2024-12-24,37,Male,Annual,Yoga,22,209,Absent,20:29:00
+2230,2024-08-16,37,Other,Annual,Strength Training,38,301,Present,21:25:00
+2010,2024-12-23,37,Female,Annual,Yoga,33,243,Present,05:16:00
+134,2024-08-04,37,Other,Annual,Cardio,65,327,Absent,05:11:00
+1169,2024-07-16,37,Male,Annual,HIIT,83,746,Present,16:37:00
+106,2024-10-14,37,Female,Annual,Strength Training,108,961,Present,15:30:00
+2239,2024-01-29,37,Female,Annual,Yoga,115,649,Present,12:19:00
+131,2024-01-16,37,Female,Annual,CrossFit,104,873,Absent,17:13:00
+1066,2024-12-20,37,Male,Annual,Yoga,27,140,Present,10:32:00
+156,2024-06-12,37,Other,Annual,CrossFit,54,487,Present,10:20:00
+1272,2024-03-16,37,Male,Monthly,CrossFit,29,177,Present,07:55:00
+2380,2024-03-16,37,Female,Monthly,HIIT,95,807,Absent,19:49:00
+827,2024-09-18,37,Other,Monthly,Yoga,58,485,Present,10:43:00
+1280,2024-11-12,37,Other,Monthly,Strength Training,57,331,Present,07:59:00
+1122,2024-07-11,37,Male,Monthly,HIIT,79,554,Present,11:28:00
+1064,2024-07-27,37,Male,Monthly,Cardio,81,479,Present,12:14:00
+1599,2024-08-21,37,Other,Monthly,Strength Training,59,387,Absent,11:08:00
+1411,2024-02-08,37,Male,Monthly,Strength Training,61,546,Present,10:44:00
+1544,2024-12-03,37,Other,Monthly,HIIT,68,599,Absent,22:25:00
+550,2024-01-19,37,Female,Monthly,CrossFit,75,492,Present,22:58:00
+631,2024-07-05,37,Other,Monthly,CrossFit,91,908,Absent,12:52:00
+1808,2024-06-22,37,Female,Monthly,Strength Training,56,396,Present,21:45:00
+2349,2024-06-23,37,Male,Monthly,Strength Training,115,987,Absent,10:41:00
+2399,2024-11-02,37,Female,Monthly,CrossFit,62,552,Present,21:47:00
+1630,2024-06-16,37,Female,Monthly,Cardio,62,582,Present,13:53:00
+1761,2024-10-23,37,Female,Monthly,CrossFit,118,695,Present,19:06:00
+1660,2024-06-15,37,Female,Monthly,Yoga,41,223,Absent,17:03:00
+57,2024-06-12,37,Male,Monthly,Cardio,37,242,Present,11:54:00
+1507,2024-02-01,37,Other,Monthly,Cardio,98,761,Absent,18:22:00
+960,2024-05-29,37,Other,Monthly,Strength Training,35,204,Present,08:42:00
+1577,2024-09-10,37,Female,Monthly,Strength Training,101,565,Absent,22:27:00
+2262,2024-02-12,37,Other,Monthly,Strength Training,76,458,Absent,13:14:00
+1717,2024-07-24,37,Male,Monthly,HIIT,28,239,Absent,21:50:00
+2533,2024-10-02,37,Female,Quarterly,Cardio,90,716,Absent,07:01:00
+526,2024-11-27,37,Female,Quarterly,HIIT,23,191,Absent,09:10:00
+2289,2024-03-02,37,Other,Quarterly,Strength Training,40,395,Absent,15:45:00
+1589,2024-06-23,37,Male,Quarterly,Cardio,96,791,Present,11:12:00
+2221,2024-08-12,37,Other,Quarterly,CrossFit,105,929,Present,20:09:00
+1588,2024-12-22,37,Male,Quarterly,HIIT,66,586,Present,19:54:00
+2293,2024-07-21,37,Female,Quarterly,HIIT,64,513,Present,08:56:00
+113,2024-10-23,37,Other,Quarterly,HIIT,120,842,Present,20:17:00
+1615,2024-03-21,37,Other,Quarterly,CrossFit,45,287,Absent,09:13:00
+2260,2024-06-16,37,Other,Quarterly,CrossFit,60,534,Absent,11:49:00
+2312,2024-03-30,37,Female,Quarterly,Strength Training,91,655,Present,18:10:00
+2295,2024-01-15,37,Female,Quarterly,Cardio,120,739,Absent,06:31:00
+1396,2024-01-03,37,Other,Quarterly,Strength Training,33,261,Absent,12:45:00
+834,2024-09-27,37,Other,Quarterly,Cardio,23,173,Present,10:42:00
+823,2024-06-25,37,Male,Quarterly,Cardio,103,847,Present,18:54:00
+2498,2024-08-24,37,Male,Quarterly,Cardio,111,578,Absent,06:26:00
+2413,2024-02-25,37,Female,Quarterly,Yoga,58,337,Present,06:48:00
+311,2024-08-01,37,Other,Quarterly,CrossFit,120,964,Present,22:42:00
+891,2024-10-10,37,Other,Quarterly,Strength Training,105,611,Present,06:24:00
+1513,2024-12-09,37,Other,Quarterly,Strength Training,39,270,Present,05:55:00
+1746,2024-01-25,38,Female,Annual,CrossFit,114,914,Absent,08:56:00
+173,2024-06-01,38,Male,Annual,CrossFit,28,200,Absent,07:15:00
+2346,2024-05-26,38,Male,Annual,Strength Training,81,678,Absent,12:05:00
+1963,2024-07-13,38,Male,Annual,Cardio,99,818,Present,13:06:00
+175,2024-12-12,38,Other,Annual,Strength Training,82,560,Present,14:27:00
+572,2024-09-02,38,Female,Annual,Yoga,27,147,Absent,09:25:00
+653,2024-11-27,38,Other,Annual,HIIT,36,233,Absent,14:39:00
+1654,2024-02-28,38,Other,Annual,Cardio,32,265,Absent,15:19:00
+1019,2024-05-03,38,Male,Annual,CrossFit,116,1048,Absent,19:22:00
+1463,2024-04-21,38,Other,Annual,CrossFit,97,569,Present,07:54:00
+889,2024-08-06,38,Other,Annual,Strength Training,84,609,Present,17:54:00
+8,2024-05-04,38,Male,Annual,Yoga,99,959,Absent,21:59:00
+215,2024-11-30,38,Female,Annual,Cardio,111,1025,Present,21:15:00
+2105,2024-05-02,38,Other,Annual,CrossFit,66,508,Absent,14:50:00
+1405,2024-07-08,38,Female,Annual,Cardio,24,169,Present,13:27:00
+142,2024-03-25,38,Female,Annual,HIIT,82,816,Absent,09:38:00
+2023,2024-03-28,38,Other,Monthly,CrossFit,33,322,Absent,10:52:00
+1706,2024-11-30,38,Female,Monthly,CrossFit,64,339,Present,11:05:00
+1816,2024-07-21,38,Other,Monthly,CrossFit,86,705,Absent,08:30:00
+2358,2024-06-28,38,Other,Monthly,Strength Training,45,294,Present,16:36:00
+1075,2024-11-08,38,Male,Monthly,Strength Training,20,143,Present,11:45:00
+978,2024-09-24,38,Other,Monthly,Strength Training,58,340,Present,18:41:00
+361,2024-08-31,38,Other,Monthly,Cardio,111,900,Present,21:55:00
+2580,2024-05-09,38,Male,Monthly,Strength Training,115,920,Absent,11:04:00
+16,2024-10-05,38,Other,Monthly,HIIT,106,976,Absent,13:15:00
+1289,2024-07-05,38,Male,Monthly,Yoga,108,997,Present,05:30:00
+2356,2024-09-13,38,Other,Monthly,Yoga,70,559,Present,19:04:00
+820,2024-02-07,38,Female,Monthly,Cardio,39,206,Present,06:47:00
+302,2024-12-13,38,Male,Monthly,HIIT,23,226,Absent,10:23:00
+558,2024-08-09,38,Other,Monthly,Yoga,81,713,Absent,09:33:00
+672,2024-08-30,38,Male,Monthly,Strength Training,51,299,Present,09:40:00
+404,2024-06-03,38,Female,Monthly,Yoga,43,281,Absent,12:05:00
+977,2024-02-06,38,Other,Monthly,HIIT,87,525,Present,11:04:00
+675,2024-12-04,38,Other,Monthly,Cardio,73,485,Absent,11:39:00
+138,2024-07-05,38,Other,Quarterly,Strength Training,98,578,Present,07:43:00
+563,2024-07-07,38,Other,Quarterly,CrossFit,84,596,Absent,18:51:00
+1142,2024-11-11,38,Male,Quarterly,Cardio,46,343,Absent,16:05:00
+2068,2024-02-10,38,Other,Quarterly,CrossFit,117,1140,Absent,07:52:00
+147,2024-10-24,38,Female,Quarterly,Cardio,106,808,Present,17:12:00
+1535,2024-02-07,38,Male,Quarterly,HIIT,77,769,Absent,07:16:00
+2348,2024-08-20,38,Male,Quarterly,HIIT,36,311,Absent,21:38:00
+84,2024-05-26,38,Other,Quarterly,Strength Training,108,605,Absent,22:52:00
+1633,2024-06-07,38,Female,Quarterly,Strength Training,107,802,Absent,17:30:00
+1675,2024-02-01,38,Other,Quarterly,CrossFit,23,173,Present,14:53:00
+2439,2024-04-07,38,Other,Quarterly,Strength Training,115,919,Present,11:46:00
+2420,2024-12-28,38,Male,Quarterly,Yoga,91,843,Absent,08:01:00
+2536,2024-06-24,38,Other,Quarterly,Yoga,38,274,Present,09:04:00
+278,2024-04-19,38,Female,Quarterly,Cardio,114,1087,Absent,08:38:00
+1062,2024-09-28,38,Female,Quarterly,CrossFit,35,333,Absent,05:10:00
+2116,2024-09-26,38,Female,Quarterly,Yoga,48,285,Present,13:02:00
+808,2024-08-17,38,Other,Quarterly,Yoga,45,385,Absent,22:57:00
+721,2024-01-29,38,Other,Quarterly,HIIT,70,604,Absent,19:03:00
+775,2024-09-03,38,Male,Quarterly,Strength Training,69,685,Present,07:46:00
+1650,2024-11-23,38,Female,Quarterly,CrossFit,109,577,Present,14:05:00
+180,2024-07-06,38,Other,Quarterly,Strength Training,48,348,Present,18:39:00
+956,2024-05-30,38,Male,Quarterly,Cardio,98,962,Present,07:33:00
+1259,2024-11-27,38,Male,Quarterly,CrossFit,88,498,Absent,19:58:00
+1955,2024-07-07,38,Female,Quarterly,Strength Training,35,229,Absent,15:01:00
+365,2024-09-20,38,Male,Quarterly,Yoga,56,347,Present,05:30:00
+1667,2024-01-29,39,Male,Annual,Yoga,48,402,Absent,21:40:00
+2050,2024-12-01,39,Other,Annual,Cardio,51,379,Present,06:23:00
+1788,2024-12-04,39,Female,Annual,HIIT,31,178,Present,16:52:00
+525,2024-05-11,39,Male,Annual,Cardio,83,742,Absent,18:29:00
+2488,2024-03-07,39,Other,Annual,Cardio,116,1065,Absent,16:03:00
+1179,2024-10-17,39,Male,Annual,Cardio,101,852,Present,16:55:00
+1972,2024-06-22,39,Other,Annual,Yoga,68,623,Absent,14:01:00
+58,2024-11-12,39,Other,Annual,Yoga,76,596,Absent,09:48:00
+1809,2024-11-15,39,Female,Annual,CrossFit,99,980,Absent,17:08:00
+2094,2024-06-30,39,Other,Annual,HIIT,33,311,Present,05:45:00
+872,2024-12-06,39,Other,Annual,Yoga,36,325,Absent,17:31:00
+1485,2024-06-08,39,Other,Annual,Cardio,74,487,Absent,12:59:00
+1047,2024-09-22,39,Other,Annual,Cardio,68,562,Present,20:42:00
+868,2024-06-17,39,Male,Annual,Cardio,104,807,Present,06:13:00
+262,2024-02-18,39,Female,Annual,CrossFit,31,171,Absent,15:47:00
+1754,2024-05-18,39,Male,Annual,HIIT,102,977,Present,19:22:00
+1978,2024-10-06,39,Other,Annual,Yoga,107,1038,Present,11:24:00
+801,2024-08-10,39,Other,Annual,Strength Training,83,803,Present,21:21:00
+203,2024-03-14,39,Other,Monthly,CrossFit,52,486,Absent,10:01:00
+845,2024-09-06,39,Female,Monthly,Yoga,65,550,Present,12:32:00
+2259,2024-04-08,39,Other,Monthly,Yoga,91,578,Present,21:51:00
+45,2024-08-14,39,Female,Monthly,Yoga,26,208,Absent,14:20:00
+1578,2024-01-04,39,Female,Monthly,CrossFit,101,730,Present,10:21:00
+576,2024-11-04,39,Female,Monthly,HIIT,33,263,Absent,06:45:00
+1145,2024-08-10,39,Male,Monthly,Cardio,38,323,Present,17:42:00
+2484,2024-02-29,39,Female,Monthly,Cardio,116,844,Absent,16:50:00
+2220,2024-07-06,39,Male,Monthly,CrossFit,112,800,Present,09:34:00
+1451,2024-12-22,39,Other,Monthly,Strength Training,33,296,Present,19:41:00
+2492,2024-02-07,39,Other,Monthly,Cardio,109,1062,Present,22:06:00
+1942,2024-02-08,39,Female,Monthly,HIIT,50,395,Absent,19:49:00
+504,2024-06-30,39,Other,Monthly,Cardio,25,170,Present,22:02:00
+2524,2024-05-30,39,Male,Monthly,Cardio,101,705,Present,17:12:00
+799,2024-03-29,39,Female,Monthly,Cardio,54,406,Present,11:13:00
+388,2024-11-12,39,Other,Monthly,HIIT,77,545,Absent,12:46:00
+2013,2024-07-15,39,Male,Monthly,Cardio,39,210,Absent,13:56:00
+1429,2024-10-30,39,Other,Monthly,CrossFit,98,680,Absent,21:18:00
+729,2024-04-27,39,Female,Monthly,Strength Training,48,433,Present,20:09:00
+1421,2024-12-04,39,Other,Monthly,Strength Training,83,790,Present,09:22:00
+1381,2024-03-10,39,Female,Monthly,Cardio,31,221,Present,10:44:00
+629,2024-12-29,39,Other,Quarterly,Strength Training,63,364,Present,09:12:00
+717,2024-08-08,39,Female,Quarterly,Cardio,39,248,Absent,14:56:00
+395,2024-08-30,39,Other,Quarterly,Strength Training,89,774,Present,09:44:00
+2319,2024-06-09,39,Female,Quarterly,Cardio,106,918,Absent,21:40:00
+29,2024-02-07,39,Other,Quarterly,Strength Training,120,991,Present,21:23:00
+1760,2024-05-22,39,Male,Quarterly,HIIT,56,450,Present,09:53:00
+712,2024-01-15,39,Female,Quarterly,Cardio,49,302,Absent,17:10:00
+2545,2024-10-09,39,Male,Quarterly,HIIT,76,387,Absent,20:57:00
+1511,2024-02-17,39,Other,Quarterly,Cardio,30,285,Present,12:09:00
+2281,2024-03-29,39,Male,Quarterly,Cardio,108,710,Present,10:55:00
+2265,2024-06-29,39,Male,Quarterly,Strength Training,79,424,Absent,10:04:00
+416,2024-12-15,39,Other,Quarterly,Strength Training,56,444,Absent,10:35:00
+2153,2024-10-20,39,Male,Quarterly,CrossFit,40,351,Present,13:46:00
+1922,2024-01-22,39,Male,Quarterly,Strength Training,119,906,Absent,05:26:00
+1949,2024-09-16,39,Female,Quarterly,CrossFit,32,288,Absent,12:22:00
+197,2024-04-16,39,Female,Quarterly,Yoga,78,666,Absent,12:57:00
+308,2024-05-21,39,Male,Quarterly,Strength Training,91,830,Present,22:57:00
+1096,2024-07-10,39,Female,Quarterly,Strength Training,39,268,Absent,10:32:00
+1257,2024-10-10,40,Male,Annual,HIIT,92,481,Absent,06:38:00
+229,2024-05-03,40,Other,Annual,Yoga,47,235,Absent,16:19:00
+1323,2024-08-14,40,Male,Annual,Strength Training,111,589,Absent,08:38:00
+750,2024-08-12,40,Other,Annual,Yoga,44,293,Absent,22:46:00
+1837,2024-04-10,40,Female,Annual,CrossFit,77,475,Absent,18:25:00
+2389,2024-02-16,40,Male,Annual,Yoga,81,489,Absent,05:42:00
+1137,2024-12-23,40,Other,Annual,Yoga,75,679,Present,16:25:00
+1668,2024-10-29,40,Male,Annual,Cardio,68,652,Present,15:19:00
+368,2024-06-26,40,Other,Annual,HIIT,55,511,Absent,16:35:00
+546,2024-10-26,40,Other,Monthly,CrossFit,71,375,Present,21:33:00
+2168,2024-01-17,40,Male,Monthly,HIIT,20,109,Absent,05:06:00
+1877,2024-03-20,40,Female,Monthly,Strength Training,105,861,Present,07:28:00
+1581,2024-07-03,40,Female,Monthly,Yoga,40,307,Present,14:02:00
+1618,2024-02-27,40,Other,Monthly,Yoga,35,242,Absent,07:21:00
+2086,2024-11-22,40,Female,Monthly,Cardio,65,644,Absent,09:04:00
+2503,2024-12-12,40,Female,Monthly,Cardio,107,668,Present,12:08:00
+1395,2024-12-06,40,Female,Monthly,CrossFit,89,542,Present,21:48:00
+893,2024-09-03,40,Other,Monthly,Yoga,31,232,Absent,10:08:00
+2173,2024-08-08,40,Female,Monthly,Cardio,116,996,Present,21:06:00
+2475,2024-08-24,40,Male,Monthly,Cardio,59,577,Present,14:13:00
+314,2024-03-30,40,Other,Monthly,Yoga,99,599,Absent,11:27:00
+2032,2024-11-08,40,Female,Monthly,CrossFit,69,454,Present,22:03:00
+684,2024-09-16,40,Female,Monthly,CrossFit,73,656,Present,08:01:00
+917,2024-04-26,40,Male,Monthly,CrossFit,93,650,Present,12:13:00
+2407,2024-09-01,40,Male,Monthly,CrossFit,76,542,Absent,20:54:00
+666,2024-12-20,40,Other,Monthly,Cardio,88,712,Present,09:16:00
+555,2024-12-04,40,Male,Monthly,Cardio,20,155,Absent,16:18:00
+363,2024-02-03,40,Male,Monthly,Cardio,36,272,Present,17:17:00
+636,2024-09-02,40,Male,Monthly,Strength Training,71,588,Present,08:52:00
+191,2024-03-18,40,Female,Quarterly,Cardio,20,113,Absent,11:29:00
+1712,2024-09-17,40,Female,Quarterly,CrossFit,33,303,Absent,09:59:00
+754,2024-03-05,40,Female,Quarterly,Strength Training,32,181,Absent,20:28:00
+1358,2024-05-31,40,Other,Quarterly,Cardio,39,287,Present,08:59:00
+1345,2024-04-11,40,Female,Quarterly,HIIT,102,833,Absent,10:50:00
+1688,2024-08-06,40,Other,Quarterly,Cardio,106,694,Absent,06:22:00
+47,2024-12-07,40,Other,Quarterly,Yoga,92,524,Absent,19:24:00
+1735,2024-08-30,40,Other,Quarterly,Cardio,86,701,Absent,19:34:00
+1250,2024-01-25,40,Female,Quarterly,HIIT,117,1072,Absent,16:42:00
+1995,2024-03-02,40,Female,Quarterly,HIIT,89,740,Absent,14:40:00
+258,2024-12-02,40,Male,Quarterly,CrossFit,92,782,Present,08:39:00
+2461,2024-12-01,40,Female,Quarterly,HIIT,27,191,Absent,14:50:00
+2200,2024-12-01,40,Male,Quarterly,Strength Training,59,539,Absent,10:34:00
+15,2024-07-08,40,Other,Quarterly,CrossFit,99,643,Present,20:18:00
+1261,2024-06-15,40,Female,Quarterly,HIIT,48,379,Absent,13:02:00
+565,2024-05-02,40,Female,Quarterly,HIIT,36,320,Absent,09:37:00
+2076,2024-10-10,40,Male,Quarterly,Cardio,100,918,Present,05:22:00
+888,2024-12-02,40,Male,Quarterly,HIIT,42,318,Absent,20:47:00
+1906,2024-07-01,40,Female,Quarterly,HIIT,57,568,Absent,22:08:00
+382,2024-12-22,40,Male,Quarterly,Cardio,75,671,Absent,06:07:00
+1378,2024-12-13,40,Other,Quarterly,HIIT,42,316,Present,18:06:00
+2313,2024-12-31,40,Other,Quarterly,Cardio,42,355,Absent,18:48:00
+398,2024-02-26,40,Female,Quarterly,CrossFit,45,245,Absent,08:28:00
+2126,2024-04-06,41,Male,Annual,HIIT,51,419,Absent,06:44:00
+2534,2024-04-21,41,Male,Annual,Yoga,100,660,Present,07:35:00
+1549,2024-09-20,41,Other,Annual,Yoga,120,931,Absent,08:20:00
+1129,2024-06-13,41,Male,Annual,Cardio,93,664,Present,05:04:00
+178,2024-01-25,41,Other,Annual,CrossFit,47,395,Absent,22:22:00
+419,2024-06-09,41,Female,Annual,HIIT,74,433,Absent,11:54:00
+2107,2024-05-29,41,Female,Annual,HIIT,104,616,Absent,06:13:00
+703,2024-09-26,41,Female,Annual,HIIT,103,984,Present,15:40:00
+1108,2024-08-13,41,Female,Annual,Cardio,114,594,Present,22:15:00
+1870,2024-06-23,41,Other,Annual,CrossFit,86,688,Absent,16:23:00
+2525,2024-12-01,41,Female,Annual,Yoga,47,406,Present,12:04:00
+2009,2024-02-14,41,Female,Annual,Strength Training,97,525,Absent,05:08:00
+2219,2024-02-22,41,Other,Annual,Yoga,91,456,Absent,13:33:00
+2529,2024-01-28,41,Other,Annual,Strength Training,91,686,Present,10:04:00
+217,2024-08-26,41,Other,Annual,Yoga,83,741,Absent,17:44:00
+196,2024-01-31,41,Other,Annual,CrossFit,102,944,Absent,08:55:00
+402,2024-08-25,41,Female,Annual,Strength Training,73,613,Absent,11:10:00
+1090,2024-01-12,41,Other,Annual,Strength Training,37,190,Present,22:03:00
+1045,2024-04-25,41,Other,Annual,Cardio,83,715,Present,21:23:00
+1325,2024-04-07,41,Other,Annual,Yoga,98,979,Present,05:46:00
+980,2024-11-27,41,Male,Annual,Strength Training,61,450,Absent,21:29:00
+296,2024-10-17,41,Other,Annual,Yoga,72,642,Present,05:02:00
+1433,2024-06-29,41,Female,Annual,HIIT,73,526,Present,19:28:00
+2406,2024-01-15,41,Male,Annual,HIIT,82,761,Present,08:09:00
+1471,2024-07-12,41,Male,Monthly,Yoga,113,709,Present,18:12:00
+1442,2024-03-15,41,Female,Monthly,Cardio,38,350,Present,15:20:00
+1273,2024-03-02,41,Male,Monthly,HIIT,26,241,Present,12:45:00
+2206,2024-02-05,41,Other,Monthly,HIIT,63,578,Absent,08:54:00
+1727,2024-03-13,41,Other,Monthly,HIIT,49,331,Absent,08:41:00
+251,2024-02-04,41,Other,Monthly,HIIT,68,465,Present,21:12:00
+2058,2024-11-09,41,Female,Monthly,Strength Training,25,172,Present,10:23:00
+1648,2024-11-23,41,Male,Monthly,CrossFit,110,804,Absent,10:22:00
+2113,2024-05-14,41,Other,Monthly,Strength Training,115,1001,Absent,09:52:00
+685,2024-04-04,41,Other,Monthly,CrossFit,115,1137,Present,10:05:00
+1417,2024-08-26,41,Female,Monthly,Yoga,50,272,Absent,08:26:00
+1201,2024-11-03,41,Other,Monthly,HIIT,99,501,Absent,16:50:00
+2164,2024-06-09,41,Other,Quarterly,CrossFit,49,376,Present,05:10:00
+152,2024-02-10,41,Other,Quarterly,Strength Training,83,819,Present,05:38:00
+230,2024-05-14,41,Other,Quarterly,Cardio,85,512,Absent,07:31:00
+874,2024-07-01,41,Other,Quarterly,Yoga,93,471,Present,10:51:00
+2271,2024-10-01,41,Other,Quarterly,CrossFit,68,451,Present,12:02:00
+1007,2024-01-30,41,Female,Quarterly,Cardio,42,415,Absent,16:18:00
+1357,2024-07-31,41,Other,Quarterly,Cardio,59,549,Present,19:24:00
+580,2024-01-30,41,Female,Quarterly,Cardio,116,769,Present,09:11:00
+979,2024-03-21,41,Male,Quarterly,CrossFit,33,310,Present,08:51:00
+1765,2024-12-09,41,Other,Quarterly,Yoga,96,635,Absent,22:15:00
+1563,2024-07-06,41,Male,Quarterly,CrossFit,62,602,Absent,11:57:00
+1193,2024-03-10,41,Other,Quarterly,Yoga,68,574,Absent,13:59:00
+997,2024-06-14,41,Other,Quarterly,Yoga,110,995,Present,17:19:00
+527,2024-12-02,41,Male,Quarterly,Strength Training,45,254,Present,15:22:00
+2445,2024-09-25,41,Other,Quarterly,Strength Training,28,161,Absent,14:34:00
+1089,2024-10-12,41,Other,Quarterly,HIIT,27,228,Present,15:26:00
+2576,2024-11-21,41,Female,Quarterly,Cardio,42,331,Present,21:56:00
+1917,2024-02-01,41,Other,Quarterly,Strength Training,57,450,Present,07:45:00
+95,2024-11-05,41,Male,Quarterly,CrossFit,110,865,Absent,16:19:00
+593,2024-07-16,42,Female,Annual,Yoga,44,355,Absent,09:34:00
+1057,2024-02-06,42,Male,Annual,Yoga,28,159,Absent,12:24:00
+1499,2024-07-03,42,Male,Annual,Cardio,59,434,Present,07:58:00
+459,2024-04-21,42,Female,Annual,Strength Training,79,556,Absent,13:11:00
+52,2024-11-22,42,Male,Annual,CrossFit,42,346,Present,05:27:00
+1479,2024-06-24,42,Female,Annual,CrossFit,45,418,Absent,08:55:00
+1998,2024-10-31,42,Female,Annual,CrossFit,83,765,Absent,06:40:00
+1893,2024-07-19,42,Female,Annual,Strength Training,115,719,Absent,09:14:00
+2301,2024-11-17,42,Female,Annual,CrossFit,36,317,Absent,15:40:00
+1527,2024-03-19,42,Female,Annual,Strength Training,47,302,Present,14:44:00
+994,2024-04-06,42,Male,Annual,Yoga,88,700,Absent,21:46:00
+873,2024-02-06,42,Other,Annual,CrossFit,77,607,Absent,10:47:00
+1480,2024-11-15,42,Other,Annual,Strength Training,111,563,Present,05:39:00
+305,2024-11-02,42,Other,Annual,Cardio,46,396,Present,08:09:00
+2240,2024-03-01,42,Female,Monthly,CrossFit,28,247,Present,18:37:00
+1125,2024-07-28,42,Female,Monthly,Strength Training,105,1023,Present,05:58:00
+1530,2024-11-06,42,Other,Monthly,Strength Training,23,164,Absent,09:11:00
+49,2024-07-02,42,Male,Monthly,CrossFit,103,755,Present,16:47:00
+1923,2024-11-29,42,Male,Monthly,CrossFit,101,660,Absent,19:15:00
+2432,2024-05-27,42,Male,Monthly,CrossFit,56,429,Absent,19:05:00
+1190,2024-02-27,42,Male,Monthly,HIIT,33,213,Present,22:39:00
+932,2024-02-16,42,Male,Monthly,HIIT,89,814,Present,22:39:00
+734,2024-02-10,42,Male,Monthly,Strength Training,58,481,Absent,07:16:00
+2550,2024-12-22,42,Female,Monthly,Cardio,86,694,Absent,18:06:00
+1790,2024-07-02,42,Male,Monthly,Yoga,31,160,Absent,22:16:00
+2093,2024-09-14,42,Female,Monthly,CrossFit,66,448,Absent,15:57:00
+446,2024-01-24,42,Female,Monthly,HIIT,67,443,Absent,20:58:00
+1575,2024-09-06,42,Other,Monthly,CrossFit,53,414,Absent,20:10:00
+2514,2024-05-16,42,Female,Monthly,Yoga,106,534,Absent,12:49:00
+1523,2024-05-23,42,Female,Monthly,CrossFit,90,892,Absent,10:39:00
+1743,2024-10-04,42,Male,Monthly,HIIT,26,154,Present,10:29:00
+2217,2024-07-31,42,Male,Monthly,Yoga,94,933,Present,08:35:00
+2027,2024-07-19,42,Female,Monthly,CrossFit,66,640,Present,06:01:00
+1372,2024-05-15,42,Male,Monthly,Strength Training,35,228,Present,12:25:00
+2537,2024-02-25,42,Other,Monthly,Strength Training,66,655,Present,20:54:00
+906,2024-11-02,42,Male,Quarterly,Strength Training,76,534,Present,10:44:00
+843,2024-08-04,42,Male,Quarterly,HIIT,72,673,Absent,10:44:00
+1107,2024-08-30,42,Female,Quarterly,HIIT,65,461,Present,08:18:00
+2073,2024-10-17,42,Other,Quarterly,HIIT,97,612,Absent,22:28:00
+1966,2024-09-16,42,Male,Quarterly,Strength Training,90,893,Absent,19:58:00
+100,2024-10-22,42,Female,Quarterly,CrossFit,69,369,Present,18:31:00
+2341,2024-12-27,42,Other,Quarterly,HIIT,34,260,Absent,12:55:00
+1375,2024-02-24,42,Other,Quarterly,HIIT,54,382,Absent,12:53:00
+114,2024-12-31,42,Male,Quarterly,Yoga,88,761,Absent,05:32:00
+1865,2024-11-18,42,Other,Quarterly,CrossFit,91,720,Present,18:06:00
+1812,2024-12-18,42,Female,Quarterly,CrossFit,61,354,Absent,21:39:00
+1205,2024-05-05,42,Female,Quarterly,HIIT,42,294,Present,20:13:00
+390,2024-07-12,42,Male,Quarterly,Strength Training,87,621,Present,16:36:00
+697,2024-09-26,42,Female,Quarterly,Strength Training,108,954,Present,11:54:00
+1046,2024-06-15,42,Other,Quarterly,Strength Training,23,188,Absent,16:19:00
+2425,2024-05-07,42,Female,Quarterly,CrossFit,22,136,Absent,22:14:00
+50,2024-12-04,42,Other,Quarterly,Strength Training,99,746,Absent,16:19:00
+497,2024-05-15,42,Female,Quarterly,Cardio,95,749,Present,21:33:00
+1403,2024-06-30,42,Male,Quarterly,CrossFit,111,622,Absent,06:57:00
+2203,2024-05-24,42,Other,Quarterly,Yoga,98,936,Absent,21:21:00
+515,2024-04-14,43,Other,Annual,CrossFit,115,772,Absent,07:26:00
+1067,2024-08-26,43,Other,Annual,Yoga,31,293,Present,05:22:00
+1791,2024-05-11,43,Female,Annual,Strength Training,45,375,Present,13:55:00
+1885,2024-11-27,43,Male,Annual,CrossFit,118,743,Absent,22:46:00
+614,2024-01-14,43,Female,Annual,Cardio,120,603,Present,15:07:00
+2318,2024-04-19,43,Other,Annual,HIIT,76,506,Absent,21:08:00
+2099,2024-10-14,43,Female,Annual,Cardio,34,253,Absent,14:43:00
+2224,2024-11-08,43,Other,Annual,Cardio,60,497,Present,19:15:00
+1956,2024-03-03,43,Female,Annual,CrossFit,54,296,Absent,08:25:00
+2008,2024-04-28,43,Male,Annual,Yoga,37,233,Absent,13:53:00
+2333,2024-03-04,43,Male,Annual,CrossFit,86,442,Present,09:06:00
+205,2024-04-14,43,Male,Annual,Strength Training,36,301,Present,14:28:00
+2557,2024-04-04,43,Other,Annual,HIIT,80,654,Absent,22:56:00
+1117,2024-12-18,43,Female,Annual,Strength Training,43,392,Present,14:49:00
+1979,2024-04-27,43,Male,Annual,Yoga,120,766,Present,19:43:00
+2483,2024-11-15,43,Female,Annual,Strength Training,114,1094,Present,21:29:00
+850,2024-04-03,43,Male,Annual,Yoga,25,183,Absent,14:00:00
+728,2024-05-10,43,Male,Annual,Strength Training,58,555,Present,08:55:00
+1164,2024-02-27,43,Female,Annual,Cardio,102,714,Absent,21:23:00
+761,2024-07-18,43,Male,Annual,Yoga,63,447,Absent,20:52:00
+1721,2024-03-19,43,Other,Annual,CrossFit,116,1016,Absent,21:31:00
+2277,2024-09-04,43,Female,Annual,HIIT,42,240,Present,16:59:00
+894,2024-02-21,43,Female,Monthly,Yoga,86,562,Present,10:33:00
+780,2024-12-02,43,Male,Monthly,Strength Training,87,475,Absent,13:42:00
+1718,2024-06-04,43,Female,Monthly,HIIT,82,507,Absent,15:19:00
+539,2024-10-09,43,Male,Monthly,HIIT,112,772,Present,11:57:00
+1603,2024-01-25,43,Male,Monthly,Strength Training,107,667,Present,15:13:00
+1009,2024-08-18,43,Male,Monthly,HIIT,108,834,Absent,21:40:00
+2527,2024-06-04,43,Female,Monthly,Yoga,111,670,Absent,18:50:00
+753,2024-10-13,43,Female,Monthly,Strength Training,54,439,Present,05:56:00
+2036,2024-02-28,43,Other,Monthly,Strength Training,64,571,Absent,11:03:00
+1355,2024-11-16,43,Other,Monthly,Yoga,118,900,Absent,06:01:00
+2531,2024-09-22,43,Female,Monthly,CrossFit,42,265,Present,09:35:00
+1073,2024-07-04,43,Female,Monthly,HIIT,73,435,Present,13:16:00
+248,2024-04-14,43,Male,Monthly,CrossFit,27,204,Present,18:27:00
+1282,2024-03-15,43,Other,Monthly,CrossFit,89,864,Absent,13:17:00
+228,2024-03-04,43,Male,Monthly,CrossFit,29,205,Present,07:21:00
+2243,2024-05-29,43,Other,Monthly,Cardio,88,776,Present,07:10:00
+813,2024-11-09,43,Male,Monthly,Cardio,109,722,Present,22:11:00
+1874,2024-12-11,43,Female,Monthly,CrossFit,66,628,Present,19:44:00
+2437,2024-08-18,43,Male,Monthly,Strength Training,36,350,Present,09:39:00
+2232,2024-01-26,43,Female,Monthly,Strength Training,52,463,Absent,15:21:00
+1071,2024-06-09,43,Female,Monthly,CrossFit,24,182,Absent,08:54:00
+939,2024-05-06,43,Other,Monthly,HIIT,77,642,Absent,08:38:00
+1120,2024-08-12,43,Male,Monthly,Strength Training,72,624,Present,06:29:00
+2390,2024-09-24,43,Male,Monthly,Yoga,26,220,Present,19:25:00
+1708,2024-05-12,43,Male,Quarterly,Cardio,33,192,Absent,19:43:00
+1088,2024-09-23,43,Other,Quarterly,Cardio,92,534,Present,17:03:00
+1929,2024-11-12,43,Other,Quarterly,Cardio,112,745,Absent,15:38:00
+2327,2024-07-07,43,Female,Quarterly,Cardio,42,332,Absent,11:46:00
+2378,2024-01-02,43,Male,Quarterly,Cardio,70,368,Absent,16:56:00
+2015,2024-12-11,43,Male,Quarterly,HIIT,73,392,Present,07:06:00
+63,2024-10-10,43,Female,Quarterly,Strength Training,22,142,Absent,22:58:00
+2507,2024-09-23,43,Female,Quarterly,Strength Training,61,379,Present,19:15:00
+922,2024-01-19,43,Female,Quarterly,Yoga,77,439,Present,11:13:00
+654,2024-08-22,43,Male,Quarterly,CrossFit,56,306,Present,12:09:00
+1576,2024-09-14,43,Male,Quarterly,Cardio,81,581,Absent,07:37:00
+2278,2024-08-12,43,Other,Quarterly,Strength Training,108,751,Present,14:09:00
+1173,2024-12-17,43,Male,Quarterly,CrossFit,89,844,Present,17:33:00
+1824,2024-11-26,43,Male,Quarterly,CrossFit,53,379,Present,16:28:00
+887,2024-03-06,43,Male,Quarterly,CrossFit,37,295,Present,14:29:00
+1334,2024-10-15,43,Male,Quarterly,Strength Training,20,127,Present,14:28:00
+1834,2024-05-23,43,Female,Quarterly,Cardio,83,446,Absent,10:56:00
+339,2024-10-08,43,Other,Quarterly,CrossFit,36,285,Present,09:34:00
+1778,2024-07-12,43,Male,Quarterly,Cardio,104,673,Absent,22:56:00
+345,2024-06-29,44,Male,Annual,HIIT,20,180,Present,13:36:00
+1252,2024-11-03,44,Male,Annual,HIIT,87,788,Absent,18:50:00
+245,2024-01-16,44,Other,Annual,Strength Training,63,452,Absent,11:49:00
+2012,2024-06-19,44,Male,Annual,Yoga,69,394,Present,22:31:00
+720,2024-07-26,44,Male,Annual,HIIT,51,399,Absent,05:31:00
+1416,2024-11-18,44,Female,Annual,HIIT,65,633,Absent,21:25:00
+668,2024-04-09,44,Female,Annual,Yoga,74,499,Absent,13:33:00
+2302,2024-06-11,44,Male,Annual,Strength Training,25,170,Present,06:16:00
+2024,2024-12-13,44,Male,Annual,Strength Training,93,691,Absent,08:21:00
+1932,2024-11-17,44,Other,Annual,Yoga,27,243,Absent,21:02:00
+2251,2024-01-24,44,Male,Annual,Cardio,53,354,Present,09:47:00
+1919,2024-10-18,44,Male,Annual,HIIT,110,794,Present,11:04:00
+1397,2024-06-17,44,Male,Annual,Cardio,24,186,Absent,18:29:00
+1235,2024-06-16,44,Female,Annual,Cardio,48,350,Present,21:52:00
+407,2024-06-01,44,Other,Annual,CrossFit,68,515,Absent,21:32:00
+798,2024-10-07,44,Male,Annual,HIIT,95,784,Absent,19:24:00
+1600,2024-04-23,44,Other,Annual,CrossFit,38,362,Absent,09:21:00
+2201,2024-10-11,44,Male,Monthly,Cardio,99,839,Absent,06:30:00
+369,2024-10-19,44,Male,Monthly,CrossFit,92,642,Present,19:37:00
+1456,2024-10-20,44,Female,Monthly,Cardio,68,547,Present,19:43:00
+2061,2024-07-19,44,Male,Monthly,Yoga,43,389,Present,09:20:00
+1733,2024-10-21,44,Female,Monthly,CrossFit,84,592,Present,16:02:00
+704,2024-12-02,44,Female,Monthly,Yoga,84,624,Present,17:36:00
+628,2024-10-20,44,Male,Monthly,Yoga,36,312,Absent,20:48:00
+2033,2024-09-16,44,Male,Monthly,Strength Training,79,772,Present,05:52:00
+690,2024-11-09,44,Other,Monthly,Cardio,105,797,Absent,19:38:00
+806,2024-11-30,44,Other,Monthly,Strength Training,44,334,Absent,21:25:00
+2598,2024-04-27,44,Male,Quarterly,CrossFit,94,875,Present,22:49:00
+1036,2024-01-28,44,Other,Quarterly,Strength Training,104,583,Absent,16:51:00
+424,2024-04-06,44,Male,Quarterly,Strength Training,29,243,Present,15:00:00
+1993,2024-10-24,44,Female,Quarterly,Cardio,109,850,Present,07:09:00
+83,2024-10-17,44,Male,Quarterly,CrossFit,20,148,Absent,08:30:00
+443,2024-10-22,44,Male,Quarterly,HIIT,91,631,Present,19:16:00
+1518,2024-04-02,44,Female,Quarterly,CrossFit,71,620,Absent,08:37:00
+1015,2024-10-12,44,Male,Quarterly,Cardio,54,379,Absent,05:20:00
+1160,2024-10-02,44,Other,Quarterly,Cardio,60,554,Present,09:37:00
+1271,2024-02-29,44,Female,Quarterly,Strength Training,119,663,Absent,08:29:00
+2154,2024-12-09,44,Male,Quarterly,Cardio,26,193,Present,05:07:00
+1267,2024-05-17,44,Female,Quarterly,Cardio,70,575,Absent,14:11:00
+2238,2024-12-19,44,Female,Quarterly,Cardio,92,806,Absent,20:55:00
+1481,2024-03-18,44,Other,Quarterly,Cardio,98,928,Present,11:40:00
+2031,2024-12-03,44,Male,Quarterly,CrossFit,40,380,Present,16:25:00
+682,2024-10-04,44,Female,Quarterly,Strength Training,106,913,Present,21:34:00
+1541,2024-01-19,44,Female,Quarterly,Strength Training,65,550,Absent,16:55:00
+1219,2024-11-28,44,Other,Quarterly,HIIT,36,305,Absent,16:27:00
+376,2024-07-21,44,Male,Quarterly,Strength Training,99,671,Absent,09:12:00
+821,2024-10-17,45,Female,Annual,Cardio,110,612,Absent,11:08:00
+1553,2024-09-06,45,Female,Annual,Cardio,118,1070,Absent,21:12:00
+1690,2024-06-29,45,Male,Annual,Yoga,74,411,Absent,14:21:00
+184,2024-02-06,45,Male,Annual,Cardio,118,775,Absent,17:42:00
+870,2024-01-02,45,Male,Annual,CrossFit,23,206,Absent,22:25:00
+575,2024-12-02,45,Male,Annual,HIIT,53,490,Present,16:56:00
+255,2024-06-25,45,Other,Annual,Cardio,84,476,Absent,06:12:00
+1366,2024-06-27,45,Male,Annual,Yoga,79,705,Absent,15:09:00
+2247,2024-03-06,45,Male,Annual,HIIT,88,550,Present,17:29:00
+2431,2024-09-03,45,Male,Annual,Yoga,87,605,Absent,16:04:00
+937,2024-01-05,45,Male,Annual,Yoga,110,966,Present,16:27:00
+1100,2024-07-01,45,Other,Annual,Strength Training,103,563,Absent,10:34:00
+1033,2024-11-23,45,Other,Annual,HIIT,91,866,Present,22:11:00
+1246,2024-05-26,45,Female,Annual,CrossFit,51,378,Absent,20:59:00
+795,2024-10-29,45,Female,Annual,Yoga,21,173,Present,12:46:00
+2542,2024-10-23,45,Male,Annual,Strength Training,120,1037,Present,15:57:00
+1376,2024-09-20,45,Other,Annual,HIIT,34,229,Present,16:14:00
+2288,2024-06-17,45,Female,Monthly,Yoga,55,420,Present,22:14:00
+2539,2024-02-27,45,Other,Monthly,HIIT,85,720,Present,05:57:00
+2501,2024-08-06,45,Female,Monthly,HIIT,59,407,Absent,12:21:00
+1900,2024-02-13,45,Male,Monthly,Strength Training,71,657,Present,16:51:00
+1435,2024-10-29,45,Other,Monthly,Yoga,83,420,Present,05:14:00
+1601,2024-12-16,45,Female,Monthly,Yoga,51,503,Absent,10:25:00
+1720,2024-01-11,45,Female,Monthly,Cardio,91,871,Present,16:26:00
+760,2024-01-30,45,Male,Monthly,Yoga,103,591,Absent,18:28:00
+1997,2024-10-14,45,Female,Monthly,Cardio,36,215,Absent,18:48:00
+730,2024-04-22,45,Female,Monthly,CrossFit,85,543,Absent,21:17:00
+1298,2024-09-10,45,Female,Monthly,HIIT,53,340,Absent,20:37:00
+43,2024-11-26,45,Female,Monthly,HIIT,61,412,Absent,08:43:00
+1150,2024-08-19,45,Male,Quarterly,HIIT,65,332,Absent,14:34:00
+394,2024-08-05,45,Other,Quarterly,Yoga,112,960,Absent,13:16:00
+2573,2024-01-28,45,Other,Quarterly,HIIT,29,152,Absent,12:31:00
+373,2024-02-26,45,Female,Quarterly,Yoga,46,418,Present,18:07:00
+2182,2024-01-02,45,Other,Quarterly,Strength Training,108,726,Present,10:07:00
+2452,2024-08-03,45,Male,Quarterly,HIIT,73,374,Present,19:56:00
+1060,2024-03-20,45,Female,Quarterly,CrossFit,55,451,Present,20:50:00
+76,2024-11-22,45,Male,Quarterly,Strength Training,54,522,Absent,05:01:00
+6,2024-09-11,45,Other,Quarterly,Cardio,63,518,Present,20:08:00
+1973,2024-08-17,45,Other,Quarterly,Cardio,35,186,Absent,13:33:00
+172,2024-12-06,45,Male,Quarterly,Cardio,76,647,Absent,11:50:00
+1469,2024-10-11,45,Female,Quarterly,Cardio,106,547,Present,07:22:00
+1157,2024-06-21,45,Male,Quarterly,CrossFit,53,408,Present,13:48:00
+165,2024-02-24,45,Other,Quarterly,CrossFit,59,299,Absent,08:57:00
+1583,2024-12-03,45,Male,Quarterly,HIIT,70,538,Present,07:44:00
+3,2024-06-13,45,Male,Quarterly,Cardio,70,633,Absent,07:24:00
+2504,2024-01-09,45,Other,Quarterly,Yoga,74,641,Present,12:03:00
+261,2024-02-08,45,Other,Quarterly,Cardio,56,491,Absent,06:08:00
+1926,2024-12-11,46,Female,Annual,Strength Training,31,234,Absent,10:39:00
+2279,2024-09-22,46,Other,Annual,Strength Training,89,519,Present,06:27:00
+1021,2024-12-28,46,Other,Annual,Cardio,47,370,Present,22:22:00
+399,2024-12-31,46,Other,Annual,HIIT,97,841,Present,10:20:00
+853,2024-07-18,46,Female,Annual,HIIT,87,626,Present,06:31:00
+1886,2024-10-26,46,Female,Annual,Cardio,32,275,Absent,08:40:00
+2575,2024-11-20,46,Other,Annual,CrossFit,100,816,Present,21:47:00
+752,2024-10-03,46,Male,Annual,Yoga,71,667,Absent,18:06:00
+1815,2024-05-03,46,Male,Annual,Cardio,26,220,Absent,09:04:00
+1863,2024-01-24,46,Other,Annual,Yoga,53,323,Present,21:17:00
+2137,2024-08-24,46,Female,Annual,HIIT,34,237,Present,19:24:00
+1739,2024-09-14,46,Female,Annual,Strength Training,94,790,Present,22:40:00
+1713,2024-08-19,46,Other,Annual,CrossFit,105,834,Absent,08:57:00
+1905,2024-12-26,46,Other,Annual,HIIT,35,297,Present,12:37:00
+2566,2024-09-02,46,Other,Annual,HIIT,22,193,Present,12:50:00
+2040,2024-07-07,46,Other,Annual,Cardio,98,929,Absent,20:32:00
+912,2024-02-01,46,Female,Annual,Cardio,28,144,Absent,14:47:00
+1128,2024-06-17,46,Other,Annual,CrossFit,44,394,Absent,12:37:00
+1723,2024-10-28,46,Other,Monthly,Strength Training,84,501,Present,19:06:00
+2236,2024-02-25,46,Other,Monthly,Yoga,76,661,Absent,15:13:00
+935,2024-07-26,46,Other,Monthly,CrossFit,69,367,Absent,12:17:00
+765,2024-02-22,46,Male,Monthly,Strength Training,38,333,Present,09:27:00
+1316,2024-10-21,46,Male,Monthly,HIIT,114,997,Absent,21:04:00
+1212,2024-02-25,46,Other,Monthly,Strength Training,69,498,Absent,11:13:00
+2195,2024-05-06,46,Male,Monthly,Yoga,44,313,Present,13:06:00
+959,2024-04-04,46,Male,Monthly,Strength Training,21,150,Present,13:32:00
+1387,2024-06-08,46,Male,Monthly,CrossFit,99,628,Absent,07:10:00
+1419,2024-05-24,46,Other,Monthly,HIIT,91,804,Absent,05:19:00
+412,2024-07-08,46,Female,Monthly,HIIT,62,408,Absent,07:25:00
+2543,2024-07-31,46,Male,Monthly,Cardio,32,269,Absent,11:12:00
+928,2024-06-25,46,Other,Monthly,CrossFit,84,490,Present,16:12:00
+2095,2024-04-19,46,Other,Quarterly,Cardio,96,753,Absent,16:05:00
+1848,2024-08-07,46,Other,Quarterly,CrossFit,83,648,Absent,19:26:00
+2383,2024-12-24,46,Other,Quarterly,HIIT,59,573,Present,06:27:00
+1251,2024-07-30,46,Other,Quarterly,CrossFit,53,377,Present,05:00:00
+626,2024-02-18,46,Male,Quarterly,Strength Training,87,516,Present,19:32:00
+201,2024-01-05,46,Female,Quarterly,Strength Training,27,246,Absent,06:22:00
+1445,2024-07-21,46,Female,Quarterly,Cardio,54,515,Present,05:40:00
+1431,2024-12-08,46,Male,Quarterly,CrossFit,98,492,Present,21:20:00
+2092,2024-02-07,46,Female,Quarterly,CrossFit,34,264,Present,11:09:00
+355,2024-08-12,46,Other,Quarterly,Cardio,66,621,Present,17:54:00
+428,2024-06-10,46,Male,Quarterly,HIIT,39,318,Present,10:53:00
+2284,2024-07-02,46,Male,Quarterly,Cardio,61,433,Absent,21:09:00
+451,2024-02-15,46,Female,Quarterly,Cardio,86,662,Present,13:56:00
+2552,2024-06-28,46,Other,Quarterly,CrossFit,62,433,Absent,06:56:00
+2109,2024-10-10,46,Male,Quarterly,Yoga,82,527,Absent,13:10:00
+1807,2024-02-11,46,Female,Quarterly,CrossFit,82,655,Absent,18:33:00
+1491,2024-08-02,46,Male,Quarterly,HIIT,116,959,Absent,21:16:00
+168,2024-12-29,47,Male,Annual,HIIT,40,227,Present,14:39:00
+794,2024-08-30,47,Female,Annual,Cardio,42,268,Absent,18:04:00
+757,2024-09-24,47,Female,Annual,Strength Training,52,264,Absent,06:50:00
+2131,2024-05-22,47,Male,Annual,Cardio,97,738,Absent,12:40:00
+324,2024-02-15,47,Male,Annual,Strength Training,70,512,Present,21:52:00
+1726,2024-11-16,47,Female,Annual,CrossFit,57,288,Present,10:04:00
+520,2024-10-31,47,Male,Annual,Strength Training,33,286,Present,09:27:00
+499,2024-10-03,47,Other,Annual,Strength Training,120,766,Present,17:23:00
+1283,2024-05-07,47,Female,Annual,Yoga,70,360,Present,09:04:00
+38,2024-03-26,47,Female,Annual,CrossFit,107,779,Present,15:14:00
+595,2024-11-01,47,Other,Annual,Cardio,115,605,Absent,22:15:00
+1768,2024-07-11,47,Female,Annual,CrossFit,118,1152,Absent,14:44:00
+985,2024-04-06,47,Female,Annual,Strength Training,57,503,Absent,08:40:00
+1152,2024-11-12,47,Male,Annual,Yoga,82,416,Present,18:50:00
+1489,2024-08-03,47,Female,Annual,Yoga,59,436,Present,13:30:00
+915,2024-07-05,47,Female,Annual,Strength Training,40,310,Absent,15:40:00
+1719,2024-08-30,47,Other,Annual,CrossFit,108,762,Present,09:22:00
+2210,2024-07-10,47,Male,Annual,HIIT,70,354,Present,15:15:00
+2414,2024-09-13,47,Other,Annual,Yoga,85,659,Present,15:48:00
+1459,2024-05-29,47,Female,Annual,Strength Training,65,617,Present,09:52:00
+1097,2024-11-13,47,Male,Monthly,Strength Training,65,353,Absent,06:27:00
+2316,2024-02-09,47,Female,Monthly,Cardio,31,159,Absent,12:01:00
+2595,2024-12-08,47,Male,Monthly,Strength Training,26,249,Present,13:15:00
+2467,2024-11-12,47,Male,Monthly,Cardio,54,346,Present,20:44:00
+120,2024-05-05,47,Male,Monthly,Strength Training,69,591,Absent,09:23:00
+449,2024-07-12,47,Female,Monthly,Cardio,69,663,Present,19:27:00
+1370,2024-04-27,47,Female,Monthly,Strength Training,110,651,Present,11:53:00
+1683,2024-06-27,47,Female,Monthly,Cardio,64,355,Absent,06:13:00
+1636,2024-03-22,47,Male,Monthly,CrossFit,74,444,Absent,10:15:00
+94,2024-08-09,47,Male,Monthly,HIIT,114,937,Absent,22:33:00
+1596,2024-09-12,47,Other,Monthly,Strength Training,99,512,Present,21:09:00
+67,2024-07-17,47,Female,Monthly,Cardio,25,172,Present,05:44:00
+2000,2024-07-24,47,Other,Monthly,Cardio,104,718,Absent,06:44:00
+1853,2024-08-28,47,Other,Monthly,HIIT,101,535,Present,06:06:00
+627,2024-12-07,47,Other,Monthly,CrossFit,52,444,Absent,08:19:00
+1369,2024-10-30,47,Male,Monthly,Strength Training,84,808,Absent,22:46:00
+584,2024-10-15,47,Other,Monthly,CrossFit,23,182,Present,15:18:00
+705,2024-06-11,47,Male,Monthly,HIIT,114,920,Present,20:44:00
+1389,2024-10-15,47,Male,Monthly,CrossFit,26,254,Absent,14:22:00
+779,2024-01-06,47,Male,Monthly,Strength Training,58,538,Present,09:18:00
+2204,2024-10-12,47,Female,Monthly,Cardio,90,517,Absent,14:48:00
+2257,2024-06-28,47,Female,Quarterly,Cardio,97,906,Absent,16:17:00
+116,2024-06-30,47,Other,Quarterly,CrossFit,42,393,Absent,20:17:00
+1639,2024-09-09,47,Male,Quarterly,HIIT,94,519,Absent,12:30:00
+1913,2024-12-16,47,Female,Quarterly,Yoga,98,813,Present,07:19:00
+2415,2024-06-01,47,Female,Quarterly,Cardio,62,568,Absent,11:08:00
+1135,2024-10-21,47,Other,Quarterly,CrossFit,70,577,Absent,17:35:00
+658,2024-11-21,47,Other,Quarterly,Cardio,44,319,Absent,18:32:00
+299,2024-09-10,47,Female,Quarterly,Cardio,120,900,Absent,10:31:00
+360,2024-05-30,47,Male,Quarterly,HIIT,31,192,Absent,21:19:00
+2379,2024-05-07,47,Other,Quarterly,HIIT,92,784,Present,20:48:00
+962,2024-01-15,47,Female,Quarterly,Cardio,93,576,Present,18:10:00
+1967,2024-01-11,47,Female,Quarterly,HIIT,88,855,Present,10:47:00
+725,2024-11-11,47,Other,Quarterly,HIIT,76,720,Absent,19:00:00
+1590,2024-06-15,47,Male,Quarterly,HIIT,97,934,Absent,17:37:00
+53,2024-01-01,47,Male,Quarterly,CrossFit,55,286,Absent,13:54:00
+743,2024-03-08,47,Female,Quarterly,HIIT,103,723,Present,08:46:00
+247,2024-11-29,47,Male,Quarterly,Strength Training,109,1040,Absent,19:58:00
+1243,2024-05-18,47,Female,Quarterly,Cardio,114,996,Absent,21:18:00
+2118,2024-01-29,47,Other,Quarterly,Strength Training,107,698,Present,19:46:00
+2084,2024-11-09,47,Female,Quarterly,CrossFit,78,615,Present,07:50:00
+1540,2024-11-24,47,Other,Quarterly,Cardio,27,211,Present,19:18:00
+2314,2024-12-11,47,Female,Quarterly,HIIT,82,743,Present,09:21:00
+2180,2024-08-31,48,Female,Annual,Cardio,39,317,Present,13:18:00
+358,2024-11-27,48,Other,Annual,CrossFit,74,719,Absent,12:34:00
+423,2024-07-30,48,Male,Annual,Strength Training,101,810,Absent,11:43:00
+1200,2024-04-14,48,Male,Annual,CrossFit,98,616,Absent,12:19:00
+2422,2024-12-17,48,Other,Annual,CrossFit,107,651,Absent,19:53:00
+1564,2024-05-04,48,Female,Annual,Yoga,28,245,Present,13:30:00
+909,2024-11-19,48,Other,Annual,Strength Training,25,202,Absent,14:13:00
+1666,2024-08-09,48,Female,Annual,Strength Training,103,693,Absent,20:52:00
+859,2024-10-31,48,Female,Annual,Cardio,31,207,Absent,22:45:00
+1277,2024-10-18,48,Male,Annual,Cardio,104,721,Absent,10:26:00
+2151,2024-11-06,48,Male,Annual,Cardio,39,374,Absent,07:18:00
+849,2024-02-21,48,Male,Annual,CrossFit,80,440,Present,08:22:00
+2179,2024-08-11,48,Female,Annual,Yoga,48,261,Present,11:12:00
+2158,2024-06-21,48,Other,Annual,Yoga,76,433,Present,11:09:00
+2005,2024-03-11,48,Female,Annual,CrossFit,69,400,Absent,07:01:00
+2486,2024-10-13,48,Female,Annual,Strength Training,77,665,Present,16:18:00
+410,2024-08-21,48,Other,Annual,CrossFit,57,351,Absent,22:34:00
+1925,2024-09-09,48,Male,Annual,Cardio,73,449,Present,09:17:00
+2436,2024-11-13,48,Male,Monthly,CrossFit,24,155,Absent,11:33:00
+686,2024-07-10,48,Male,Monthly,HIIT,54,440,Present,12:16:00
+432,2024-06-22,48,Other,Monthly,HIIT,87,857,Present,22:16:00
+36,2024-03-14,48,Male,Monthly,Cardio,20,159,Absent,07:50:00
+1849,2024-04-25,48,Other,Monthly,HIIT,33,276,Absent,21:43:00
+810,2024-01-02,48,Male,Monthly,Yoga,28,145,Present,09:12:00
+1745,2024-09-17,48,Other,Monthly,CrossFit,86,789,Absent,21:53:00
+519,2024-05-21,48,Other,Monthly,Yoga,82,427,Absent,13:24:00
+999,2024-01-06,48,Other,Monthly,HIIT,114,825,Absent,17:33:00
+1414,2024-01-09,48,Male,Monthly,Cardio,119,1111,Absent,22:36:00
+148,2024-08-17,48,Male,Monthly,Yoga,109,793,Present,06:26:00
+797,2024-09-05,48,Other,Monthly,HIIT,49,357,Present,17:30:00
+1854,2024-06-01,48,Female,Monthly,CrossFit,90,737,Absent,05:43:00
+647,2024-08-21,48,Male,Monthly,Yoga,88,690,Present,13:00:00
+930,2024-02-05,48,Female,Monthly,Strength Training,75,530,Present,13:22:00
+1144,2024-11-26,48,Other,Monthly,Yoga,70,474,Absent,12:47:00
+1896,2024-03-19,48,Female,Monthly,Strength Training,74,589,Present,18:57:00
+561,2024-09-04,48,Other,Monthly,Cardio,45,259,Present,19:15:00
+1657,2024-10-21,48,Other,Monthly,Cardio,45,250,Absent,15:00:00
+1413,2024-02-24,48,Female,Monthly,Strength Training,65,491,Absent,07:18:00
+2091,2024-08-03,48,Female,Monthly,Yoga,90,694,Absent,06:17:00
+2029,2024-11-12,48,Other,Monthly,Yoga,87,552,Present,11:35:00
+1797,2024-01-13,48,Female,Quarterly,HIIT,86,518,Present,15:50:00
+471,2024-12-07,48,Female,Quarterly,Strength Training,38,299,Present,05:06:00
+1098,2024-08-28,48,Male,Quarterly,Yoga,118,901,Absent,05:16:00
+200,2024-09-10,48,Other,Quarterly,HIIT,68,565,Absent,21:24:00
+659,2024-11-15,48,Female,Quarterly,Yoga,84,477,Absent,20:16:00
+1944,2024-06-13,48,Female,Quarterly,HIIT,71,633,Absent,14:17:00
+91,2024-04-04,48,Male,Quarterly,Yoga,71,672,Absent,13:50:00
+2429,2024-07-15,48,Male,Quarterly,Yoga,105,795,Absent,14:32:00
+1199,2024-05-10,48,Other,Quarterly,HIIT,74,709,Absent,08:51:00
+1082,2024-05-16,48,Other,Quarterly,Strength Training,109,756,Absent,17:38:00
+377,2024-08-10,48,Other,Quarterly,Cardio,45,404,Absent,16:49:00
+581,2024-03-02,48,Other,Quarterly,HIIT,70,490,Absent,10:20:00
+869,2024-10-24,48,Female,Quarterly,HIIT,116,1018,Absent,11:04:00
+669,2024-04-22,48,Female,Quarterly,Strength Training,29,153,Absent,19:00:00
+1555,2024-06-28,48,Female,Quarterly,Cardio,95,636,Absent,14:25:00
+13,2024-06-28,48,Female,Quarterly,HIIT,44,389,Absent,19:08:00
+1080,2024-08-19,48,Other,Quarterly,Strength Training,78,542,Absent,17:40:00
+263,2024-01-15,48,Female,Quarterly,Yoga,44,396,Absent,14:12:00
+2559,2024-11-20,48,Female,Quarterly,CrossFit,98,544,Absent,08:33:00
+530,2024-04-27,48,Female,Quarterly,CrossFit,102,738,Absent,17:15:00
+110,2024-05-08,48,Other,Quarterly,CrossFit,25,138,Present,14:03:00
+397,2024-07-16,49,Female,Annual,CrossFit,115,798,Absent,18:00:00
+1707,2024-12-17,49,Male,Annual,CrossFit,46,367,Present,08:57:00
+1473,2024-11-10,49,Female,Annual,Cardio,113,791,Absent,09:53:00
+1525,2024-08-03,49,Other,Annual,Strength Training,58,467,Present,13:41:00
+606,2024-12-17,49,Male,Annual,HIIT,73,397,Present,05:56:00
+456,2024-12-29,49,Other,Annual,Strength Training,43,347,Absent,12:10:00
+210,2024-02-25,49,Male,Annual,Cardio,120,614,Absent,15:58:00
+28,2024-05-02,49,Other,Annual,HIIT,37,187,Absent,19:56:00
+437,2024-08-23,49,Male,Annual,HIIT,41,366,Absent,11:13:00
+2072,2024-12-10,49,Female,Annual,HIIT,106,940,Absent,17:18:00
+2374,2024-05-20,49,Male,Annual,CrossFit,72,402,Present,20:40:00
+319,2024-07-06,49,Male,Annual,HIIT,33,226,Absent,12:39:00
+742,2024-10-16,49,Female,Annual,HIIT,43,358,Present,15:57:00
+635,2024-03-25,49,Male,Annual,CrossFit,73,427,Absent,15:55:00
+610,2024-03-04,49,Other,Annual,Strength Training,37,195,Absent,07:41:00
+37,2024-08-24,49,Female,Annual,Strength Training,81,756,Absent,11:16:00
+1211,2024-03-31,49,Male,Annual,Yoga,97,868,Absent,17:41:00
+875,2024-03-07,49,Male,Annual,Cardio,44,221,Present,12:49:00
+202,2024-10-15,49,Male,Annual,Cardio,72,591,Absent,11:22:00
+1101,2024-07-20,49,Female,Annual,Cardio,119,1121,Absent,20:16:00
+972,2024-06-16,49,Male,Annual,Yoga,65,640,Absent,21:35:00
+2261,2024-11-10,49,Male,Annual,Cardio,99,756,Present,17:47:00
+1301,2024-04-27,49,Male,Annual,Yoga,81,606,Absent,05:33:00
+1780,2024-02-09,49,Female,Monthly,HIIT,63,590,Present,14:30:00
+159,2024-03-14,49,Female,Monthly,HIIT,59,367,Present,20:38:00
+294,2024-05-30,49,Female,Monthly,Cardio,89,655,Present,13:23:00
+1407,2024-09-04,49,Male,Monthly,Cardio,74,402,Absent,05:26:00
+483,2024-04-27,49,Female,Monthly,HIIT,94,808,Present,13:19:00
+2472,2024-02-03,49,Female,Monthly,Yoga,46,292,Present,15:44:00
+898,2024-10-24,49,Female,Monthly,CrossFit,82,753,Absent,16:36:00
+2273,2024-08-21,49,Other,Monthly,Strength Training,82,612,Absent,10:38:00
+2250,2024-03-23,49,Other,Monthly,HIIT,97,964,Absent,11:48:00
+1351,2024-01-24,49,Other,Monthly,Cardio,103,606,Absent,12:01:00
+1716,2024-12-24,49,Female,Monthly,Strength Training,47,255,Present,11:42:00
+1151,2024-10-24,49,Other,Monthly,Strength Training,64,435,Absent,21:57:00
+160,2024-08-29,49,Other,Monthly,HIIT,56,512,Absent,16:22:00
+434,2024-01-06,49,Male,Monthly,Cardio,85,669,Present,07:10:00
+2226,2024-02-11,49,Female,Monthly,Strength Training,33,238,Present,08:14:00
+1412,2024-04-17,49,Other,Monthly,Strength Training,111,623,Present,19:02:00
+480,2024-10-23,49,Other,Monthly,CrossFit,54,384,Absent,11:59:00
+1478,2024-07-10,49,Other,Quarterly,Strength Training,100,986,Absent,18:32:00
+2470,2024-06-15,49,Male,Quarterly,HIIT,78,566,Absent,17:23:00
+259,2024-04-08,49,Female,Quarterly,Cardio,87,622,Present,18:24:00
+269,2024-03-25,49,Male,Quarterly,Strength Training,70,378,Present,13:14:00
+2325,2024-01-03,49,Male,Quarterly,Yoga,27,187,Present,22:31:00
+2189,2024-08-13,49,Female,Quarterly,HIIT,53,490,Present,15:36:00
+1546,2024-04-21,49,Other,Quarterly,Cardio,108,695,Present,08:44:00
+731,2024-06-03,49,Male,Quarterly,Yoga,69,505,Absent,11:05:00
+117,2024-08-28,49,Other,Quarterly,Cardio,31,193,Absent,09:26:00
+772,2024-05-31,49,Female,Quarterly,Cardio,92,483,Present,12:13:00
+663,2024-01-24,49,Male,Quarterly,Strength Training,77,736,Absent,05:57:00
+2125,2024-07-28,49,Other,Quarterly,CrossFit,52,410,Absent,12:25:00
+1078,2024-01-14,49,Male,Quarterly,CrossFit,44,351,Absent,22:35:00
+2364,2024-07-10,49,Other,Quarterly,CrossFit,70,699,Present,08:34:00
+171,2024-03-15,49,Male,Quarterly,HIIT,92,809,Absent,12:17:00
+1012,2024-10-15,49,Other,Quarterly,Yoga,35,294,Absent,08:12:00
+2276,2024-11-15,49,Female,Quarterly,CrossFit,88,876,Absent,18:26:00
+2388,2024-09-19,49,Female,Quarterly,Strength Training,78,554,Present,13:40:00
+1935,2024-06-22,49,Other,Quarterly,Yoga,104,803,Absent,15:53:00
+971,2024-09-12,49,Female,Quarterly,Yoga,119,852,Absent,10:44:00
+1514,2024-08-04,49,Other,Quarterly,HIIT,53,406,Present,16:34:00
+362,2024-09-18,49,Male,Quarterly,Strength Training,56,504,Present,14:12:00
+2256,2024-09-11,49,Other,Quarterly,Strength Training,25,203,Present,14:26:00
+2497,2024-07-05,49,Male,Quarterly,Cardio,113,907,Present,06:44:00
+1464,2024-08-19,49,Male,Quarterly,Cardio,39,281,Present,19:41:00
+237,2024-05-26,50,Female,Annual,Yoga,117,959,Present,11:35:00
+645,2024-12-06,50,Male,Annual,HIIT,55,443,Present,07:46:00
+2442,2024-02-12,50,Female,Annual,Yoga,68,461,Present,05:17:00
+1373,2024-09-21,50,Female,Annual,Strength Training,51,350,Absent,09:53:00
+2466,2024-06-27,50,Other,Annual,Strength Training,79,630,Absent,10:47:00
+1521,2024-05-29,50,Other,Annual,Yoga,50,270,Present,12:48:00
+2170,2024-08-19,50,Female,Annual,Cardio,112,565,Present,19:07:00
+2548,2024-03-17,50,Male,Annual,CrossFit,105,999,Absent,22:49:00
+1222,2024-06-30,50,Female,Annual,Yoga,34,183,Absent,17:05:00
+1001,2024-04-05,50,Other,Annual,Cardio,59,321,Absent,07:07:00
+2584,2024-04-01,50,Other,Annual,HIIT,115,720,Present,17:42:00
+1051,2024-10-07,50,Other,Annual,Strength Training,63,515,Absent,17:34:00
+2571,2024-07-07,50,Female,Annual,Cardio,62,387,Absent,12:11:00
+2583,2024-10-27,50,Male,Monthly,CrossFit,49,408,Present,08:06:00
+35,2024-12-25,50,Female,Monthly,CrossFit,59,584,Present,17:28:00
+488,2024-03-29,50,Male,Monthly,Strength Training,66,558,Present,13:48:00
+2129,2024-06-01,50,Female,Monthly,Strength Training,39,339,Absent,18:34:00
+342,2024-11-15,50,Male,Monthly,Yoga,37,327,Present,15:34:00
+828,2024-10-23,50,Male,Monthly,Strength Training,114,1078,Absent,18:22:00
+1329,2024-07-22,50,Male,Monthly,HIIT,48,410,Present,20:15:00
+418,2024-02-06,50,Male,Monthly,HIIT,34,240,Absent,13:30:00
+1796,2024-09-02,50,Male,Monthly,CrossFit,90,601,Present,16:12:00
+1806,2024-10-08,50,Male,Monthly,Strength Training,99,904,Absent,13:48:00
+137,2024-03-18,50,Other,Monthly,Cardio,117,878,Present,06:06:00
+167,2024-03-17,50,Female,Monthly,Cardio,47,278,Present,18:58:00
+250,2024-02-06,50,Other,Monthly,CrossFit,58,505,Absent,22:17:00
+2053,2024-11-23,50,Female,Monthly,Cardio,51,322,Present,07:46:00
+901,2024-11-18,50,Female,Monthly,HIIT,30,239,Absent,06:34:00
+1559,2024-01-26,50,Male,Quarterly,Strength Training,70,611,Absent,09:53:00
+327,2024-07-13,50,Male,Quarterly,Yoga,31,305,Absent,09:53:00
+1738,2024-12-15,50,Female,Quarterly,Strength Training,23,172,Present,15:25:00
+1560,2024-01-05,50,Male,Quarterly,Strength Training,31,210,Present,20:23:00
+460,2024-08-01,50,Female,Quarterly,HIIT,93,899,Absent,16:09:00
+2418,2024-04-23,50,Other,Quarterly,HIIT,40,233,Present,20:09:00
+2443,2024-01-05,50,Male,Quarterly,Yoga,97,820,Present,16:12:00
+2254,2024-04-21,50,Other,Quarterly,Strength Training,98,836,Present,15:26:00
+1819,2024-05-22,50,Male,Quarterly,HIIT,37,330,Absent,11:25:00
+2522,2024-05-22,50,Female,Quarterly,Strength Training,65,422,Absent,09:53:00
+2004,2024-06-01,50,Male,Quarterly,CrossFit,50,411,Absent,16:21:00
+1406,2024-08-11,50,Male,Quarterly,Cardio,51,292,Absent,14:07:00
+1295,2024-01-19,50,Female,Quarterly,Cardio,51,465,Absent,14:05:00
+41,2024-04-27,50,Other,Quarterly,HIIT,51,428,Present,15:05:00
+1106,2024-09-01,50,Female,Quarterly,HIIT,27,192,Absent,12:14:00
+212,2024-08-25,50,Female,Quarterly,HIIT,69,655,Absent,14:23:00
+303,2024-10-19,50,Male,Quarterly,CrossFit,92,797,Absent,13:33:00
+213,2024-09-22,50,Female,Quarterly,CrossFit,34,266,Present,09:27:00
+1138,2024-03-06,51,Male,Annual,Cardio,100,905,Present,19:29:00
+649,2024-07-18,51,Other,Annual,Yoga,110,937,Present,22:58:00
+2275,2024-06-12,51,Female,Annual,CrossFit,102,1013,Absent,19:40:00
+101,2024-03-12,51,Male,Annual,HIIT,108,856,Absent,09:04:00
+463,2024-07-17,51,Male,Annual,CrossFit,31,230,Present,07:39:00
+400,2024-10-19,51,Male,Annual,CrossFit,57,393,Absent,18:56:00
+2563,2024-06-08,51,Female,Annual,HIIT,84,720,Absent,08:36:00
+802,2024-08-24,51,Female,Annual,Cardio,85,703,Absent,08:25:00
+1268,2024-12-07,51,Female,Annual,Yoga,68,627,Absent,15:34:00
+484,2024-07-31,51,Male,Annual,HIIT,27,229,Present,19:43:00
+970,2024-02-08,51,Male,Annual,CrossFit,81,490,Absent,09:46:00
+140,2024-02-04,51,Female,Annual,Yoga,63,466,Present,10:46:00
+1113,2024-02-10,51,Female,Annual,HIIT,32,319,Present,16:39:00
+1276,2024-10-12,51,Other,Annual,Cardio,32,211,Absent,19:17:00
+2336,2024-11-09,51,Female,Monthly,HIIT,51,493,Absent,22:23:00
+1682,2024-05-01,51,Male,Monthly,Strength Training,81,465,Absent,16:08:00
+2207,2024-08-05,51,Male,Monthly,Strength Training,25,142,Present,22:52:00
+2519,2024-08-10,51,Female,Monthly,Cardio,82,795,Absent,17:54:00
+1148,2024-05-31,51,Other,Monthly,Cardio,73,671,Absent,19:20:00
+375,2024-02-01,51,Female,Monthly,CrossFit,63,448,Absent,15:33:00
+1275,2024-06-16,51,Male,Monthly,HIIT,47,457,Present,13:47:00
+372,2024-09-06,51,Female,Monthly,Strength Training,55,424,Present,09:40:00
+380,2024-09-18,51,Male,Monthly,Cardio,63,476,Present,11:59:00
+1756,2024-04-10,51,Other,Monthly,Cardio,31,302,Present,05:11:00
+2392,2024-10-15,51,Female,Monthly,Cardio,88,566,Absent,17:48:00
+21,2024-01-02,51,Other,Monthly,Cardio,68,526,Absent,16:58:00
+735,2024-11-06,51,Other,Monthly,HIIT,102,916,Present,12:35:00
+1529,2024-12-05,51,Other,Monthly,Cardio,79,568,Absent,09:26:00
+1484,2024-02-05,51,Female,Monthly,Strength Training,44,241,Absent,15:32:00
+2138,2024-08-29,51,Male,Monthly,Strength Training,68,645,Absent,16:29:00
+1793,2024-04-23,51,Other,Monthly,Yoga,44,326,Present,18:16:00
+2487,2024-03-20,51,Female,Monthly,CrossFit,66,541,Absent,07:24:00
+1773,2024-11-23,51,Female,Quarterly,HIIT,63,537,Absent,08:13:00
+942,2024-09-02,51,Male,Quarterly,Cardio,74,616,Absent,19:13:00
+522,2024-12-25,51,Female,Quarterly,CrossFit,117,818,Present,07:08:00
+1851,2024-02-03,51,Male,Quarterly,Strength Training,51,478,Absent,10:49:00
+792,2024-10-12,51,Female,Quarterly,Strength Training,80,421,Absent,15:47:00
+938,2024-10-10,51,Female,Quarterly,Yoga,51,272,Present,07:09:00
+1154,2024-01-11,51,Male,Quarterly,Yoga,21,105,Absent,17:13:00
+553,2024-04-28,51,Female,Quarterly,CrossFit,43,399,Present,08:48:00
+722,2024-06-17,51,Male,Quarterly,Cardio,95,525,Present,17:13:00
+805,2024-09-20,51,Female,Quarterly,Strength Training,54,502,Present,11:58:00
+333,2024-06-17,51,Female,Quarterly,CrossFit,92,599,Absent,14:54:00
+1037,2024-03-12,51,Other,Quarterly,CrossFit,51,315,Absent,06:22:00
+1177,2024-07-02,51,Female,Quarterly,Strength Training,87,702,Present,14:02:00
+736,2024-02-15,51,Male,Quarterly,Cardio,118,901,Absent,14:18:00
+699,2024-06-18,51,Male,Quarterly,Strength Training,64,459,Present,21:43:00
+1223,2024-10-18,51,Male,Quarterly,Yoga,41,249,Absent,18:02:00
+187,2024-02-24,51,Other,Quarterly,HIIT,108,611,Absent,17:40:00
+585,2024-06-11,51,Female,Quarterly,HIIT,60,490,Present,08:25:00
+2227,2024-03-14,51,Male,Quarterly,HIIT,24,164,Absent,09:50:00
+1434,2024-05-31,51,Other,Quarterly,Strength Training,84,536,Absent,16:41:00
+34,2024-03-17,51,Male,Quarterly,CrossFit,36,208,Present,20:18:00
+916,2024-06-14,51,Other,Quarterly,CrossFit,74,631,Absent,10:42:00
+379,2024-07-06,51,Female,Quarterly,Yoga,52,390,Absent,12:14:00
+1335,2024-02-25,51,Female,Quarterly,Yoga,77,515,Present,19:52:00
+1943,2024-01-15,51,Male,Quarterly,CrossFit,36,340,Absent,11:37:00
+2510,2024-08-24,51,Male,Quarterly,HIIT,53,295,Present,07:29:00
+858,2024-01-12,51,Female,Quarterly,HIIT,31,296,Present,13:00:00
+1095,2024-01-13,52,Other,Annual,Strength Training,94,891,Present,12:22:00
+1658,2024-12-02,52,Female,Annual,Cardio,73,635,Absent,19:39:00
+2197,2024-12-11,52,Other,Annual,Yoga,52,421,Absent,17:52:00
+325,2024-06-18,52,Male,Annual,HIIT,76,390,Present,11:07:00
+856,2024-12-03,52,Male,Annual,CrossFit,61,571,Present,11:05:00
+2211,2024-01-16,52,Male,Annual,Yoga,114,813,Absent,11:25:00
+913,2024-10-01,52,Other,Annual,CrossFit,33,297,Absent,08:17:00
+812,2024-11-08,52,Male,Annual,Yoga,20,148,Present,21:38:00
+1852,2024-09-16,52,Male,Annual,Strength Training,96,490,Absent,10:09:00
+2192,2024-11-24,52,Female,Annual,CrossFit,96,587,Present,10:26:00
+1510,2024-04-24,52,Other,Annual,CrossFit,67,528,Absent,17:55:00
+495,2024-02-13,52,Other,Annual,HIIT,71,370,Present,12:13:00
+145,2024-07-11,52,Other,Annual,Strength Training,27,155,Absent,16:55:00
+1509,2024-09-28,52,Other,Annual,Yoga,101,929,Present,08:08:00
+218,2024-11-07,52,Male,Annual,Strength Training,92,852,Present,17:03:00
+609,2024-06-17,52,Male,Annual,Yoga,104,523,Present,14:31:00
+193,2024-01-04,52,Male,Annual,HIIT,73,456,Absent,18:31:00
+1496,2024-02-27,52,Male,Annual,Strength Training,56,520,Absent,10:20:00
+223,2024-12-23,52,Other,Monthly,HIIT,78,608,Present,14:51:00
+2202,2024-04-08,52,Male,Monthly,Cardio,32,207,Present,19:03:00
+1681,2024-05-25,52,Other,Monthly,Yoga,48,373,Present,06:39:00
+389,2024-06-11,52,Male,Monthly,CrossFit,71,441,Absent,22:05:00
+2228,2024-05-20,52,Female,Monthly,Yoga,53,489,Present,06:27:00
+2435,2024-11-05,52,Male,Monthly,Cardio,23,133,Absent,20:30:00
+1248,2024-11-30,52,Female,Monthly,HIIT,94,564,Present,07:58:00
+698,2024-10-13,52,Male,Monthly,Yoga,94,842,Present,13:45:00
+2285,2024-10-29,52,Female,Monthly,HIIT,61,386,Present,10:01:00
+1425,2024-02-12,52,Female,Monthly,Strength Training,71,427,Absent,09:45:00
+2080,2024-11-26,52,Female,Monthly,Yoga,59,324,Absent,21:17:00
+87,2024-03-04,52,Female,Monthly,CrossFit,115,1098,Absent,16:18:00
+914,2024-07-30,52,Male,Monthly,Yoga,45,252,Present,13:21:00
+989,2024-11-22,52,Female,Monthly,Strength Training,50,383,Absent,07:27:00
+1779,2024-11-01,52,Other,Monthly,Strength Training,38,273,Absent,10:48:00
+1990,2024-06-09,52,Other,Monthly,Strength Training,79,456,Present,13:22:00
+1092,2024-08-23,52,Other,Monthly,HIIT,119,867,Absent,15:37:00
+796,2024-10-05,52,Female,Monthly,CrossFit,71,640,Present,09:12:00
+27,2024-06-12,52,Male,Monthly,CrossFit,77,620,Absent,14:48:00
+2512,2024-09-08,52,Female,Monthly,Strength Training,29,237,Absent,15:51:00
+62,2024-04-08,52,Other,Monthly,Strength Training,113,878,Present,09:42:00
+1884,2024-07-28,52,Other,Monthly,Yoga,91,497,Absent,22:07:00
+1613,2024-06-12,52,Other,Quarterly,CrossFit,57,490,Present,05:19:00
+547,2024-08-15,52,Female,Quarterly,Strength Training,66,509,Absent,22:19:00
+445,2024-05-26,52,Other,Quarterly,HIIT,109,617,Present,22:05:00
+1869,2024-07-26,52,Other,Quarterly,HIIT,45,405,Absent,14:41:00
+577,2024-12-25,52,Male,Quarterly,HIIT,50,290,Present,18:11:00
+2303,2024-02-19,52,Male,Quarterly,Yoga,83,617,Present,16:54:00
+2476,2024-08-13,52,Female,Quarterly,HIIT,56,325,Present,21:09:00
+211,2024-01-12,52,Other,Quarterly,Yoga,101,548,Present,15:07:00
+1362,2024-12-14,52,Male,Quarterly,Cardio,68,670,Absent,07:55:00
+2085,2024-01-04,52,Male,Quarterly,Strength Training,90,866,Absent,14:33:00
+1696,2024-03-10,52,Other,Quarterly,HIIT,43,243,Absent,15:04:00
+1054,2024-05-14,52,Other,Quarterly,Strength Training,115,667,Present,13:06:00
+133,2024-09-12,52,Male,Quarterly,HIIT,84,534,Present,17:02:00
+2561,2024-06-08,52,Other,Quarterly,Strength Training,81,685,Absent,17:07:00
+2373,2024-11-01,52,Male,Quarterly,Yoga,59,534,Absent,11:36:00
+1466,2024-06-26,52,Male,Quarterly,Strength Training,59,312,Absent,08:30:00
+1462,2024-01-25,52,Male,Quarterly,Yoga,117,1093,Absent,09:58:00
+864,2024-05-07,52,Female,Quarterly,CrossFit,24,175,Absent,20:04:00
+811,2024-12-22,52,Other,Quarterly,Cardio,61,370,Absent,20:47:00
+297,2024-08-23,52,Female,Quarterly,CrossFit,94,588,Absent,09:11:00
+22,2024-07-28,53,Female,Annual,HIIT,41,248,Absent,14:24:00
+352,2024-10-11,53,Other,Annual,CrossFit,79,448,Present,15:58:00
+1890,2024-04-28,53,Male,Annual,HIIT,54,275,Absent,07:13:00
+2237,2024-05-01,53,Female,Annual,CrossFit,87,656,Present,11:36:00
+1700,2024-11-12,53,Other,Annual,Yoga,58,466,Present,16:11:00
+541,2024-05-09,53,Other,Annual,Yoga,118,726,Absent,21:22:00
+2335,2024-07-07,53,Female,Annual,HIIT,112,930,Absent,16:34:00
+933,2024-01-26,53,Male,Annual,Strength Training,32,269,Absent,13:23:00
+1305,2024-04-23,53,Other,Annual,Yoga,73,543,Absent,05:40:00
+1902,2024-06-06,53,Female,Annual,Yoga,105,800,Absent,22:34:00
+952,2024-01-10,53,Female,Annual,Cardio,48,336,Absent,11:44:00
+222,2024-02-09,53,Female,Annual,Strength Training,89,593,Present,22:39:00
+1285,2024-10-13,53,Other,Annual,Strength Training,70,494,Present,18:35:00
+275,2024-03-05,53,Female,Annual,HIIT,61,415,Absent,13:41:00
+958,2024-11-24,53,Female,Annual,HIIT,39,202,Present,11:37:00
+1962,2024-03-03,53,Female,Annual,Strength Training,107,1005,Absent,06:16:00
+288,2024-01-19,53,Other,Annual,Cardio,29,177,Absent,14:50:00
+1287,2024-09-23,53,Male,Annual,Yoga,102,674,Absent,17:19:00
+335,2024-07-04,53,Female,Annual,Cardio,80,755,Present,14:04:00
+751,2024-06-06,53,Male,Annual,HIIT,21,109,Present,05:24:00
+911,2024-05-06,53,Female,Monthly,Cardio,57,386,Present,22:16:00
+1931,2024-04-16,53,Male,Monthly,Strength Training,47,468,Present,08:56:00
+1383,2024-10-20,53,Male,Monthly,HIIT,32,199,Absent,08:16:00
+2292,2024-01-17,53,Female,Monthly,Cardio,89,578,Absent,20:18:00
+1163,2024-07-27,53,Male,Monthly,Strength Training,59,565,Present,07:35:00
+256,2024-12-19,53,Male,Monthly,Cardio,112,733,Present,06:38:00
+1642,2024-02-05,53,Female,Monthly,Strength Training,102,772,Present,21:23:00
+1493,2024-11-11,53,Female,Monthly,HIIT,98,859,Absent,06:57:00
+1102,2024-02-20,53,Male,Monthly,Cardio,22,168,Absent,08:49:00
+1646,2024-11-20,53,Male,Monthly,Cardio,90,733,Present,19:12:00
+1703,2024-05-22,53,Male,Monthly,HIIT,79,400,Present,05:52:00
+1691,2024-08-07,53,Other,Monthly,Yoga,67,643,Present,09:42:00
+755,2024-05-29,53,Female,Monthly,CrossFit,53,480,Absent,14:02:00
+2157,2024-01-09,53,Female,Monthly,Cardio,108,1017,Present,22:47:00
+1492,2024-03-18,53,Male,Quarterly,HIIT,20,120,Absent,15:51:00
+1989,2024-08-14,53,Male,Quarterly,Yoga,84,445,Present,08:06:00
+1777,2024-04-22,53,Female,Quarterly,HIIT,82,412,Absent,13:29:00
+2446,2024-10-13,53,Female,Quarterly,HIIT,67,585,Present,20:05:00
+89,2024-05-19,53,Male,Quarterly,HIIT,37,194,Present,15:22:00
+429,2024-01-11,53,Female,Quarterly,Cardio,33,275,Absent,05:31:00
+1623,2024-02-01,53,Female,Quarterly,CrossFit,110,570,Absent,18:50:00
+2546,2024-12-11,53,Female,Quarterly,CrossFit,63,584,Absent,07:38:00
+2410,2024-03-17,53,Male,Quarterly,Strength Training,41,322,Present,06:33:00
+2143,2024-03-09,53,Male,Quarterly,Cardio,80,610,Present,15:30:00
+2434,2024-09-20,53,Female,Quarterly,Yoga,100,519,Present,15:29:00
+1488,2024-09-04,53,Female,Quarterly,Cardio,64,433,Absent,06:16:00
+2342,2024-03-09,53,Male,Quarterly,Cardio,76,670,Present,17:24:00
+233,2024-08-07,53,Male,Quarterly,HIIT,30,223,Absent,12:27:00
+957,2024-08-05,53,Other,Quarterly,Cardio,45,292,Absent,18:35:00
+2315,2024-09-12,53,Other,Quarterly,CrossFit,91,802,Absent,20:12:00
+803,2024-09-29,53,Female,Quarterly,Yoga,44,375,Absent,22:19:00
+189,2024-04-14,53,Female,Quarterly,Strength Training,98,900,Absent,12:30:00
+385,2024-08-01,54,Other,Annual,Cardio,43,385,Absent,14:59:00
+862,2024-08-25,54,Male,Annual,Cardio,111,603,Present,05:58:00
+1281,2024-01-06,54,Male,Annual,CrossFit,24,130,Present,12:20:00
+1044,2024-08-14,54,Female,Annual,HIIT,28,265,Present,13:19:00
+1732,2024-02-01,54,Male,Annual,Strength Training,100,995,Absent,14:07:00
+1432,2024-03-30,54,Male,Annual,Cardio,87,804,Present,13:58:00
+1408,2024-11-03,54,Other,Annual,HIIT,99,922,Present,11:37:00
+14,2024-12-01,54,Other,Annual,Yoga,99,644,Absent,14:45:00
+1964,2024-03-28,54,Other,Annual,Strength Training,109,858,Absent,20:34:00
+943,2024-10-26,54,Male,Annual,HIIT,51,504,Present,21:25:00
+1260,2024-10-06,54,Female,Annual,Yoga,39,333,Present,16:59:00
+512,2024-02-17,54,Male,Annual,Yoga,49,273,Present,15:23:00
+702,2024-08-05,54,Female,Annual,Strength Training,109,1084,Absent,19:50:00
+1368,2024-04-20,54,Male,Annual,CrossFit,88,870,Present,12:51:00
+126,2024-10-17,54,Male,Annual,Yoga,37,194,Absent,19:14:00
+2516,2024-11-02,54,Female,Annual,Yoga,113,853,Absent,19:01:00
+2331,2024-01-01,54,Female,Annual,CrossFit,85,657,Absent,08:14:00
+2150,2024-11-19,54,Female,Annual,Strength Training,90,603,Present,05:06:00
+1730,2024-11-10,54,Other,Annual,Yoga,116,1021,Present,10:02:00
+1802,2024-05-30,54,Male,Annual,CrossFit,110,748,Present,14:02:00
+61,2024-01-19,54,Female,Annual,Yoga,120,751,Present,20:44:00
+2112,2024-09-03,54,Other,Annual,Strength Training,54,300,Present,17:33:00
+371,2024-04-26,54,Female,Annual,Yoga,63,389,Present,19:28:00
+2477,2024-12-02,54,Female,Annual,Yoga,75,670,Present,14:27:00
+2592,2024-09-29,54,Female,Annual,Cardio,31,211,Present,10:50:00
+716,2024-12-24,54,Male,Monthly,CrossFit,88,640,Present,18:56:00
+865,2024-07-23,54,Other,Monthly,HIIT,106,915,Absent,13:06:00
+2398,2024-11-16,54,Female,Monthly,Yoga,20,160,Absent,07:44:00
+448,2024-08-24,54,Other,Monthly,Strength Training,81,808,Present,15:34:00
+2121,2024-08-04,54,Other,Monthly,Yoga,74,586,Absent,15:46:00
+1740,2024-07-30,54,Female,Monthly,Strength Training,90,589,Absent,09:21:00
+1895,2024-08-06,54,Female,Monthly,Strength Training,32,230,Present,21:36:00
+786,2024-08-13,54,Male,Monthly,Yoga,22,160,Absent,12:44:00
+665,2024-08-25,54,Male,Monthly,HIIT,98,620,Absent,15:45:00
+208,2024-05-31,54,Female,Monthly,Strength Training,62,613,Present,10:30:00
+769,2024-06-07,54,Male,Monthly,Strength Training,66,348,Absent,06:17:00
+442,2024-06-12,54,Female,Monthly,HIIT,102,981,Absent,19:42:00
+1371,2024-05-06,54,Other,Monthly,HIIT,91,455,Present,20:39:00
+2139,2024-05-05,54,Female,Monthly,HIIT,115,710,Present,08:20:00
+1423,2024-06-29,54,Other,Monthly,HIIT,52,405,Present,21:22:00
+430,2024-07-04,54,Female,Monthly,Cardio,60,450,Absent,17:47:00
+2030,2024-02-15,54,Female,Quarterly,Cardio,39,207,Absent,07:32:00
+2155,2024-04-22,54,Female,Quarterly,CrossFit,81,543,Present,09:31:00
+1930,2024-08-22,54,Other,Quarterly,Yoga,22,196,Present,09:26:00
+596,2024-09-08,54,Male,Quarterly,HIIT,116,913,Present,10:15:00
+926,2024-11-08,54,Male,Quarterly,Yoga,36,248,Present,22:17:00
+1161,2024-09-20,54,Female,Quarterly,Cardio,20,118,Absent,22:39:00
+502,2024-01-07,54,Male,Quarterly,Yoga,95,876,Absent,06:27:00
+1315,2024-03-28,54,Female,Quarterly,HIIT,66,559,Absent,13:09:00
+2411,2024-01-09,54,Other,Quarterly,Strength Training,81,721,Absent,20:34:00
+1174,2024-05-12,54,Male,Quarterly,Strength Training,76,382,Present,22:37:00
+1386,2024-07-22,54,Male,Quarterly,Strength Training,81,493,Absent,07:21:00
+2386,2024-07-06,54,Male,Quarterly,HIIT,89,610,Absent,08:17:00
+642,2024-12-17,54,Other,Quarterly,Strength Training,105,1028,Present,09:40:00
+181,2024-12-21,54,Other,Quarterly,CrossFit,69,487,Present,19:23:00
+634,2024-01-18,54,Other,Quarterly,CrossFit,63,546,Present,14:12:00
+1532,2024-02-20,55,Other,Annual,Strength Training,26,249,Present,06:05:00
+2526,2024-04-05,55,Other,Annual,Strength Training,77,433,Present,15:39:00
+461,2024-05-22,55,Female,Annual,HIIT,28,218,Absent,16:10:00
+1711,2024-07-17,55,Male,Annual,Yoga,84,700,Absent,15:35:00
+1789,2024-03-08,55,Other,Annual,CrossFit,24,221,Present,06:16:00
+2521,2024-03-16,55,Male,Annual,Yoga,38,206,Absent,14:19:00
+1604,2024-07-03,55,Female,Annual,CrossFit,24,233,Absent,05:21:00
+1093,2024-11-15,55,Female,Annual,Strength Training,31,242,Present,12:51:00
+2360,2024-06-01,55,Female,Annual,CrossFit,106,942,Absent,13:01:00
+2096,2024-10-24,55,Other,Annual,Strength Training,116,825,Absent,15:31:00
+2252,2024-08-06,55,Female,Annual,CrossFit,107,825,Absent,05:01:00
+2193,2024-12-05,55,Female,Annual,CrossFit,116,747,Absent,10:37:00
+1957,2024-06-27,55,Male,Monthly,Strength Training,97,864,Absent,19:32:00
+1181,2024-01-15,55,Male,Monthly,HIIT,114,887,Absent,22:10:00
+2320,2024-03-27,55,Female,Monthly,HIIT,67,436,Present,14:25:00
+1550,2024-05-24,55,Male,Monthly,Yoga,81,424,Present,19:57:00
+1830,2024-01-03,55,Male,Monthly,Yoga,37,280,Present,17:13:00
+1180,2024-07-22,55,Male,Monthly,HIIT,21,189,Present,09:00:00
+242,2024-07-25,55,Other,Monthly,Strength Training,105,867,Absent,05:35:00
+1677,2024-11-16,55,Male,Monthly,Strength Training,105,537,Present,06:53:00
+2511,2024-09-12,55,Other,Monthly,Strength Training,111,582,Absent,16:17:00
+2423,2024-09-07,55,Other,Monthly,Yoga,86,829,Present,22:37:00
+825,2024-10-19,55,Male,Monthly,HIIT,40,221,Absent,16:20:00
+2258,2024-11-12,55,Female,Monthly,CrossFit,27,198,Present,05:59:00
+674,2024-11-18,55,Other,Monthly,CrossFit,75,707,Present,16:12:00
+1524,2024-06-16,55,Male,Monthly,Cardio,36,234,Present,08:48:00
+1194,2024-09-29,55,Other,Monthly,Yoga,20,102,Absent,21:03:00
+436,2024-08-11,55,Female,Monthly,Strength Training,34,255,Present,08:04:00
+1266,2024-06-17,55,Other,Monthly,Strength Training,76,385,Absent,06:14:00
+264,2024-08-30,55,Male,Monthly,Yoga,35,320,Present,12:05:00
+1813,2024-03-09,55,Male,Monthly,CrossFit,100,664,Present,10:30:00
+582,2024-04-09,55,Female,Monthly,Cardio,25,156,Present,06:08:00
+2172,2024-09-17,55,Other,Quarterly,CrossFit,53,454,Present,18:07:00
+64,2024-09-04,55,Male,Quarterly,HIIT,33,248,Absent,05:51:00
+1233,2024-10-29,55,Male,Quarterly,Yoga,65,490,Absent,13:22:00
+1203,2024-06-16,55,Male,Quarterly,HIIT,30,264,Absent,22:09:00
+837,2024-03-01,55,Male,Quarterly,CrossFit,42,410,Absent,10:32:00
+2065,2024-09-01,55,Other,Quarterly,Cardio,91,852,Present,11:26:00
+194,2024-08-17,55,Other,Quarterly,Cardio,105,931,Present,12:24:00
+2371,2024-05-25,55,Male,Quarterly,CrossFit,24,193,Present,08:30:00
+1803,2024-12-28,55,Female,Quarterly,HIIT,36,294,Present,18:34:00
+788,2024-03-30,55,Female,Quarterly,Strength Training,82,703,Present,20:11:00
+632,2024-11-21,56,Male,Annual,Yoga,100,640,Present,22:28:00
+141,2024-12-13,56,Female,Annual,Cardio,67,440,Present,13:38:00
+414,2024-03-15,56,Male,Annual,HIIT,49,262,Absent,15:35:00
+615,2024-11-19,56,Male,Annual,Strength Training,98,895,Absent,18:04:00
+392,2024-04-29,56,Female,Annual,Yoga,105,947,Present,21:19:00
+1916,2024-11-29,56,Other,Annual,Yoga,73,489,Absent,20:51:00
+1566,2024-07-13,56,Male,Annual,Strength Training,102,788,Present,12:34:00
+2152,2024-12-13,56,Other,Annual,CrossFit,21,124,Absent,21:17:00
+2570,2024-11-17,56,Female,Annual,CrossFit,62,377,Present,14:21:00
+2291,2024-05-17,56,Other,Annual,Cardio,105,570,Present,17:35:00
+1635,2024-12-31,56,Female,Annual,Cardio,47,382,Present,19:29:00
+206,2024-02-22,56,Female,Annual,CrossFit,74,398,Present,19:03:00
+2329,2024-08-06,56,Female,Annual,Strength Training,52,395,Present,17:33:00
+2108,2024-06-16,56,Male,Annual,Strength Training,100,795,Present,22:56:00
+409,2024-03-04,56,Male,Annual,CrossFit,26,215,Absent,10:08:00
+1087,2024-01-17,56,Male,Annual,CrossFit,113,1039,Absent,06:15:00
+1986,2024-02-02,56,Other,Annual,Strength Training,92,592,Present,11:02:00
+1558,2024-09-28,56,Male,Annual,Strength Training,58,358,Absent,17:43:00
+2328,2024-12-14,56,Other,Annual,CrossFit,71,391,Present,17:29:00
+421,2024-07-29,56,Female,Monthly,Cardio,85,463,Absent,12:43:00
+1010,2024-09-18,56,Other,Monthly,Cardio,22,110,Absent,22:59:00
+2244,2024-08-03,56,Male,Monthly,Strength Training,84,423,Absent,08:41:00
+231,2024-09-04,56,Other,Monthly,CrossFit,64,561,Absent,17:26:00
+1934,2024-09-25,56,Other,Monthly,HIIT,75,453,Absent,17:21:00
+2253,2024-01-23,56,Female,Monthly,Cardio,23,219,Present,06:57:00
+1328,2024-06-11,56,Female,Monthly,CrossFit,74,414,Absent,14:26:00
+1443,2024-01-29,56,Male,Monthly,HIIT,33,211,Absent,22:55:00
+1240,2024-06-04,56,Other,Monthly,Yoga,74,718,Present,09:19:00
+2127,2024-01-20,56,Male,Monthly,HIIT,70,424,Present,17:13:00
+1680,2024-01-28,56,Other,Monthly,Strength Training,25,180,Present,08:16:00
+781,2024-10-28,56,Male,Monthly,Strength Training,79,652,Present,09:52:00
+2014,2024-11-25,56,Female,Quarterly,CrossFit,33,240,Absent,18:07:00
+1987,2024-03-12,56,Male,Quarterly,Strength Training,62,530,Absent,13:45:00
+598,2024-03-14,56,Female,Quarterly,HIIT,38,321,Absent,13:42:00
+2499,2024-04-22,56,Male,Quarterly,HIIT,55,507,Absent,09:17:00
+951,2024-04-18,56,Female,Quarterly,Strength Training,54,503,Present,19:16:00
+1112,2024-07-04,56,Male,Quarterly,Cardio,71,412,Absent,09:24:00
+835,2024-08-29,56,Female,Quarterly,Strength Training,76,533,Present,18:49:00
+1418,2024-03-16,56,Male,Quarterly,CrossFit,95,725,Absent,13:57:00
+1873,2024-02-17,56,Male,Quarterly,CrossFit,29,162,Present,05:06:00
+1879,2024-05-20,56,Other,Quarterly,Yoga,38,320,Present,06:54:00
+2188,2024-01-17,56,Female,Quarterly,Cardio,84,424,Absent,05:07:00
+2502,2024-05-18,56,Other,Quarterly,CrossFit,120,1140,Present,15:53:00
+2377,2024-10-24,56,Female,Quarterly,CrossFit,49,377,Present,10:31:00
+1710,2024-01-11,56,Female,Quarterly,HIIT,76,526,Present,08:38:00
+1313,2024-08-07,56,Other,Quarterly,Yoga,65,489,Absent,19:08:00
+331,2024-11-19,56,Other,Quarterly,HIIT,62,315,Present,22:33:00
+1068,2024-09-22,56,Female,Quarterly,Yoga,47,342,Absent,19:27:00
+679,2024-08-14,56,Female,Quarterly,HIIT,61,312,Present,22:37:00
+2011,2024-05-21,56,Male,Quarterly,Cardio,64,362,Present,05:39:00
+908,2024-04-15,56,Other,Quarterly,CrossFit,26,199,Present,17:29:00
+1958,2024-12-21,56,Other,Quarterly,Yoga,92,572,Absent,16:22:00
+1952,2024-04-10,57,Other,Annual,Strength Training,94,926,Present,07:15:00
+2081,2024-09-24,57,Female,Annual,HIIT,34,333,Present,14:23:00
+207,2024-06-28,57,Male,Annual,Cardio,64,474,Present,10:09:00
+832,2024-04-28,57,Other,Annual,Yoga,39,357,Absent,15:01:00
+924,2024-07-07,57,Male,Annual,Yoga,43,241,Present,11:28:00
+1352,2024-10-26,57,Other,Annual,Yoga,91,892,Present,08:21:00
+391,2024-12-21,57,Male,Annual,Cardio,101,993,Absent,09:06:00
+1844,2024-05-17,57,Female,Annual,Yoga,99,784,Present,22:57:00
+855,2024-12-12,57,Male,Annual,Cardio,92,567,Present,14:05:00
+2366,2024-03-20,57,Other,Annual,Strength Training,111,617,Present,11:29:00
+1430,2024-08-16,57,Other,Annual,CrossFit,93,601,Present,05:14:00
+1574,2024-10-02,57,Other,Annual,HIIT,119,806,Absent,16:26:00
+936,2024-05-24,57,Other,Annual,CrossFit,75,668,Present,16:40:00
+163,2024-02-05,57,Male,Annual,Yoga,111,1000,Absent,17:12:00
+304,2024-04-11,57,Male,Annual,Cardio,108,949,Absent,06:48:00
+30,2024-12-02,57,Female,Annual,CrossFit,96,621,Absent,13:16:00
+2351,2024-07-02,57,Female,Annual,Cardio,114,797,Present,14:20:00
+2588,2024-08-02,57,Male,Annual,Cardio,115,696,Absent,09:08:00
+1402,2024-03-25,57,Male,Annual,Cardio,60,515,Absent,14:33:00
+851,2024-04-07,57,Other,Annual,CrossFit,38,288,Present,12:50:00
+1286,2024-09-23,57,Female,Annual,HIIT,90,484,Present,18:14:00
+1640,2024-08-24,57,Female,Monthly,Yoga,33,256,Absent,20:35:00
+2075,2024-10-27,57,Other,Monthly,CrossFit,49,467,Absent,11:24:00
+1961,2024-10-02,57,Female,Monthly,Cardio,63,522,Present,11:07:00
+2589,2024-09-25,57,Female,Monthly,Cardio,90,778,Absent,22:59:00
+2562,2024-06-22,57,Male,Monthly,HIIT,81,805,Absent,05:03:00
+748,2024-06-17,57,Other,Monthly,Cardio,80,481,Absent,19:30:00
+2457,2024-06-28,57,Male,Monthly,Yoga,102,518,Present,06:46:00
+2311,2024-01-09,57,Male,Monthly,HIIT,85,435,Absent,17:33:00
+1297,2024-05-08,57,Male,Monthly,Strength Training,36,244,Present,06:39:00
+1244,2024-10-27,57,Male,Monthly,CrossFit,114,962,Absent,21:43:00
+768,2024-10-07,57,Female,Monthly,HIIT,72,476,Present,08:01:00
+1472,2024-09-17,57,Other,Monthly,Cardio,54,391,Present,17:54:00
+2355,2024-04-19,57,Other,Monthly,CrossFit,93,709,Present,21:56:00
+511,2024-12-23,57,Male,Monthly,Cardio,58,465,Absent,19:00:00
+2547,2024-10-10,57,Other,Monthly,CrossFit,60,414,Present,22:18:00
+1611,2024-08-26,57,Female,Monthly,Yoga,92,742,Present,13:34:00
+902,2024-09-01,57,Other,Monthly,HIIT,100,805,Absent,07:16:00
+157,2024-10-10,57,Other,Monthly,Strength Training,63,341,Absent,06:46:00
+1231,2024-01-04,57,Other,Monthly,Strength Training,88,710,Absent,12:40:00
+709,2024-03-16,57,Other,Monthly,Cardio,93,624,Present,10:28:00
+323,2024-03-31,57,Female,Quarterly,CrossFit,24,144,Absent,08:56:00
+2540,2024-01-08,57,Other,Quarterly,Cardio,103,890,Present,14:46:00
+2111,2024-10-25,57,Male,Quarterly,Yoga,91,754,Present,16:48:00
+489,2024-03-14,57,Male,Quarterly,HIIT,101,694,Absent,08:45:00
+1941,2024-05-15,57,Female,Quarterly,Cardio,92,506,Absent,15:20:00
+998,2024-01-13,57,Female,Quarterly,HIIT,92,642,Present,11:13:00
+1889,2024-09-06,57,Other,Quarterly,CrossFit,57,529,Present,17:34:00
+2035,2024-10-04,57,Other,Quarterly,Yoga,56,315,Present,16:47:00
+393,2024-12-14,57,Male,Quarterly,Cardio,102,729,Present,06:47:00
+1734,2024-12-11,57,Female,Quarterly,Cardio,53,303,Present,16:42:00
+1892,2024-09-06,57,Other,Quarterly,CrossFit,96,652,Absent,18:44:00
+332,2024-03-16,57,Male,Quarterly,Yoga,64,609,Absent,13:29:00
+1146,2024-06-06,57,Female,Quarterly,Strength Training,106,622,Present,14:53:00
+529,2024-05-07,57,Other,Quarterly,HIIT,97,535,Present,14:22:00
+619,2024-05-29,57,Other,Quarterly,Yoga,118,664,Present,18:12:00
+337,2024-01-01,57,Female,Quarterly,CrossFit,118,760,Present,05:28:00
+1752,2024-11-05,57,Other,Quarterly,Cardio,98,826,Absent,06:46:00
+1562,2024-07-19,57,Male,Quarterly,Strength Training,60,337,Absent,22:21:00
+2391,2024-12-08,58,Female,Annual,Cardio,43,266,Present,22:15:00
+1694,2024-05-20,58,Male,Annual,Cardio,79,602,Absent,19:55:00
+2132,2024-08-10,58,Other,Annual,HIIT,20,199,Absent,13:32:00
+1118,2024-04-18,58,Female,Annual,Cardio,39,242,Absent,05:29:00
+1115,2024-02-22,58,Female,Annual,HIIT,30,282,Present,20:12:00
+420,2024-12-24,58,Male,Annual,Strength Training,83,420,Present,06:07:00
+96,2024-02-10,58,Other,Annual,Strength Training,101,778,Absent,10:39:00
+2101,2024-09-01,58,Female,Annual,HIIT,47,243,Absent,08:52:00
+182,2024-03-17,58,Female,Annual,Cardio,97,862,Present,09:21:00
+1505,2024-02-08,58,Female,Annual,Strength Training,43,339,Present,16:14:00
+1312,2024-07-03,58,Male,Annual,HIIT,109,556,Absent,16:49:00
+289,2024-06-28,58,Other,Annual,Cardio,107,629,Absent,06:01:00
+405,2024-11-07,58,Other,Annual,Yoga,92,575,Absent,20:35:00
+221,2024-05-20,58,Female,Annual,Strength Training,59,466,Present,09:17:00
+1438,2024-11-01,58,Female,Annual,Yoga,25,182,Present,15:52:00
+1486,2024-01-16,58,Male,Annual,Strength Training,66,545,Present,11:53:00
+1742,2024-05-21,58,Other,Annual,Strength Training,50,484,Absent,08:04:00
+974,2024-10-12,58,Female,Annual,Cardio,76,435,Present,15:27:00
+1225,2024-11-13,58,Female,Monthly,Yoga,118,1000,Present,15:02:00
+744,2024-10-06,58,Male,Monthly,HIIT,114,887,Present,09:50:00
+2272,2024-12-30,58,Female,Monthly,Cardio,77,422,Absent,18:36:00
+1124,2024-01-20,58,Female,Monthly,Cardio,119,644,Absent,14:13:00
+903,2024-02-16,58,Male,Monthly,CrossFit,20,109,Present,12:38:00
+98,2024-11-17,58,Other,Monthly,Strength Training,98,721,Present,12:34:00
+1274,2024-03-24,58,Other,Monthly,Strength Training,78,593,Absent,06:46:00
+224,2024-07-09,58,Female,Monthly,HIIT,23,227,Present,22:05:00
+458,2024-09-29,58,Other,Monthly,HIIT,79,408,Present,11:49:00
+1494,2024-05-13,58,Male,Monthly,CrossFit,96,576,Present,09:55:00
+995,2024-08-29,58,Female,Monthly,Cardio,111,645,Absent,16:55:00
+1452,2024-08-05,58,Other,Monthly,Strength Training,23,219,Absent,20:27:00
+2242,2024-02-07,58,Male,Monthly,HIIT,69,482,Absent,13:58:00
+280,2024-09-25,58,Male,Monthly,Yoga,34,201,Present,12:40:00
+1620,2024-05-01,58,Male,Monthly,Cardio,115,685,Present,20:27:00
+676,2024-09-03,58,Female,Monthly,HIIT,74,614,Present,06:05:00
+334,2024-09-16,58,Male,Monthly,Cardio,24,168,Present,08:41:00
+481,2024-05-23,58,Female,Monthly,Yoga,55,447,Absent,17:36:00
+1736,2024-02-28,58,Other,Monthly,CrossFit,71,598,Absent,19:16:00
+1327,2024-12-29,58,Other,Quarterly,CrossFit,43,226,Absent,14:11:00
+2560,2024-09-19,58,Other,Quarterly,Strength Training,79,455,Absent,19:51:00
+2517,2024-07-15,58,Other,Quarterly,CrossFit,116,964,Present,20:18:00
+2269,2024-10-30,58,Other,Quarterly,Strength Training,72,678,Absent,18:20:00
+789,2024-01-08,58,Male,Quarterly,CrossFit,43,420,Present,08:46:00
+2572,2024-09-08,58,Male,Quarterly,HIIT,89,615,Absent,15:19:00
+1769,2024-07-07,58,Other,Quarterly,HIIT,26,239,Absent,19:12:00
+2216,2024-11-13,58,Female,Quarterly,Yoga,80,556,Present,12:09:00
+710,2024-11-08,58,Other,Quarterly,Cardio,38,193,Absent,10:32:00
+1079,2024-09-20,58,Male,Quarterly,CrossFit,20,110,Absent,18:30:00
+1798,2024-10-23,58,Male,Quarterly,CrossFit,71,692,Present,09:10:00
+1232,2024-09-11,58,Female,Quarterly,HIIT,112,611,Present,15:26:00
+1832,2024-01-16,58,Female,Quarterly,Yoga,81,772,Present,12:53:00
+1652,2024-09-23,58,Male,Quarterly,HIIT,120,612,Present,07:47:00
+2003,2024-02-21,58,Female,Quarterly,CrossFit,120,1153,Present,14:25:00
+353,2024-01-20,58,Other,Quarterly,Cardio,25,201,Absent,18:19:00
+453,2024-08-25,58,Female,Quarterly,Strength Training,51,396,Absent,10:32:00
+119,2024-02-06,59,Female,Annual,HIIT,39,277,Absent,05:25:00
+301,2024-09-27,59,Male,Annual,CrossFit,42,283,Present,22:14:00
+2209,2024-07-01,59,Female,Annual,CrossFit,31,194,Present,21:26:00
+1206,2024-01-27,59,Male,Annual,Strength Training,63,477,Absent,08:24:00
+689,2024-07-14,59,Male,Annual,Strength Training,89,790,Present,20:38:00
+2393,2024-07-06,59,Female,Annual,CrossFit,94,801,Present,18:02:00
+1860,2024-04-08,59,Male,Annual,Strength Training,71,431,Absent,09:15:00
+270,2024-07-13,59,Female,Annual,HIIT,32,272,Absent,13:18:00
+1897,2024-03-05,59,Male,Annual,HIIT,52,322,Present,05:23:00
+2064,2024-01-14,59,Other,Annual,Yoga,49,296,Absent,16:10:00
+878,2024-06-08,59,Male,Annual,Cardio,89,577,Present,16:09:00
+2299,2024-08-04,59,Male,Annual,Strength Training,49,284,Present,20:03:00
+359,2024-04-20,59,Female,Annual,HIIT,48,332,Present,13:08:00
+562,2024-01-17,59,Male,Annual,HIIT,85,782,Absent,05:53:00
+318,2024-03-17,59,Female,Annual,Yoga,120,797,Present,18:31:00
+2587,2024-10-04,59,Male,Annual,Cardio,106,801,Absent,05:35:00
+1904,2024-08-10,59,Male,Annual,Strength Training,102,543,Absent,08:00:00
+1238,2024-08-26,59,Other,Annual,Cardio,46,379,Present,07:22:00
+2397,2024-12-27,59,Male,Annual,Cardio,40,284,Absent,21:36:00
+80,2024-08-23,59,Other,Annual,CrossFit,89,502,Present,21:53:00
+97,2024-08-30,59,Female,Monthly,Yoga,110,585,Present,22:57:00
+370,2024-09-20,59,Female,Monthly,Cardio,40,391,Present,14:28:00
+2089,2024-11-17,59,Other,Monthly,HIIT,98,539,Present,20:38:00
+1023,2024-03-10,59,Male,Monthly,CrossFit,94,721,Absent,16:09:00
+1565,2024-10-30,59,Other,Monthly,Cardio,62,446,Present,11:26:00
+2178,2024-10-25,59,Female,Monthly,Strength Training,51,299,Present,16:29:00
+188,2024-03-05,59,Female,Monthly,HIIT,71,641,Absent,13:46:00
+135,2024-03-16,59,Other,Monthly,Cardio,44,341,Absent,16:15:00
+1533,2024-04-19,59,Other,Monthly,CrossFit,34,291,Present,07:59:00
+1447,2024-08-20,59,Female,Monthly,HIIT,47,258,Absent,14:10:00
+644,2024-05-17,59,Other,Monthly,HIIT,67,521,Present,05:17:00
+2489,2024-01-07,59,Female,Monthly,HIIT,71,574,Present,14:21:00
+1077,2024-03-14,59,Female,Monthly,Yoga,117,659,Absent,20:54:00
+59,2024-06-14,59,Female,Monthly,HIIT,47,460,Absent,17:00:00
+661,2024-11-14,59,Other,Monthly,Strength Training,69,456,Present,19:16:00
+2041,2024-04-17,59,Other,Monthly,CrossFit,51,288,Absent,20:15:00
+1616,2024-02-25,59,Male,Monthly,CrossFit,58,366,Absent,12:26:00
+1763,2024-08-29,59,Other,Quarterly,Strength Training,20,107,Absent,05:47:00
+386,2024-07-04,59,Male,Quarterly,Cardio,71,551,Present,16:52:00
+2493,2024-08-23,59,Male,Quarterly,Cardio,105,960,Absent,19:07:00
+724,2024-09-22,59,Female,Quarterly,HIIT,79,620,Absent,12:07:00
+1099,2024-08-01,59,Female,Quarterly,Strength Training,93,630,Present,09:28:00
+1552,2024-09-10,59,Male,Quarterly,Cardio,107,625,Absent,10:17:00
+2051,2024-10-07,59,Female,Quarterly,Strength Training,36,239,Present,21:34:00
+1792,2024-02-24,59,Female,Quarterly,Strength Training,103,966,Present,06:57:00
+847,2024-03-15,59,Other,Quarterly,CrossFit,93,908,Present,20:47:00
+641,2024-10-25,59,Other,Quarterly,Strength Training,43,422,Absent,18:03:00
+992,2024-12-19,59,Male,Quarterly,Strength Training,66,486,Present,11:04:00
+1829,2024-12-09,59,Female,Quarterly,Strength Training,25,144,Absent,08:10:00
+2361,2024-01-08,59,Male,Quarterly,Strength Training,110,616,Absent,08:52:00
+2191,2024-06-24,59,Other,Quarterly,CrossFit,24,152,Absent,09:42:00
+1085,2024-11-18,59,Other,Quarterly,HIIT,74,391,Absent,21:29:00
+1695,2024-05-08,59,Female,Quarterly,Strength Training,111,834,Present,08:44:00
+1992,2024-11-02,59,Female,Quarterly,HIIT,106,909,Present,21:19:00
+1817,2024-11-22,59,Male,Quarterly,Cardio,115,836,Present,12:33:00
+1041,2024-07-29,60,Other,Annual,Cardio,49,395,Present,22:26:00
+485,2024-03-10,60,Other,Annual,CrossFit,22,214,Absent,16:25:00
+1938,2024-06-12,60,Male,Annual,HIIT,94,800,Present,08:12:00
+2322,2024-10-14,60,Other,Annual,HIIT,56,374,Absent,12:36:00
+1264,2024-08-06,60,Other,Annual,Cardio,93,774,Absent,11:47:00
+1182,2024-01-15,60,Male,Annual,Strength Training,94,626,Absent,05:21:00
+2120,2024-09-04,60,Female,Annual,Strength Training,40,291,Absent,08:57:00
+1446,2024-10-05,60,Male,Annual,HIIT,76,412,Present,21:27:00
+2518,2024-10-18,60,Male,Annual,HIIT,68,442,Present,07:27:00
+991,2024-09-18,60,Other,Annual,HIIT,73,665,Present,08:01:00
+1139,2024-05-13,60,Female,Annual,Cardio,26,158,Absent,09:28:00
+1665,2024-04-09,60,Male,Annual,CrossFit,84,626,Absent,21:55:00
+1392,2024-12-25,60,Male,Annual,Strength Training,74,484,Absent,08:05:00
+570,2024-02-14,60,Other,Annual,HIIT,41,240,Absent,13:04:00
+1020,2024-12-26,60,Female,Annual,Yoga,50,329,Present,10:24:00
+2078,2024-06-23,60,Other,Annual,Yoga,69,345,Absent,16:20:00
+422,2024-07-14,60,Female,Annual,CrossFit,77,386,Absent,21:26:00
+1320,2024-07-01,60,Female,Annual,Cardio,25,167,Absent,16:27:00
+560,2024-10-03,60,Male,Annual,HIIT,32,160,Present,19:42:00
+1977,2024-08-22,60,Male,Annual,Cardio,57,310,Absent,18:36:00
+474,2024-11-23,60,Other,Annual,Yoga,67,536,Present,08:31:00
+350,2024-03-17,60,Other,Monthly,Yoga,83,750,Present,07:21:00
+1867,2024-01-25,60,Female,Monthly,Cardio,42,281,Present,08:52:00
+1933,2024-07-13,60,Other,Monthly,Strength Training,118,1115,Absent,11:39:00
+2020,2024-05-21,60,Male,Monthly,CrossFit,105,569,Absent,18:32:00
+1831,2024-09-27,60,Female,Monthly,HIIT,44,386,Present,08:17:00
+1333,2024-08-13,60,Female,Monthly,CrossFit,49,313,Absent,12:40:00
+1724,2024-10-15,60,Other,Monthly,Strength Training,62,412,Absent,09:02:00
+1755,2024-10-18,60,Female,Monthly,HIIT,49,340,Present,10:00:00
+2453,2024-03-08,60,Female,Monthly,HIIT,103,990,Absent,06:44:00
+1928,2024-01-29,60,Other,Monthly,Strength Training,120,772,Absent,20:48:00
+190,2024-12-04,60,Female,Monthly,Strength Training,109,780,Absent,11:36:00
+2478,2024-08-04,60,Female,Monthly,CrossFit,94,729,Present,11:57:00
+1330,2024-05-03,60,Female,Monthly,CrossFit,42,390,Present,20:40:00
+1440,2024-05-30,60,Other,Monthly,CrossFit,110,632,Present,12:47:00
+1234,2024-12-02,60,Other,Monthly,Yoga,88,771,Absent,22:35:00
+1476,2024-11-17,60,Male,Monthly,Strength Training,74,557,Absent,09:21:00
+1715,2024-08-21,60,Other,Monthly,HIIT,87,484,Absent,15:05:00
+11,2024-10-11,60,Female,Monthly,Strength Training,110,738,Present,22:43:00
+947,2024-09-09,60,Other,Monthly,Yoga,39,230,Absent,07:42:00
+1024,2024-07-11,60,Male,Monthly,Cardio,77,645,Absent,16:54:00
+1050,2024-02-09,60,Female,Monthly,HIIT,20,191,Absent,19:16:00
+252,2024-04-11,60,Other,Monthly,Yoga,77,446,Absent,19:33:00
+1664,2024-04-30,60,Female,Monthly,Cardio,46,260,Present,19:47:00
+1645,2024-04-14,60,Female,Monthly,Cardio,35,348,Absent,05:17:00
+501,2024-03-15,60,Female,Monthly,Strength Training,109,1022,Absent,05:27:00
+842,2024-05-01,60,Female,Monthly,Yoga,113,647,Absent,08:05:00
+1975,2024-04-18,60,Female,Monthly,CrossFit,85,829,Present,07:35:00
+1538,2024-05-02,60,Other,Quarterly,CrossFit,69,644,Absent,17:02:00
+292,2024-08-23,60,Female,Quarterly,Yoga,119,994,Present,17:54:00
+1349,2024-08-23,60,Female,Quarterly,CrossFit,90,887,Present,06:05:00
+1025,2024-09-14,60,Other,Quarterly,HIIT,57,472,Absent,13:05:00
+2430,2024-02-24,60,Male,Quarterly,Cardio,54,319,Absent,22:47:00
+2345,2024-01-12,60,Other,Quarterly,Cardio,57,326,Absent,22:26:00
+1292,2024-02-23,60,Male,Quarterly,CrossFit,31,230,Absent,14:04:00
+492,2024-07-30,60,Female,Quarterly,Strength Training,107,667,Present,10:33:00
+1258,2024-10-10,60,Male,Quarterly,HIIT,97,845,Absent,14:04:00
+774,2024-03-05,60,Male,Quarterly,Cardio,52,501,Absent,11:57:00
+1065,2024-03-08,60,Female,Quarterly,Cardio,41,268,Absent,13:06:00
+1602,2024-05-06,60,Female,Quarterly,Cardio,23,209,Absent,05:53:00
+2233,2024-01-07,60,Male,Quarterly,Yoga,119,733,Absent,05:53:00
+1049,2024-12-01,60,Female,Quarterly,Strength Training,64,616,Absent,08:55:00
+81,2024-12-17,60,Male,Quarterly,Yoga,98,630,Present,21:54:00
+1818,2024-12-29,60,Female,Quarterly,HIIT,32,276,Absent,21:44:00
+513,2024-03-10,60,Female,Quarterly,CrossFit,72,539,Absent,19:08:00
+833,2024-01-16,61,Male,Annual,CrossFit,110,678,Absent,15:30:00
+1474,2024-03-18,61,Other,Annual,Yoga,89,554,Absent,12:04:00
+1310,2024-11-09,61,Other,Annual,Cardio,83,450,Present,15:22:00
+2427,2024-06-27,61,Female,Annual,Strength Training,104,738,Absent,06:58:00
+819,2024-07-03,61,Male,Annual,Cardio,108,679,Absent,10:13:00
+2057,2024-02-12,61,Other,Annual,Strength Training,69,450,Absent,08:52:00
+544,2024-10-24,61,Male,Annual,Cardio,43,344,Absent,20:56:00
+2458,2024-08-25,61,Female,Annual,Strength Training,20,130,Present,06:00:00
+176,2024-07-03,61,Other,Annual,HIIT,31,246,Absent,05:42:00
+1359,2024-07-28,61,Other,Annual,Yoga,44,359,Present,16:21:00
+1693,2024-05-11,61,Male,Annual,Yoga,79,636,Present,22:39:00
+475,2024-04-26,61,Female,Annual,HIIT,101,913,Absent,09:25:00
+714,2024-05-02,61,Male,Annual,CrossFit,44,325,Absent,17:23:00
+2128,2024-10-10,61,Male,Annual,HIIT,116,1025,Absent,13:13:00
+1585,2024-07-05,61,Female,Annual,CrossFit,61,349,Present,05:45:00
+1882,2024-12-13,61,Other,Annual,CrossFit,30,209,Absent,16:09:00
+2394,2024-11-02,61,Other,Annual,Strength Training,55,473,Absent,10:44:00
+1278,2024-09-25,61,Female,Annual,Cardio,119,1035,Present,07:59:00
+1974,2024-08-19,61,Male,Annual,Yoga,69,508,Absent,19:30:00
+1331,2024-02-13,61,Other,Annual,Cardio,77,732,Present,12:43:00
+564,2024-11-26,61,Other,Annual,Strength Training,53,271,Present,05:20:00
+1641,2024-11-10,61,Other,Annual,Strength Training,86,711,Present,18:13:00
+387,2024-07-07,61,Male,Annual,HIIT,28,175,Absent,19:10:00
+2213,2024-02-05,61,Other,Annual,Strength Training,45,372,Absent,17:31:00
+846,2024-11-10,61,Female,Annual,CrossFit,25,201,Present,09:31:00
+633,2024-11-03,61,Male,Annual,HIIT,21,196,Absent,14:25:00
+1453,2024-03-26,61,Other,Monthly,Cardio,58,438,Absent,18:59:00
+1918,2024-03-13,61,Male,Monthly,CrossFit,82,455,Absent,18:59:00
+179,2024-09-03,61,Other,Monthly,Cardio,57,408,Present,21:12:00
+496,2024-04-14,61,Female,Monthly,HIIT,51,441,Present,16:00:00
+1516,2024-07-17,61,Male,Monthly,Cardio,81,460,Absent,16:42:00
+285,2024-05-15,61,Other,Monthly,Cardio,57,303,Absent,07:24:00
+39,2024-05-21,61,Female,Monthly,Strength Training,94,737,Present,08:57:00
+2090,2024-05-09,61,Male,Monthly,Yoga,100,796,Absent,05:45:00
+1582,2024-10-29,61,Female,Monthly,CrossFit,28,140,Absent,12:37:00
+70,2024-01-18,61,Male,Monthly,CrossFit,32,304,Absent,07:12:00
+9,2024-02-10,61,Female,Monthly,CrossFit,36,289,Present,09:39:00
+1656,2024-10-14,61,Male,Monthly,CrossFit,102,634,Absent,09:51:00
+162,2024-05-09,61,Male,Monthly,CrossFit,80,553,Present,17:39:00
+1221,2024-01-30,61,Male,Monthly,Yoga,48,247,Absent,16:45:00
+199,2024-01-02,61,Other,Monthly,HIIT,106,706,Present,22:05:00
+2296,2024-10-30,61,Female,Monthly,Yoga,79,539,Absent,19:33:00
+1317,2024-04-18,61,Other,Quarterly,Strength Training,116,730,Present,20:17:00
+2222,2024-10-24,61,Female,Quarterly,Strength Training,83,579,Absent,13:09:00
+950,2024-04-26,61,Male,Quarterly,Yoga,86,498,Absent,17:29:00
+528,2024-08-19,61,Other,Quarterly,Cardio,107,959,Present,21:55:00
+831,2024-03-05,61,Other,Quarterly,Cardio,103,1003,Present,07:05:00
+1290,2024-11-25,61,Female,Quarterly,Strength Training,38,281,Present,06:03:00
+824,2024-04-01,61,Female,Quarterly,CrossFit,68,354,Absent,10:30:00
+130,2024-08-04,61,Other,Quarterly,Cardio,103,756,Present,05:33:00
+2229,2024-06-21,61,Female,Quarterly,Strength Training,25,249,Absent,08:28:00
+322,2024-11-20,61,Other,Quarterly,Strength Training,69,388,Absent,06:24:00
+2214,2024-05-20,61,Female,Quarterly,Yoga,74,461,Present,14:45:00
+1081,2024-08-21,61,Other,Quarterly,Yoga,116,763,Absent,13:30:00
+2136,2024-09-16,61,Female,Quarterly,HIIT,62,391,Absent,16:18:00
+1076,2024-10-02,61,Other,Quarterly,CrossFit,37,196,Absent,07:27:00
+127,2024-01-05,62,Male,Annual,Strength Training,87,788,Absent,11:13:00
+1269,2024-02-01,62,Other,Annual,Strength Training,58,463,Present,15:49:00
+1880,2024-04-04,62,Other,Annual,CrossFit,97,594,Absent,21:01:00
+1040,2024-12-23,62,Female,Annual,Cardio,71,605,Absent,13:43:00
+715,2024-12-14,62,Male,Annual,Yoga,24,190,Present,11:09:00
+948,2024-01-17,62,Female,Annual,Yoga,117,767,Present,07:57:00
+1249,2024-11-04,62,Female,Annual,Cardio,66,391,Present,05:43:00
+1110,2024-02-16,62,Female,Annual,HIIT,53,438,Absent,09:37:00
+2382,2024-08-28,62,Other,Annual,CrossFit,86,743,Absent,13:46:00
+2133,2024-05-22,62,Other,Annual,Yoga,94,531,Present,18:24:00
+2409,2024-03-28,62,Male,Annual,CrossFit,94,868,Absent,07:48:00
+2599,2024-12-20,62,Male,Annual,HIIT,58,303,Present,10:38:00
+2515,2024-05-07,62,Other,Annual,CrossFit,113,950,Absent,09:01:00
+1245,2024-02-04,62,Male,Annual,Strength Training,103,628,Present,20:17:00
+1786,2024-05-02,62,Female,Annual,CrossFit,81,520,Absent,16:29:00
+1794,2024-08-12,62,Female,Annual,HIIT,90,590,Absent,09:28:00
+1483,2024-11-06,62,Other,Annual,Yoga,103,542,Present,10:53:00
+313,2024-12-01,62,Female,Annual,HIIT,100,935,Present,05:21:00
+1663,2024-02-21,62,Other,Annual,Strength Training,106,712,Absent,11:42:00
+2474,2024-01-08,62,Female,Annual,Strength Training,83,521,Present,13:38:00
+265,2024-07-09,62,Female,Annual,Strength Training,75,639,Present,17:48:00
+2600,2024-04-01,62,Female,Annual,Strength Training,65,610,Present,05:42:00
+1000,2024-05-25,62,Other,Annual,CrossFit,111,591,Present,15:30:00
+892,2024-12-30,62,Male,Annual,HIIT,26,189,Present,15:05:00
+2283,2024-08-25,62,Female,Annual,Strength Training,29,228,Absent,22:15:00
+800,2024-08-14,62,Other,Annual,CrossFit,74,386,Present,10:31:00
+219,2024-12-21,62,Other,Monthly,CrossFit,58,368,Absent,17:22:00
+1647,2024-02-24,62,Other,Monthly,HIIT,55,317,Absent,11:01:00
+1571,2024-02-11,62,Male,Monthly,Strength Training,43,276,Present,08:50:00
+1104,2024-01-21,62,Female,Monthly,Cardio,74,469,Present,12:46:00
+192,2024-11-18,62,Female,Monthly,Yoga,31,247,Present,13:27:00
+1159,2024-12-02,62,Female,Monthly,Yoga,84,542,Present,16:45:00
+1536,2024-08-05,62,Male,Monthly,CrossFit,36,189,Absent,06:15:00
+1843,2024-07-18,62,Female,Monthly,Cardio,24,131,Absent,07:50:00
+300,2024-04-07,62,Other,Monthly,CrossFit,92,853,Present,13:32:00
+2142,2024-07-22,62,Female,Monthly,Strength Training,117,1066,Present,18:48:00
+2479,2024-11-27,62,Male,Monthly,HIIT,99,744,Absent,05:16:00
+804,2024-09-12,62,Other,Monthly,CrossFit,106,806,Absent,08:36:00
+238,2024-01-16,62,Male,Monthly,Cardio,69,600,Absent,15:31:00
+1781,2024-04-02,62,Other,Quarterly,Cardio,55,467,Present,15:21:00
+2117,2024-10-20,62,Female,Quarterly,Strength Training,89,676,Absent,20:19:00
+2535,2024-10-06,62,Female,Quarterly,Cardio,51,446,Present,07:45:00
+1845,2024-05-14,62,Other,Quarterly,CrossFit,41,212,Absent,16:07:00
+2591,2024-02-14,62,Male,Quarterly,CrossFit,77,496,Present,05:50:00
+1981,2024-09-29,62,Other,Quarterly,Strength Training,31,202,Absent,11:11:00
+524,2024-04-23,62,Female,Quarterly,Yoga,58,449,Absent,06:17:00
+1519,2024-09-10,62,Other,Quarterly,HIIT,109,576,Present,22:35:00
+1983,2024-07-10,62,Other,Quarterly,HIIT,100,581,Absent,17:47:00
+1441,2024-09-22,62,Other,Quarterly,CrossFit,94,661,Absent,09:54:00
+2456,2024-07-15,62,Male,Quarterly,CrossFit,71,448,Absent,12:24:00
+884,2024-10-29,62,Other,Quarterly,CrossFit,109,807,Present,09:40:00
+2196,2024-09-26,62,Other,Quarterly,Strength Training,49,326,Present,18:01:00
+747,2024-02-08,62,Other,Quarterly,CrossFit,55,485,Present,07:52:00
+1011,2024-02-13,62,Female,Quarterly,Strength Training,75,658,Present,09:09:00
+2212,2024-01-10,62,Female,Quarterly,Yoga,93,713,Absent,17:51:00
+549,2024-07-08,62,Male,Quarterly,HIIT,68,601,Present,12:24:00
+622,2024-05-06,63,Male,Annual,CrossFit,116,956,Absent,07:41:00
+1191,2024-04-13,63,Male,Annual,Yoga,81,626,Absent,16:34:00
+1302,2024-03-25,63,Female,Annual,HIIT,70,498,Present,12:06:00
+1965,2024-02-03,63,Female,Annual,Yoga,94,802,Present,10:39:00
+25,2024-12-07,63,Male,Annual,Yoga,54,288,Present,12:09:00
+1528,2024-11-29,63,Female,Annual,Cardio,30,285,Absent,12:57:00
+2140,2024-02-16,63,Other,Annual,HIIT,32,303,Present,15:21:00
+1192,2024-09-10,63,Other,Annual,Yoga,103,800,Absent,18:24:00
+2054,2024-07-29,63,Female,Annual,CrossFit,91,681,Absent,06:21:00
+1795,2024-08-02,63,Male,Annual,Yoga,72,638,Absent,11:31:00
+2465,2024-02-19,63,Male,Annual,Strength Training,98,517,Absent,18:33:00
+532,2024-10-10,63,Other,Annual,Cardio,66,438,Present,08:23:00
+1022,2024-02-15,63,Other,Annual,HIIT,65,509,Absent,11:00:00
+1722,2024-06-08,63,Female,Annual,CrossFit,80,787,Absent,05:48:00
+1655,2024-07-06,63,Female,Annual,Yoga,48,293,Present,20:24:00
+1924,2024-10-02,63,Female,Annual,Yoga,54,337,Present,05:56:00
+1810,2024-02-25,63,Other,Annual,Cardio,26,224,Present,21:02:00
+330,2024-05-19,63,Other,Annual,HIIT,47,340,Present,05:44:00
+2485,2024-10-27,63,Male,Annual,HIIT,55,369,Present,16:09:00
+695,2024-04-18,63,Female,Annual,HIIT,21,136,Absent,09:57:00
+2249,2024-11-09,63,Other,Annual,Strength Training,96,658,Absent,20:23:00
+2287,2024-05-08,63,Female,Annual,Cardio,108,913,Absent,18:45:00
+2469,2024-06-09,63,Male,Annual,Yoga,78,628,Present,11:43:00
+701,2024-08-06,63,Female,Annual,Cardio,77,394,Absent,16:52:00
+1522,2024-12-30,63,Male,Annual,CrossFit,89,878,Absent,12:37:00
+2305,2024-02-06,63,Female,Annual,HIIT,44,236,Absent,22:20:00
+2066,2024-09-27,63,Female,Monthly,Cardio,70,476,Present,12:59:00
+940,2024-08-27,63,Female,Monthly,Cardio,60,450,Present,18:18:00
+2395,2024-08-03,63,Male,Monthly,Strength Training,88,728,Absent,20:29:00
+1309,2024-06-03,63,Other,Monthly,CrossFit,45,279,Present,22:45:00
+2163,2024-01-12,63,Other,Monthly,Cardio,21,163,Absent,08:22:00
+2426,2024-10-20,63,Male,Monthly,Yoga,21,106,Absent,22:11:00
+2185,2024-12-03,63,Other,Monthly,Yoga,40,236,Absent,17:20:00
+1324,2024-01-08,63,Female,Monthly,CrossFit,96,669,Absent,13:48:00
+1785,2024-09-15,63,Other,Monthly,Cardio,95,840,Absent,09:24:00
+1242,2024-07-20,63,Female,Monthly,Cardio,55,428,Present,09:06:00
+2403,2024-03-02,63,Other,Monthly,Yoga,51,451,Present,14:01:00
+2440,2024-11-24,63,Female,Monthly,Cardio,120,767,Present,19:47:00
+183,2024-05-26,63,Male,Monthly,Yoga,55,525,Absent,07:18:00
+1828,2024-05-26,63,Female,Monthly,Yoga,118,661,Absent,05:17:00
+1954,2024-09-26,63,Other,Monthly,Strength Training,92,766,Absent,21:28:00
+1506,2024-06-21,63,Other,Monthly,CrossFit,120,865,Present,12:22:00
+624,2024-08-21,63,Female,Monthly,CrossFit,64,349,Present,05:00:00
+1771,2024-11-08,63,Male,Monthly,HIIT,32,189,Absent,13:05:00
+408,2024-03-29,63,Female,Monthly,Yoga,96,733,Absent,17:25:00
+973,2024-12-23,63,Other,Quarterly,CrossFit,24,206,Absent,17:29:00
+514,2024-04-15,63,Male,Quarterly,Cardio,49,372,Absent,09:48:00
+1512,2024-08-05,63,Other,Quarterly,Cardio,95,628,Present,15:21:00
+271,2024-08-06,63,Male,Quarterly,Yoga,120,1058,Absent,12:00:00
+2400,2024-09-01,63,Female,Quarterly,Cardio,53,501,Present,12:21:00
+79,2024-05-10,63,Other,Quarterly,Strength Training,45,265,Present,21:09:00
+1689,2024-07-30,63,Other,Quarterly,Yoga,64,392,Present,08:04:00
+1188,2024-10-02,63,Female,Quarterly,Cardio,39,383,Absent,19:05:00
+683,2024-06-02,63,Other,Quarterly,Cardio,23,189,Present,15:28:00
+566,2024-11-27,63,Other,Quarterly,HIIT,75,458,Absent,08:35:00
+1063,2024-08-16,64,Female,Annual,Cardio,22,115,Absent,05:25:00
+1388,2024-06-22,64,Male,Annual,HIIT,73,710,Present,06:09:00
+2450,2024-04-14,64,Male,Annual,HIIT,90,519,Present,06:44:00
+2156,2024-10-16,64,Female,Annual,Cardio,34,179,Absent,21:45:00
+537,2024-10-24,64,Other,Annual,HIIT,73,427,Absent,09:22:00
+2307,2024-01-17,64,Other,Annual,HIIT,40,271,Absent,11:16:00
+326,2024-04-22,64,Male,Annual,Strength Training,35,198,Present,21:54:00
+782,2024-06-26,64,Female,Annual,HIIT,49,256,Present,05:21:00
+444,2024-02-20,64,Female,Annual,Strength Training,63,624,Absent,08:32:00
+1,2024-10-11,64,Other,Annual,HIIT,28,171,Absent,20:04:00
+2549,2024-09-15,64,Female,Annual,HIIT,24,211,Present,05:58:00
+2021,2024-11-11,64,Female,Annual,HIIT,119,815,Absent,14:24:00
+1946,2024-06-09,64,Male,Annual,Cardio,58,505,Present,19:16:00
+2372,2024-11-12,64,Male,Annual,CrossFit,40,226,Present,06:02:00
+121,2024-04-11,64,Male,Annual,Yoga,32,262,Present,08:10:00
+1069,2024-07-04,64,Female,Annual,HIIT,78,513,Absent,16:42:00
+2300,2024-05-30,64,Male,Annual,HIIT,68,640,Absent,20:06:00
+2593,2024-09-10,64,Other,Annual,Strength Training,84,469,Absent,10:05:00
+381,2024-08-31,64,Male,Annual,Strength Training,59,369,Present,15:39:00
+551,2024-04-18,64,Other,Annual,CrossFit,27,187,Absent,15:25:00
+1363,2024-02-13,64,Female,Annual,Yoga,109,787,Present,15:52:00
+321,2024-11-13,64,Male,Annual,Yoga,98,494,Present,07:07:00
+982,2024-10-20,64,Female,Annual,Cardio,30,198,Present,21:16:00
+244,2024-01-24,64,Other,Annual,Strength Training,102,549,Absent,05:57:00
+1153,2024-01-11,64,Female,Monthly,Cardio,61,443,Present,06:34:00
+295,2024-12-22,64,Female,Monthly,CrossFit,54,404,Present,05:23:00
+2067,2024-06-02,64,Female,Monthly,Yoga,35,177,Absent,22:29:00
+1460,2024-12-11,64,Male,Monthly,Cardio,114,1135,Absent,15:47:00
+1569,2024-03-18,64,Other,Monthly,Strength Training,30,176,Absent,08:17:00
+1029,2024-05-02,64,Other,Monthly,Yoga,78,425,Present,06:49:00
+612,2024-09-24,64,Other,Monthly,HIIT,108,983,Present,11:28:00
+1787,2024-09-03,64,Female,Monthly,Strength Training,80,420,Present,19:33:00
+2079,2024-03-24,64,Male,Monthly,Cardio,21,157,Present,16:22:00
+1116,2024-06-05,64,Male,Monthly,HIIT,79,482,Present,10:19:00
+104,2024-09-04,64,Male,Monthly,CrossFit,86,796,Present,07:55:00
+266,2024-08-02,64,Other,Monthly,Yoga,26,192,Present,18:21:00
+1016,2024-08-26,64,Male,Monthly,Cardio,99,645,Present,16:31:00
+2385,2024-11-08,64,Female,Monthly,HIIT,42,224,Absent,13:10:00
+790,2024-07-03,64,Female,Monthly,Cardio,111,676,Absent,08:54:00
+226,2024-05-12,64,Male,Monthly,CrossFit,44,234,Absent,16:01:00
+2421,2024-12-22,64,Female,Monthly,Cardio,40,237,Absent,11:17:00
+440,2024-07-29,64,Male,Monthly,HIIT,62,442,Present,07:37:00
+214,2024-11-25,64,Female,Monthly,Strength Training,98,769,Absent,17:20:00
+2505,2024-08-19,64,Female,Monthly,HIIT,54,412,Absent,05:03:00
+608,2024-07-07,64,Female,Quarterly,CrossFit,75,580,Absent,14:17:00
+1133,2024-06-26,64,Female,Quarterly,CrossFit,40,363,Present,16:42:00
+1501,2024-01-16,64,Other,Quarterly,CrossFit,31,187,Absent,22:07:00
+2306,2024-02-09,64,Other,Quarterly,CrossFit,61,530,Absent,22:59:00
+723,2024-09-04,64,Female,Quarterly,Cardio,54,414,Present,13:36:00
+2408,2024-01-27,64,Male,Quarterly,Strength Training,70,466,Present,06:44:00
+1637,2024-02-24,64,Other,Quarterly,Strength Training,68,633,Absent,08:52:00
+1748,2024-08-17,64,Female,Quarterly,CrossFit,85,476,Absent,10:00:00
+2324,2024-10-05,64,Male,Quarterly,Cardio,23,206,Absent,17:26:00
+2569,2024-07-20,64,Other,Quarterly,HIIT,112,607,Absent,16:03:00
+108,2024-10-05,64,Other,Quarterly,Cardio,73,623,Present,10:45:00
+150,2024-09-11,64,Other,Quarterly,CrossFit,91,537,Present,06:24:00
+118,2024-12-25,64,Other,Quarterly,Yoga,89,668,Present,16:33:00
+2596,2024-07-20,64,Female,Quarterly,Yoga,63,443,Absent,19:07:00
+1379,2024-05-21,64,Male,Quarterly,Cardio,46,387,Present,15:25:00
+1140,2024-06-02,64,Female,Quarterly,Yoga,55,491,Absent,05:21:00
+836,2024-10-10,64,Female,Quarterly,Cardio,44,354,Present,10:45:00
+2494,2024-02-22,64,Male,Quarterly,Yoga,108,918,Absent,09:23:00
+2215,2024-01-03,64,Other,Quarterly,Cardio,39,387,Present,20:04:00
+745,2024-03-05,64,Male,Quarterly,CrossFit,24,165,Absent,13:21:00
+617,2024-06-21,64,Female,Quarterly,Yoga,27,219,Absent,06:20:00
+1671,2024-03-01,64,Male,Quarterly,Strength Training,91,616,Present,07:57:00
+1612,2024-06-16,64,Male,Quarterly,Strength Training,99,702,Present,21:22:00
+2017,2024-02-17,64,Male,Quarterly,HIIT,50,334,Absent,06:58:00
+2082,2024-02-02,65,Male,Annual,Strength Training,116,951,Present,06:18:00
+1394,2024-07-23,65,Male,Annual,HIIT,77,743,Absent,06:44:00
+2223,2024-05-10,65,Female,Annual,Cardio,69,623,Present,20:43:00
+829,2024-11-25,65,Female,Annual,CrossFit,39,196,Present,18:54:00
+1598,2024-09-13,65,Other,Annual,HIIT,115,771,Present,20:58:00
+599,2024-10-03,65,Other,Annual,Strength Training,91,648,Absent,10:45:00
+602,2024-07-24,65,Other,Annual,Strength Training,60,586,Present,11:26:00
+1318,2024-02-26,65,Female,Annual,HIIT,118,736,Present,22:58:00
+273,2024-12-05,65,Other,Annual,HIIT,36,279,Absent,11:56:00
+2363,2024-08-04,65,Other,Annual,Yoga,48,293,Absent,21:40:00
+1410,2024-08-09,65,Female,Annual,CrossFit,73,412,Present,14:29:00
+1018,2024-09-03,65,Female,Annual,Cardio,115,790,Present,05:13:00
+996,2024-12-05,65,Female,Annual,Yoga,63,375,Absent,10:05:00
+1570,2024-02-14,65,Other,Annual,Cardio,49,305,Absent,18:02:00
+60,2024-03-08,65,Other,Annual,HIIT,57,318,Present,19:47:00
+919,2024-07-25,65,Female,Annual,Strength Training,109,692,Absent,22:36:00
+2594,2024-12-18,65,Male,Annual,CrossFit,114,949,Present,13:55:00
+770,2024-11-12,65,Female,Annual,CrossFit,84,507,Absent,08:10:00
+2508,2024-04-06,65,Female,Annual,CrossFit,84,680,Present,05:09:00
+1390,2024-02-14,65,Other,Annual,Cardio,58,296,Absent,20:06:00
+1836,2024-05-06,65,Other,Monthly,CrossFit,31,181,Present,12:46:00
+841,2024-05-10,65,Female,Monthly,Strength Training,109,897,Present,07:01:00
+1497,2024-09-21,65,Other,Monthly,Strength Training,64,382,Present,20:20:00
+1237,2024-01-29,65,Other,Monthly,Yoga,111,1104,Present,09:29:00
+1542,2024-04-08,65,Male,Monthly,HIIT,38,273,Present,05:32:00
+1186,2024-08-03,65,Male,Monthly,Yoga,87,592,Present,16:11:00
+2473,2024-06-03,65,Other,Monthly,Cardio,114,619,Present,13:21:00
+306,2024-10-01,65,Male,Monthly,Strength Training,104,941,Absent,11:11:00
+2063,2024-12-19,65,Male,Monthly,Cardio,101,733,Present,08:13:00
+2294,2024-10-30,65,Other,Monthly,Strength Training,43,294,Absent,13:26:00
+726,2024-12-15,65,Female,Monthly,Yoga,58,425,Present,16:29:00
+1915,2024-07-24,65,Male,Monthly,Cardio,111,621,Present,13:19:00
+158,2024-05-24,65,Other,Monthly,Strength Training,74,667,Absent,20:48:00
+356,2024-02-22,65,Male,Monthly,Strength Training,73,605,Absent,13:44:00
+1759,2024-03-23,65,Other,Quarterly,Cardio,51,295,Absent,21:14:00
+568,2024-06-16,65,Male,Quarterly,Yoga,105,980,Present,19:14:00
+2160,2024-12-18,65,Other,Quarterly,HIIT,57,310,Present,13:51:00
+136,2024-02-27,65,Male,Quarterly,Strength Training,113,934,Absent,14:09:00
+969,2024-10-05,65,Male,Quarterly,HIIT,68,540,Present,07:44:00
+670,2024-06-04,65,Male,Quarterly,HIIT,68,395,Absent,05:47:00
+1094,2024-07-15,65,Other,Quarterly,Cardio,34,253,Absent,17:03:00
+1475,2024-06-10,65,Male,Quarterly,HIIT,109,1069,Present,17:19:00
+1350,2024-07-09,65,Male,Quarterly,Yoga,62,418,Present,16:24:00
+2102,2024-01-15,65,Female,Quarterly,Cardio,94,572,Absent,06:42:00
+1580,2024-02-11,65,Female,Quarterly,Cardio,91,896,Absent,14:17:00
+1380,2024-05-12,65,Male,Quarterly,HIIT,63,375,Present,11:17:00
+2491,2024-03-14,65,Female,Quarterly,HIIT,70,603,Present,12:46:00
+505,2024-01-02,65,Male,Quarterly,HIIT,119,812,Absent,05:57:00
+2,2024-06-01,65,Female,Quarterly,Strength Training,72,650,Absent,19:17:00
+687,2024-02-06,65,Other,Quarterly,CrossFit,42,344,Absent,17:53:00
