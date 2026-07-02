@@ -25,10 +25,15 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     jwt_ttl_hours: int = 720
 
+    # AI provider. Default is Ollama cloud models via the local Ollama daemon
+    # (OpenAI-compatible at :11434). Cloud models need `ollama serve` running +
+    # `ollama signin`. To switch to Lightning (or any OpenAI-compatible host)
+    # later, set AI_BASE_URL/AI_MODEL and LIGHTNING_API_KEY in .env — the key is
+    # sent as a Bearer token; local Ollama needs no key.
     lightning_api_key: str = ""
-    ai_base_url: str = "https://lightning.ai/api/v1"
-    ai_model: str = "lightning-ai/gemma-4-31B-it"
-    ai_timeout_seconds: int = 60
+    ai_base_url: str = "http://localhost:11434/v1"
+    ai_model: str = "gemma4:31b-cloud"
+    ai_timeout_seconds: int = 120
 
     cors_origins: str = "http://localhost:3000"
 

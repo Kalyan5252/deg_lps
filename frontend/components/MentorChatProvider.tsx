@@ -83,6 +83,11 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
         });
       } finally {
         setBusy(false);
+        // the mentor may have set/replaced the active question — let the
+        // workbench refresh its Question panel.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("mentor:done"));
+        }
       }
     },
     [busy, trackId]

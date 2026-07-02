@@ -3,7 +3,7 @@
 import Editor from "@monaco-editor/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
@@ -116,15 +116,51 @@ export default function TrackWorkbench() {
   useEffect(() => {
     api
       .track(id)
-      .then((d) => {
+      .then(async (d) => {
         setTrack(d.track);
         setSchema(d.schema);
         setServerUp(d.track.status === "active");
-        generate(); // spin up + first question
+        // resume the active question (agent/curriculum) if there is one,
+        // otherwise generate a first one.
+        const cur = await api.trackQuestionCurrent(id).catch(() => null);
+        if (cur) {
+          setQuestion(cur);
+          setLeftTab("question");
+        } else {
+          generate(); // spin up + first question
+        }
       })
       .catch((e) => setErr(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Keep a ref of the shown question id so listeners can compare without stale
+  // closures; the agentic mentor may replace the active question mid-chat.
+  const questionIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    questionIdRef.current = question?.id ?? null;
+  }, [question]);
+
+  // Pull the mentor/curriculum's active question and, if it changed, show it.
+  const applyCurrentQuestion = useCallback(async () => {
+    try {
+      const cur = await api.trackQuestionCurrent(id);
+      if (cur && cur.id !== questionIdRef.current) {
+        setQuestion(cur);
+        setLeftTab("question");
+        setShowLeft(true);
+        localStorage.setItem("sqlforge_track_showLeft", "1");
+      }
+    } catch {
+      /* noop */
+    }
+  }, [id]);
+
+  // After each mentor turn, refresh the Question panel (agent may have set one).
+  useEffect(() => {
+    window.addEventListener("mentor:done", applyCurrentQuestion);
+    return () => window.removeEventListener("mentor:done", applyCurrentQuestion);
+  }, [applyCurrentQuestion]);
 
   async function generate() {
     setBusy("question");
@@ -164,9 +200,14 @@ export default function TrackWorkbench() {
     try {
       const ev = await api.trackSubmit(id, question.id, sql);
       setEvalResult(ev);
-      setRightTab("review"); // show the score after submitting
+      // reveal the agent panel on the review tab so the score/feedback is visible
+      setShowRight(true);
+      setRightTab("review");
+      localStorage.setItem("sqlforge_track_showRight", "1");
       if (ev.result) setResult(ev.result);
       if (ev.level) setTrack((t: any) => ({ ...t, level: ev.level }));
+      // on a pass the curriculum advances — load the next active question.
+      if (ev.passed) applyCurrentQuestion();
     } catch (e: any) {
       setErr(e.message);
     } finally {
