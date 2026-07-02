@@ -28,6 +28,9 @@ export default function FloatingPrompt() {
   const [menu, setMenu] = useState<Pos | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [input, setInput] = useState("");
+  // while a drag/resize gesture is active we disable the morph transition so the
+  // panel tracks the cursor 1:1 instead of easing 0.5s behind it (the lag).
+  const [dragging, setDragging] = useState(false);
 
   const gesture = useRef<any>(null);
   const baseRef = useRef("");
@@ -126,6 +129,7 @@ export default function FloatingPrompt() {
     attach();
   }
   function attach() {
+    setDragging(true);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     document.body.style.userSelect = "none";
@@ -147,6 +151,7 @@ export default function FloatingPrompt() {
   }, []);
   const onUp = useCallback(() => {
     gesture.current = null;
+    setDragging(false);
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onUp);
     document.body.style.userSelect = "";
@@ -260,7 +265,7 @@ export default function FloatingPrompt() {
         } fixed z-[60] overflow-hidden text-white ${
           open ? "" : "cursor-pointer transition-transform hover:scale-105"
         }`}
-        style={geom}
+        style={dragging ? { ...geom, transition: "none" } : geom}
         onClick={() => {
           if (!open) setOpen(true);
         }}

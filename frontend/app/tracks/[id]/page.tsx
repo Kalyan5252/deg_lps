@@ -29,6 +29,18 @@ export default function TrackWorkbench() {
     schemaRef.current = schema;
   }, [schema]);
   useEffect(() => () => completionRef.current?.dispose(), []);
+
+  // When a prompt is sent (from the floating prompt or elsewhere), reveal the
+  // agent panel and switch to the chat tab so the streaming reply is visible.
+  useEffect(() => {
+    const onSend = () => {
+      setShowRight(true);
+      setRightTab("chat");
+      localStorage.setItem("sqlforge_track_showRight", "1");
+    };
+    window.addEventListener("mentor:send", onSend);
+    return () => window.removeEventListener("mentor:send", onSend);
+  }, []);
   const [leftTab, setLeftTab] = useState<LeftTab>("question");
   const [rightTab, setRightTab] = useState<RightTab>("chat");
 
