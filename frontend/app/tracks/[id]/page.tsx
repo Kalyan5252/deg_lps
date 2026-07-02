@@ -41,6 +41,47 @@ export default function TrackWorkbench() {
     window.addEventListener("mentor:send", onSend);
     return () => window.removeEventListener("mentor:send", onSend);
   }, []);
+
+  // Keyboard shortcuts (routed via a ref so they always call the latest
+  // handlers with current state). Capture phase so they win over Monaco's
+  // built-in Cmd+[ / Cmd+] (indent) bindings.
+  const shortcutsRef = useRef<{
+    run: () => void;
+    submit: () => void;
+    togglePanel: (w: "left" | "right") => void;
+  } | null>(null);
+  useEffect(() => {
+    shortcutsRef.current = { run, submit, togglePanel };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const a = shortcutsRef.current;
+      if (!a) return;
+      switch (e.key) {
+        case "'": // Run
+          e.preventDefault();
+          a.run();
+          break;
+        case "Enter": // Submit
+          e.preventDefault();
+          a.submit();
+          break;
+        case "[": // toggle left (question) panel
+          e.preventDefault();
+          e.stopPropagation();
+          a.togglePanel("left");
+          break;
+        case "]": // toggle right (agent) panel
+          e.preventDefault();
+          e.stopPropagation();
+          a.togglePanel("right");
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
   const [leftTab, setLeftTab] = useState<LeftTab>("question");
   const [rightTab, setRightTab] = useState<RightTab>("chat");
 
@@ -255,13 +296,13 @@ export default function TrackWorkbench() {
                 side="left"
                 active={showLeft}
                 onClick={() => togglePanel("left")}
-                title="Toggle question / schema / data panel"
+                title="Toggle question / schema / data panel (⌘ [)"
               />
               <PanelToggle
                 side="right"
                 active={showRight}
                 onClick={() => togglePanel("right")}
-                title="Toggle AI reviewer panel"
+                title="Toggle AI reviewer panel (⌘ ])"
               />
             </div>
             <span
@@ -451,13 +492,19 @@ export default function TrackWorkbench() {
               </span>
               </div>
               <div className="flex items-center gap-2">
-                <button className="btn !py-1" onClick={run} disabled={!!busy}>
+                <button
+                  className="btn !py-1"
+                  onClick={run}
+                  disabled={!!busy}
+                  title="Run (⌘ ')"
+                >
                   {busy === "run" ? "Running…" : "▶ Run"}
                 </button>
                 <button
                   className="btn btn-primary !py-1"
                   onClick={submit}
                   disabled={!!busy || !question}
+                  title="Submit answer (⌘ ⏎)"
                 >
                   {busy === "submit" ? "Evaluating…" : "Submit answer"}
                 </button>

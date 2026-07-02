@@ -98,10 +98,14 @@ export default function FloatingPrompt() {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
       if (mod && e.shiftKey && e.key.toLowerCase() === "k") {
+        // capture phase + stopPropagation so it fires even when Monaco (the SQL
+        // editor) has focus and would otherwise swallow the keydown.
         e.preventDefault();
+        e.stopPropagation();
         setOpen((o) => !o);
       } else if (open && mod && e.shiftKey && e.key.toLowerCase() === "v") {
         e.preventDefault();
+        e.stopPropagation();
         onMic();
       } else if (e.key === "Escape") {
         if (menu) setMenu(null);
@@ -109,8 +113,8 @@ export default function FloatingPrompt() {
         else if (open) setOpen(false);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, menu, showShortcuts, listening, input]);
 
