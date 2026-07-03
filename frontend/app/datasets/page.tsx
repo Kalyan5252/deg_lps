@@ -114,6 +114,7 @@ export default function DatasetsPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [drawerDataset, setDrawerDataset] = useState<any | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("schema");
   const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
   const [dataTable, setDataTable] = useState<string | null>(null);
@@ -143,11 +144,17 @@ export default function DatasetsPage() {
 
   async function explore(dataset: any) {
     setDrawerDataset(dataset);
+    requestAnimationFrame(() => setDrawerOpen(true));
     setDrawerTab("schema");
     setSchema(schemaFromDataset(dataset));
     setDataTable(null);
     setDataResult(null);
     setDrawerErr(null);
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    window.setTimeout(() => setDrawerDataset(null), 300);
   }
 
   async function loadTable(name: string) {
@@ -232,13 +239,19 @@ export default function DatasetsPage() {
       </div>
 
       {drawerDataset && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 overflow-hidden">
           <button
-            className="absolute inset-0 cursor-default bg-ink/20"
+            className={`absolute inset-0 cursor-default bg-ink/20 transition-opacity duration-300 ease-out ${
+              drawerOpen ? "opacity-100" : "opacity-0"
+            }`}
             aria-label="Close dataset explorer"
-            onClick={() => setDrawerDataset(null)}
+            onClick={closeDrawer}
           />
-          <aside className="absolute right-0 top-0 flex h-full w-full flex-col border-l border-line bg-white shadow-2xl md:w-1/2">
+          <aside
+            className={`absolute right-0 top-0 flex h-full w-full flex-col border-l border-line bg-white shadow-2xl transition-transform duration-300 ease-out md:w-1/2 ${
+              drawerOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
             <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
               <div className="min-w-0">
                 <h2 className="truncate text-base font-semibold">
@@ -252,7 +265,7 @@ export default function DatasetsPage() {
               </div>
               <button
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sub hover:bg-canvas hover:text-ink"
-                onClick={() => setDrawerDataset(null)}
+                onClick={closeDrawer}
                 aria-label="Close dataset explorer"
                 title="Close"
               >
