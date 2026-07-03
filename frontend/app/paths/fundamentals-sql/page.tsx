@@ -82,8 +82,8 @@ const slides: CourseSlide[] = [
   {
     kind: 'story',
     eyebrow: 'Screen 2',
-    title: 'DDL, DML, and queries',
-    body: 'DDL creates or changes structure: CREATE, ALTER, DROP. DML changes rows: INSERT, UPDATE, DELETE. Queries read and shape data: SELECT, WHERE, JOIN, GROUP BY, ORDER BY.',
+    title: 'Data Definition, Data Manipulation, and queries',
+    body: 'Data Definition Language (DDL) creates or changes structure: CREATE, ALTER, DROP. Data Manipulation Language (DML) changes rows: INSERT, UPDATE, DELETE. Queries read and shape data: SELECT, WHERE, JOIN, GROUP BY, ORDER BY.',
     accent: 'First design the table, then change the rows, then ask questions.',
   },
   {
@@ -97,7 +97,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Create Table',
-    clause: 'DDL: CREATE TABLE',
+    clause: 'Data Definition Language (DDL): CREATE TABLE',
     story:
       'Before the team can store products, the database needs a table shape: column names and data types.',
     why: 'CREATE TABLE defines structure. It says what a row looks like before any data exists.',
@@ -116,7 +116,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Alter Table',
-    clause: 'DDL: ALTER TABLE',
+    clause: 'Data Definition Language (DDL): ALTER TABLE',
     story:
       'The table exists, but product asks to track whether an item is active. The structure needs one more column.',
     why: 'ALTER TABLE changes an existing table without recreating it from scratch.',
@@ -132,7 +132,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Insert Rows',
-    clause: 'DML: INSERT',
+    clause: 'Data Manipulation Language (DML): INSERT',
     story:
       'A table with no rows is only a promise. INSERT turns structure into data.',
     why: 'INSERT adds new rows to a table. It is how applications and ETL jobs load data.',
@@ -152,7 +152,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Update Rows',
-    clause: 'DML: UPDATE',
+    clause: 'Data Manipulation Language (DML): UPDATE',
     story:
       'Data changes. A product can move categories, a customer can change plans, and mistakes get corrected.',
     why: 'UPDATE modifies existing rows. WHERE is important because it controls which rows change.',
@@ -318,7 +318,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Delete Rows',
-    clause: 'DML: DELETE',
+    clause: 'Data Manipulation Language (DML): DELETE',
     story:
       'Sometimes bad rows must be removed, but only after a careful WHERE clause.',
     why: 'DELETE removes rows. Without WHERE, it removes every row in the table.',
@@ -334,7 +334,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Drop Table',
-    clause: 'DDL: DROP TABLE',
+    clause: 'Data Definition Language (DDL): DROP TABLE',
     story:
       'When a temporary table is no longer useful, remove the table object itself.',
     why: 'DROP deletes the database object. DELETE removes rows; DROP removes the table structure too.',
