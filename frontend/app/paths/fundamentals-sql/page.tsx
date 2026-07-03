@@ -403,7 +403,7 @@ export default function FundamentalsSqlPage() {
       <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
 
       <div className="relative flex min-h-screen flex-col">
-        <div className="course-rise flex items-start justify-between px-8 py-5">
+        <div className="course-rise relative z-[100] flex items-start justify-between px-8 py-5">
           <Link
             href="/paths"
             className="text-sm text-white/60 hover:text-white"
@@ -478,7 +478,7 @@ function SlideNavigator({
           {slideTitle(slides[current])}
         </div>
       </button>
-      <div className="invisible absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-80 translate-y-2 overflow-auto rounded-lg border border-white/25 bg-[#080d16] p-2 opacity-0 shadow-[0_28px_90px_rgba(0,0,0,0.72)] ring-1 ring-black/40 backdrop-blur-xl backdrop-saturate-150 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+      <div className="invisible absolute right-0 top-full z-50 mt-3 max-h-[52vh] w-72 translate-y-2 overflow-auto rounded-lg border border-white/25 bg-[#050912] p-2 opacity-0 shadow-[0_28px_90px_rgba(0,0,0,0.82)] ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
         {slides.map((s, i) => (
           <button
             key={`${s.kind}-${s.title}-${i}`}

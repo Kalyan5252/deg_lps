@@ -39,6 +39,14 @@ const courses = [
     tags: ['BLOCKS', 'PROC', 'FUNC'],
     glow: 'bg-[radial-gradient(circle_at_88%_88%,rgba(14,165,233,0.68),transparent_36%),linear-gradient(135deg,#090b1c,#2e2f86_45%,#07080d)]',
   },
+  {
+    href: '/paths/dtl',
+    title: 'DTL',
+    level: 'Transactions',
+    desc: 'Data Transaction Language: commits, rollbacks, savepoints, isolation, ACID guarantees, and failure-safe changes.',
+    tags: ['COMMIT', 'ACID', 'ROLLBACK'],
+    glow: 'bg-[radial-gradient(circle_at_88%_88%,rgba(34,197,94,0.7),transparent_36%),linear-gradient(135deg,#07140c,#155e3a_45%,#07080d)]',
+  },
 ];
 
 export default function PathsPage() {
