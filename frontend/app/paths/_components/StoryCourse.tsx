@@ -46,7 +46,7 @@ export default function StoryCourse({
                   {current.title}
                 </div>
               </button>
-              <div className="invisible absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-80 translate-y-2 overflow-auto rounded-lg border border-white/25 bg-[#080d16] p-2 opacity-0 shadow-[0_28px_90px_rgba(0,0,0,0.72)] ring-1 ring-black/40 backdrop-blur-xl backdrop-saturate-150 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+              <div className="invisible absolute right-0 top-full z-50 mt-3 max-h-[62vh] w-72 translate-y-2 overflow-auto rounded-lg border border-white/25 bg-[#050912] p-2 opacity-0 shadow-[0_28px_90px_rgba(0,0,0,0.82)] ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                 {slides.map((s, i) => (
                   <button
                     key={`${s.title}-${i}`}
