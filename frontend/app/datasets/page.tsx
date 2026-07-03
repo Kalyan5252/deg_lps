@@ -10,6 +10,85 @@ import { api } from "@/lib/api";
 
 type DrawerTab = "schema" | "data";
 
+function singular(name: string) {
+  if (name.endsWith("ies")) return `${name.slice(0, -3)}y`;
+  if (name.endsWith("s")) return name.slice(0, -1);
+  return name;
+}
+
+function schemaFromDataset(dataset: any) {
+  const tables = (dataset.tables || []).map((t: any) => ({
+    ...t,
+    columns: (t.columns || []).map((c: any) =>
+      typeof c === "string" ? { name: c, type: "", pk: false, unique: false } : c
+    ),
+  }));
+  const tableMap = new Map<string, any>(tables.map((t: any) => [t.name, t]));
+  const aliases = new Map<string, string>();
+  tables.forEach((t: any) => {
+    aliases.set(t.name, t.name);
+    aliases.set(singular(t.name), t.name);
+    aliases.set(`${t.name}s`, t.name);
+    aliases.set(`${singular(t.name)}s`, t.name);
+  });
+
+  const columns = new Map<string, string[]>();
+  tables.forEach((t: any) => {
+    t.columns.forEach((c: any) => {
+      if (c.name) columns.set(c.name, [...(columns.get(c.name) || []), t.name]);
+    });
+  });
+
+  const flag = (table: string, col: string, key: string) =>
+    Boolean(
+      tableMap
+        .get(table)
+        ?.columns.some((c: any) => c.name === col && c[key])
+    );
+
+  const relations: any[] = [];
+  const seen = new Set<string>();
+  const add = (fromTable: string, fromCol: string, toTable: string, toCol: string) => {
+    const key = `${fromTable}.${fromCol}->${toTable}`;
+    if (fromTable !== toTable && tableMap.has(toTable) && !seen.has(key)) {
+      seen.add(key);
+      relations.push({
+        from_table: fromTable,
+        from_col: fromCol,
+        to_table: toTable,
+        to_col: toCol,
+      });
+    }
+  };
+
+  tables.forEach((t: any) => {
+    t.columns.forEach((c: any) => {
+      const col = c.name;
+      if (!col) return;
+      if (col.endsWith("_id") && col !== "id") {
+        const base = col.slice(0, -3);
+        const target = aliases.get(base) || aliases.get(`${base}s`);
+        if (
+          target &&
+          tableMap.get(target)?.columns.some((tc: any) => tc.name === "id")
+        ) {
+          add(t.name, col, target, "id");
+          return;
+        }
+      }
+      if (col.endsWith("_id") || col.endsWith("_name")) {
+        const holders = (columns.get(col) || []).filter((name) => name !== t.name);
+        const owner =
+          holders.find((name) => flag(name, col, "pk")) ||
+          holders.find((name) => flag(name, col, "unique"));
+        if (owner && !flag(t.name, col, "pk")) add(t.name, col, owner, col);
+      }
+    });
+  });
+
+  return { tables, relations };
+}
+
 export default function DatasetsPage() {
   const router = useRouter();
   const [datasets, setDatasets] = useState<any[]>([]);
@@ -46,15 +125,10 @@ export default function DatasetsPage() {
   async function explore(dataset: any) {
     setDrawerDataset(dataset);
     setDrawerTab("schema");
-    setSchema({ tables: [], relations: [] });
+    setSchema(schemaFromDataset(dataset));
     setDataTable(null);
     setDataResult(null);
     setDrawerErr(null);
-    try {
-      setSchema(await api.globalDatasetSchema(dataset.key));
-    } catch (e: any) {
-      setDrawerErr(e.message);
-    }
   }
 
   async function loadTable(name: string) {
