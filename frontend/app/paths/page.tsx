@@ -86,13 +86,11 @@ export default function PathsPage() {
                       {course.level}
                     </span>
                   </div>
-                  <h3 className="mt-10 text-2xl font-semibold leading-tight">
+                  <h3 className="mt-2 text-2xl font-semibold leading-tight">
                     {course.title}
                   </h3>
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-white/68">
-                    {course.desc}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
+                  <p className="mt-3 text-xs text-white/68">{course.desc}</p>
+                  {/* <div className="mt-4 flex flex-wrap gap-1.5">
                     {course.tags.map((tag) => (
                       <span
                         key={tag}
@@ -101,7 +99,7 @@ export default function PathsPage() {
                         {tag}
                       </span>
                     ))}
-                  </div>
+                  </div> */}
                   <div className="mt-auto pt-4">
                     <span className="inline-flex rounded-md bg-white px-4 py-2 text-sm font-medium text-ink transition-transform group-hover:translate-x-1">
                       Start course →
