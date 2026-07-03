@@ -698,9 +698,12 @@ async def _run_output(data: dict, in_rows: list[dict]):
     rows = in_rows[:MAX_ROWS]
     subtasks = [{"label": f"target: {kind}", "status": "success"}]
 
+    if not target and kind in ("api", "webhook", "sheets", "alert", "ws"):
+        # unconfigured output shouldn't crash a run — pass rows through
+        subtasks.append({"label": "no target set — pass-through", "status": "skipped"})
+        return subtasks, in_rows
+
     if kind in ("api", "webhook", "sheets", "alert"):
-        if not target:
-            raise ValueError(f"{kind} output needs a target URL.")
         if kind == "alert":
             body: Any = {"message": data.get("message")
                          or f"Pipeline alert: {len(rows)} rows", "rows": rows[:50]}
@@ -714,8 +717,6 @@ async def _run_output(data: dict, in_rows: list[dict]):
         subtasks.append({"label": f"POST {resp.status_code} · delivered {len(rows)} rows",
                          "status": "success"})
     elif kind == "ws":
-        if not target:
-            raise ValueError("WebSocket output needs a ws:// target.")
         import websockets
         async with websockets.connect(target, open_timeout=10) as ws:
             for r in rows[:1000]:
