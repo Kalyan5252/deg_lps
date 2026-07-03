@@ -215,6 +215,66 @@ CREATE TABLE IF NOT EXISTS app.custom_chat_messages (
 );
 CREATE INDEX IF NOT EXISTS custom_chat_track_idx
     ON app.custom_chat_messages (track_id, id);
+
+-- ---- Data Engineering DEI (visual pipeline builder) ----
+
+-- A pipeline is a DAG stored as JSONB ({nodes, edges}). Live node-output data
+-- lives only in an on-demand ``pipe_<id>`` schema (spun up on activate, dropped
+-- on stop) — mirroring the Custom Tracks ``custom_<id>`` pattern.
+CREATE TABLE IF NOT EXISTS app.pipelines (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    graph       JSONB NOT NULL DEFAULT '{"nodes": [], "edges": []}',
+    status      TEXT NOT NULL DEFAULT 'idle',   -- idle | active
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Durable storage for uploaded datasource data (CSV), so a pipeline can be
+-- re-run after its ephemeral ``pipe_<id>`` schema has been torn down.
+CREATE TABLE IF NOT EXISTS app.pipeline_sources (
+    id           BIGSERIAL PRIMARY KEY,
+    pipeline_id  BIGINT NOT NULL REFERENCES app.pipelines(id) ON DELETE CASCADE,
+    node_id      TEXT NOT NULL,
+    table_name   TEXT NOT NULL,
+    columns      JSONB NOT NULL,       -- [{name, type, pk}]
+    row_count    INT NOT NULL DEFAULT 0,
+    csv_text     TEXT NOT NULL,
+    UNIQUE (pipeline_id, node_id)
+);
+
+-- One row per pipeline execution.
+CREATE TABLE IF NOT EXISTS app.pipeline_runs (
+    id           BIGSERIAL PRIMARY KEY,
+    pipeline_id  BIGINT NOT NULL REFERENCES app.pipelines(id) ON DELETE CASCADE,
+    user_id      BIGINT NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    status       TEXT NOT NULL DEFAULT 'running',  -- running | success | error
+    stats        JSONB NOT NULL DEFAULT '{}',
+    started_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at  TIMESTAMPTZ
+);
+
+-- The activity feed: one row per node execution within a run, each carrying a
+-- list of subtasks (with their own status) so the Activity panel can render a
+-- log-style tree.
+CREATE TABLE IF NOT EXISTS app.pipeline_logs (
+    id           BIGSERIAL PRIMARY KEY,
+    run_id       BIGINT NOT NULL REFERENCES app.pipeline_runs(id) ON DELETE CASCADE,
+    node_id      TEXT NOT NULL,
+    node_type    TEXT NOT NULL,
+    task         TEXT NOT NULL,
+    subtasks     JSONB NOT NULL DEFAULT '[]',  -- [{label, status}]
+    status       TEXT NOT NULL DEFAULT 'success',  -- running | success | error | skipped
+    rows_in      INT,
+    rows_out     INT,
+    duration_ms  NUMERIC,
+    message      TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS pipeline_runs_pipeline_idx
+    ON app.pipeline_runs (pipeline_id, id DESC);
+CREATE INDEX IF NOT EXISTS pipeline_logs_run_idx
+    ON app.pipeline_logs (run_id, id);
 """
 
 

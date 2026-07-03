@@ -264,4 +264,63 @@ export const api = {
   },
   trackChatClear: (id: number | string) =>
     request<any>(`/tracks/${id}/chat`, { method: "DELETE" }),
+
+  // ---- Data Engineering DEI (visual pipeline builder) ----
+  pipelines: () => request<any[]>("/pipelines"),
+  pipeline: (id: number | string) => request<any>(`/pipelines/${id}`),
+  createPipeline: (name: string) =>
+    request<any>("/pipelines", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+  savePipeline: (id: number | string, graph: any) =>
+    request<any>(`/pipelines/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ graph }),
+    }),
+  deletePipeline: (id: number | string) =>
+    request<any>(`/pipelines/${id}`, { method: "DELETE" }),
+  stopPipeline: (id: number | string) =>
+    request<any>(`/pipelines/${id}/stop`, { method: "POST" }),
+  runPipeline: (id: number | string, graph: any) =>
+    request<any>(`/pipelines/${id}/run`, {
+      method: "POST",
+      body: JSON.stringify({ graph }),
+    }),
+  pipelineRuns: (id: number | string) =>
+    request<any[]>(`/pipelines/${id}/runs`),
+  pipelineRunLogs: (runId: number) =>
+    request<any[]>(`/pipelines/runs/${runId}/logs`),
+  pipelineNodePreview: (id: number | string, nodeId: string) =>
+    request<any>(`/pipelines/${id}/nodes/${encodeURIComponent(nodeId)}/preview`),
+  pipelineGenPrompt: (id: number | string, intent: string, columns: string[]) =>
+    request<{ prompt: string }>(`/pipelines/${id}/llm/gen-prompt`, {
+      method: "POST",
+      body: JSON.stringify({ intent, columns }),
+    }),
+  pipelineUploadCsv: async (
+    id: number | string,
+    nodeId: string,
+    file: File
+  ) => {
+    const fd = new FormData();
+    fd.append("node_id", nodeId);
+    fd.append("file", file);
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/pipelines/${id}/datasources/csv`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+    });
+    if (!res.ok) {
+      let detail = `Upload failed (${res.status})`;
+      try {
+        detail = (await res.json()).detail || detail;
+      } catch {
+        /* noop */
+      }
+      throw new Error(detail);
+    }
+    return res.json();
+  },
 };

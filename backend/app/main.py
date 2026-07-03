@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import random
 from contextlib import asynccontextmanager
 from typing import Any
@@ -9,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from . import ai, auth, custom, db, global_datasets, sandbox
+from . import ai, auth, custom, db, global_datasets, pipelines, sandbox
 from .config import get_settings
 from .scenarios import PATHS, all_scenarios, get_scenario
 
@@ -1280,6 +1281,194 @@ async def hunt_history(user: dict = auth.CurrentUser):
             "peak_difficulty": max((c["difficulty"] for c in cps), default=0),
         })
     return {"hunts": out, "lifetime": await _hunt_lifetime(user["id"])}
+
+
+# ==========================================================================
+# Data Engineering DEI — visual pipeline builder
+# ==========================================================================
+
+class PipelineCreate(BaseModel):
+    name: str
+
+
+class GraphIn(BaseModel):
+    graph: dict
+
+
+class NodeConfigIn(BaseModel):
+    node_id: str
+    config: dict
+
+
+class GenPromptIn(BaseModel):
+    intent: str
+    columns: list[str] = []
+
+
+async def _own_pipeline(pipeline_id: int, user_id: int) -> dict:
+    row = await db.pool().fetchrow(
+        "SELECT * FROM app.pipelines WHERE id=$1 AND user_id=$2",
+        pipeline_id, user_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Pipeline not found")
+    return dict(row)
+
+
+def _pipeline_out(row: dict) -> dict:
+    graph = row["graph"]
+    if isinstance(graph, str):
+        graph = json.loads(graph)
+    return {"id": row["id"], "name": row["name"], "status": row["status"],
+            "graph": graph, "created_at": row["created_at"].isoformat()}
+
+
+@app.get("/api/pipelines")
+async def list_pipelines(user: dict = auth.CurrentUser):
+    rows = await db.pool().fetch(
+        "SELECT id, name, status, graph, created_at FROM app.pipelines "
+        "WHERE user_id=$1 ORDER BY id DESC", user["id"])
+    out = []
+    for r in rows:
+        d = _pipeline_out(dict(r))
+        d["node_count"] = len(d["graph"].get("nodes", []))
+        out.append(d)
+    return out
+
+
+@app.post("/api/pipelines")
+async def create_pipeline(body: PipelineCreate, user: dict = auth.CurrentUser):
+    row = await db.pool().fetchrow(
+        "INSERT INTO app.pipelines (user_id, name) VALUES ($1,$2) "
+        "RETURNING id, name, status, graph, created_at",
+        user["id"], body.name.strip() or "Untitled pipeline")
+    return _pipeline_out(dict(row))
+
+
+@app.get("/api/pipelines/{pipeline_id}")
+async def get_pipeline(pipeline_id: int, user: dict = auth.CurrentUser):
+    return _pipeline_out(await _own_pipeline(pipeline_id, user["id"]))
+
+
+@app.put("/api/pipelines/{pipeline_id}")
+async def save_pipeline(pipeline_id: int, body: GraphIn,
+                        user: dict = auth.CurrentUser):
+    await _own_pipeline(pipeline_id, user["id"])
+    await db.pool().execute(
+        "UPDATE app.pipelines SET graph=$1 WHERE id=$2 AND user_id=$3",
+        json.dumps(body.graph), pipeline_id, user["id"])
+    return {"ok": True}
+
+
+@app.delete("/api/pipelines/{pipeline_id}")
+async def delete_pipeline(pipeline_id: int, user: dict = auth.CurrentUser):
+    await _own_pipeline(pipeline_id, user["id"])
+    await pipelines.teardown(pipeline_id)
+    await db.pool().execute(
+        "DELETE FROM app.pipelines WHERE id=$1 AND user_id=$2",
+        pipeline_id, user["id"])
+    return {"ok": True}
+
+
+@app.post("/api/pipelines/{pipeline_id}/stop")
+async def stop_pipeline(pipeline_id: int, user: dict = auth.CurrentUser):
+    await _own_pipeline(pipeline_id, user["id"])
+    await pipelines.teardown(pipeline_id)
+    await db.pool().execute(
+        "UPDATE app.pipelines SET status='idle' WHERE id=$1", pipeline_id)
+    return {"ok": True}
+
+
+@app.post("/api/pipelines/{pipeline_id}/datasources/csv")
+async def upload_pipeline_csv(
+    pipeline_id: int,
+    node_id: str = Form(...),
+    file: UploadFile = File(...),
+    user: dict = auth.CurrentUser,
+):
+    await _own_pipeline(pipeline_id, user["id"])
+    raw = (await file.read()).decode("utf-8", "replace")
+    try:
+        return await pipelines.ingest_csv(
+            pipeline_id, node_id, file.filename or "table.csv", raw)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/pipelines/{pipeline_id}/nodes/{node_id}/preview")
+async def pipeline_node_preview(pipeline_id: int, node_id: str,
+                                user: dict = auth.CurrentUser):
+    await _own_pipeline(pipeline_id, user["id"])
+    return await pipelines.node_preview(pipeline_id, node_id)
+
+
+@app.post("/api/pipelines/{pipeline_id}/run")
+async def run_pipeline(pipeline_id: int, body: GraphIn | None = None,
+                       user: dict = auth.CurrentUser):
+    row = await _own_pipeline(pipeline_id, user["id"])
+    graph = body.graph if body else row["graph"]
+    if isinstance(graph, str):
+        graph = json.loads(graph)
+    if body:  # persist the latest graph before running
+        await db.pool().execute(
+            "UPDATE app.pipelines SET graph=$1, status='active' WHERE id=$2",
+            json.dumps(graph), pipeline_id)
+    try:
+        run_id = await pipelines.run(pipeline_id, user["id"], graph)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=str(exc))
+    return {"ok": True, "run_id": run_id}
+
+
+@app.get("/api/pipelines/{pipeline_id}/runs")
+async def pipeline_runs(pipeline_id: int, user: dict = auth.CurrentUser):
+    await _own_pipeline(pipeline_id, user["id"])
+    rows = await db.pool().fetch(
+        "SELECT id, status, stats, started_at, finished_at "
+        "FROM app.pipeline_runs WHERE pipeline_id=$1 ORDER BY id DESC LIMIT 30",
+        pipeline_id)
+    out = []
+    for r in rows:
+        stats = r["stats"]
+        if isinstance(stats, str):
+            stats = json.loads(stats)
+        out.append({"id": r["id"], "status": r["status"], "stats": stats,
+                    "started_at": r["started_at"].isoformat(),
+                    "finished_at": r["finished_at"].isoformat()
+                    if r["finished_at"] else None})
+    return out
+
+
+@app.get("/api/pipelines/runs/{run_id}/logs")
+async def pipeline_run_logs(run_id: int, user: dict = auth.CurrentUser):
+    owner = await db.pool().fetchval(
+        "SELECT r.user_id FROM app.pipeline_runs r WHERE r.id=$1", run_id)
+    if owner != user["id"]:
+        raise HTTPException(status_code=404, detail="Run not found")
+    rows = await db.pool().fetch(
+        "SELECT node_id, node_type, task, subtasks, status, rows_in, rows_out, "
+        "duration_ms, message, created_at FROM app.pipeline_logs "
+        "WHERE run_id=$1 ORDER BY id", run_id)
+    out = []
+    for r in rows:
+        subtasks = r["subtasks"]
+        if isinstance(subtasks, str):
+            subtasks = json.loads(subtasks)
+        out.append({"node_id": r["node_id"], "node_type": r["node_type"],
+                    "task": r["task"], "subtasks": subtasks,
+                    "status": r["status"], "rows_in": r["rows_in"],
+                    "rows_out": r["rows_out"],
+                    "duration_ms": float(r["duration_ms"])
+                    if r["duration_ms"] is not None else None,
+                    "message": r["message"],
+                    "created_at": r["created_at"].isoformat()})
+    return out
+
+
+@app.post("/api/pipelines/{pipeline_id}/llm/gen-prompt")
+async def pipeline_gen_prompt(pipeline_id: int, body: GenPromptIn,
+                              user: dict = auth.CurrentUser):
+    await _own_pipeline(pipeline_id, user["id"])
+    return {"prompt": await pipelines.gen_system_prompt(body.intent, body.columns)}
 
 
 @app.get("/api/health")

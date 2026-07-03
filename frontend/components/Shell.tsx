@@ -10,6 +10,7 @@ const NAV = [
   { href: "/paths", label: "Learning Paths", icon: "◆" },
   { href: "/datasets", label: "Global Datasets", icon: "◍" },
   { href: "/tracks", label: "Custom Tracks", icon: "⬡" },
+  { href: "/pipelines", label: "Pipelines", icon: "⇄" },
   { href: "/progress", label: "Progress", icon: "▲" },
   { href: "/history", label: "Scenario History", icon: "≣" },
   { href: "/reghunt", label: "RegHunt", icon: "🎯", priority: true },
