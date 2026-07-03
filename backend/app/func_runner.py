@@ -1,20 +1,19 @@
-"""Run a user-authored Python transform in an isolated subprocess.
+"""Run user-authored Python in an isolated subprocess.
 
-Data-engineering "function" nodes let a learner write real Python to validate,
-parse, reshape or format rows flowing through the pipeline. We execute that code
-in a *separate* Python process with a wall-clock timeout and a stripped
-environment (best-effort no-network) so a runaway or misbehaving snippet can't
-take down the API worker.
+Two shapes are supported, both executed in a separate Python process with a
+wall-clock timeout and a stripped environment (best-effort no-network):
 
-Contract for the user's code: define a ``transform`` function.
+* **transform** — a *function node*. The user writes a whole ``transform(df)``
+  function; ``df`` is a pandas DataFrame of the incoming rows.
 
-    def transform(df):
-        # `df` is a pandas DataFrame of the incoming rows (or, if pandas is not
-        # installed, a list[dict]). Return a DataFrame or a list[dict].
-        return df
+* **conditional** — a *gate node* with multiple inputs. The signature is locked
+  to ``conditional_function(input_1, …, input_N)`` (one arg per connected input);
+  the user writes only the *body*. Each arg is a ``list[dict]`` of rows (so
+  ``input_1 + input_2`` concatenates), and the user can ``pd.DataFrame(input_1)``
+  for frame ops. This is how a gate combines several inputs (concat/format/join)
+  — mixing schemas implicitly is unsafe, so the combine logic is the user's.
 
-The harness feeds the upstream rows in, calls ``transform``, and serialises the
-returned rows back out as JSON.
+Both return a DataFrame or a list[dict], normalised back to rows + columns.
 """
 from __future__ import annotations
 
@@ -27,15 +26,11 @@ from typing import Any
 TIMEOUT_S = 15
 MAX_ROWS = 50_000
 
-# The worker program. Reads {"code", "rows"} as JSON on stdin, writes
-# {"ok", "rows", "columns", "stdout", "error"} as JSON on stdout. Kept as a
-# string so it runs in a pristine interpreter with no app imports.
 _WORKER = r'''
-import io, json, sys, contextlib
+import io, json, sys, contextlib, traceback
 
-payload = json.load(sys.stdin)
-code = payload.get("code") or ""
-rows = payload.get("rows") or []
+job = json.load(sys.stdin)
+mode = job.get("mode", "transform")
 
 def _emit(obj):
     sys.stdout.write("\x00RESULT\x00" + json.dumps(obj, default=str))
@@ -47,41 +42,49 @@ try:
 except Exception:
     _has_pd = False
 
+def _frame(rows):
+    return pd.DataFrame(rows) if _has_pd else rows
+
+def _normalise(out):
+    if _has_pd and isinstance(out, pd.DataFrame):
+        cols = [str(c) for c in out.columns]
+        return json.loads(out.to_json(orient="records", date_format="iso")), cols
+    if _has_pd and isinstance(out, pd.Series):
+        return [{"value": v} for v in out.tolist()], ["value"]
+    if isinstance(out, list):
+        rows = [r if isinstance(r, dict) else {"value": r} for r in out]
+        return rows, (list(rows[0].keys()) if rows else [])
+    if isinstance(out, dict):
+        return [out], list(out.keys())
+    if out is None:
+        return [], []
+    return [{"value": out}], ["value"]
+
 buf = io.StringIO()
 try:
     ns = {}
     with contextlib.redirect_stdout(buf):
-        exec(code, ns)
-        fn = ns.get("transform") or ns.get("main") or ns.get("run")
-        if not callable(fn):
-            raise ValueError(
-                "Define a function named `transform(df)` that returns the rows.")
-        data = pd.DataFrame(rows) if _has_pd else rows
-        out = fn(data)
+        if mode == "conditional":
+            argnames = job["argnames"]
+            body = job.get("code") or "return " + (argnames[0] if argnames else "None")
+            indented = "\n".join("    " + line for line in body.splitlines())
+            src = "def conditional_function(" + ", ".join(argnames) + "):\n" + indented + "\n"
+            exec(src, ns)
+            fn = ns["conditional_function"]
+            inputs = job.get("inputs") or {}
+            out = fn(*[list(inputs.get(a) or []) for a in argnames])
+        else:
+            exec(job.get("code") or "", ns)
+            fn = ns.get("transform") or ns.get("main") or ns.get("run")
+            if not callable(fn):
+                raise ValueError(
+                    "Define a function named `transform(df)` that returns the rows.")
+            out = fn(_frame(job.get("rows") or []))
 
-    # normalise the return value to rows + columns
-    if _has_pd and isinstance(out, pd.DataFrame):
-        columns = [str(c) for c in out.columns]
-        out_rows = json.loads(out.to_json(orient="records", date_format="iso"))
-    elif _has_pd and isinstance(out, pd.Series):
-        columns = ["value"]
-        out_rows = [{"value": v} for v in out.tolist()]
-    elif isinstance(out, list):
-        out_rows = [r if isinstance(r, dict) else {"value": r} for r in out]
-        columns = list(out_rows[0].keys()) if out_rows else []
-    elif isinstance(out, dict):
-        out_rows = [out]
-        columns = list(out.keys())
-    elif out is None:
-        out_rows, columns = [], []
-    else:
-        out_rows = [{"value": out}]
-        columns = ["value"]
-
-    _emit({"ok": True, "rows": out_rows, "columns": columns,
+    rows, columns = _normalise(out)
+    _emit({"ok": True, "rows": rows, "columns": columns,
            "stdout": buf.getvalue(), "error": None})
 except Exception as exc:  # noqa: BLE001
-    import traceback
     _emit({"ok": False, "rows": [], "columns": [],
            "stdout": buf.getvalue(),
            "error": f"{type(exc).__name__}: {exc}",
@@ -90,8 +93,6 @@ except Exception as exc:  # noqa: BLE001
 
 
 def _minimal_env() -> dict[str, str]:
-    # Keep only what the interpreter needs; drop anything that could carry creds
-    # or configure network proxies. This is a hardening measure, not a jail.
     keep = ("PATH", "PYTHONPATH", "LANG", "LC_ALL", "SYSTEMROOT", "TMPDIR")
     env = {k: v for k, v in os.environ.items() if k in keep}
     env["PYTHONUNBUFFERED"] = "1"
@@ -99,9 +100,8 @@ def _minimal_env() -> dict[str, str]:
     return env
 
 
-async def run_function(code: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Execute `code`'s transform against `rows` in a subprocess."""
-    payload = json.dumps({"code": code, "rows": rows[:MAX_ROWS]})
+async def _run(job: dict[str, Any]) -> dict[str, Any]:
+    payload = json.dumps(job)
     try:
         proc = await asyncio.create_subprocess_exec(
             sys.executable, "-I", "-c", _WORKER,
@@ -133,3 +133,21 @@ async def run_function(code: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
     stderr = err.decode("utf-8", "replace").strip()
     return {"ok": False, "rows": [], "columns": [], "stdout": text.strip(),
             "error": stderr or "Sandbox produced no result."}
+
+
+async def run_function(code: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Execute a `transform(df)` function against `rows`."""
+    return await _run({"mode": "transform", "code": code, "rows": rows[:MAX_ROWS]})
+
+
+async def run_conditional(
+    code: str, inputs: dict[str, list[dict[str, Any]]]
+) -> dict[str, Any]:
+    """Execute a locked-signature `conditional_function(input_1, …)` body.
+
+    `inputs` maps each arg name to its rows; arg order follows sorted input keys.
+    """
+    argnames = sorted(inputs.keys(), key=lambda k: (len(k), k))
+    capped = {a: (inputs.get(a) or [])[:MAX_ROWS] for a in argnames}
+    return await _run({"mode": "conditional", "code": code,
+                       "argnames": argnames, "inputs": capped})
