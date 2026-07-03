@@ -1,6 +1,6 @@
-# SQLForge
+# D.E.G
 
-SQLForge is a SQL learning app built around real query execution in PostgreSQL.
+D.E.G is a SQL learning app built around real query execution in PostgreSQL.
 It has three main learning surfaces:
 
 - incident scenarios backed by seeded sandbox schemas
