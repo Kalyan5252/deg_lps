@@ -49,11 +49,19 @@ export default function ConfigPanel({
   const [previewBusy, setPreviewBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [intent, setIntent] = useState("");
+  const [catalog, setCatalog] = useState<any[]>([]);
 
   useEffect(() => {
     setPreview(null);
     setMsg(null);
   }, [node?.id]);
+
+  // catalog of public datasets (for the datasource dropdown)
+  useEffect(() => {
+    if (node?.type === "datasource" && catalog.length === 0) {
+      api.globalDatasets().then(setCatalog).catch(() => {});
+    }
+  }, [node?.type, catalog.length]);
 
   if (!node) return null;
   const type = node.type;
@@ -180,19 +188,41 @@ export default function ConfigPanel({
 
             {data.kind === "public" && (
               <>
-                <Field label="Dataset key (e.g. northwind, coffee_shop)">
-                  <input
+                <Field label="Dataset">
+                  <select
                     className={inputCls}
                     value={data.dataset_key || ""}
-                    onChange={(e) => set({ dataset_key: e.target.value })}
-                  />
+                    onChange={(e) =>
+                      set({ dataset_key: e.target.value, table: "" })
+                    }
+                  >
+                    <option value="">
+                      {catalog.length ? "Select a dataset…" : "Loading…"}
+                    </option>
+                    {catalog.map((d) => (
+                      <option key={d.key} value={d.key}>
+                        {d.name} ({d.table_count} tables)
+                      </option>
+                    ))}
+                  </select>
                 </Field>
                 <Field label="Table (blank = first table)">
-                  <input
+                  <select
                     className={inputCls}
                     value={data.table || ""}
+                    disabled={!data.dataset_key}
                     onChange={(e) => set({ table: e.target.value })}
-                  />
+                  >
+                    <option value="">First table</option>
+                    {(
+                      catalog.find((d) => d.key === data.dataset_key)?.tables ||
+                      []
+                    ).map((t: any) => (
+                      <option key={t.name} value={t.name}>
+                        {t.name} ({t.row_count} rows)
+                      </option>
+                    ))}
+                  </select>
                 </Field>
               </>
             )}

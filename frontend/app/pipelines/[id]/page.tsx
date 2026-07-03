@@ -9,7 +9,6 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   MarkerType,
 } from "@xyflow/react";
 import { useRouter, useParams } from "next/navigation";
@@ -30,7 +29,6 @@ const MENU_ITEMS: { type: string; label: string }[] = [
 
 function Builder({ pipelineId }: { pipelineId: string }) {
   const router = useRouter();
-  const rf = useReactFlow();
   const [name, setName] = useState("");
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
@@ -85,12 +83,25 @@ function Builder({ pipelineId }: { pipelineId: string }) {
     };
   }
 
-  function addNode(type: string, screenX: number, screenY: number) {
-    const pos = rf.screenToFlowPosition({ x: screenX, y: screenY });
+  function addNode(type: string) {
     const id = `${type}_${Date.now().toString(36)}`;
     const data: any = { label: NODE_META[type].label };
     if (type === "gate") data.conditions = [];
-    setNodes((nds) => [...nds, { id, type, position: pos, data }]);
+    // Vertical-by-default: stack each new node in a column beneath the
+    // lowest existing node (aligned to it), rather than at the cursor.
+    const V_GAP = 150; // node height (~90) + breathing room
+    setNodes((nds) => {
+      let pos: { x: number; y: number };
+      if (nds.length === 0) {
+        pos = { x: 250, y: 80 };
+      } else {
+        const bottom = nds.reduce((a, b) =>
+          b.position.y > a.position.y ? b : a
+        );
+        pos = { x: bottom.position.x, y: bottom.position.y + V_GAP };
+      }
+      return [...nds, { id, type, position: pos, data }];
+    });
     setMenu(null);
     setSelectedId(id);
   }
@@ -218,7 +229,7 @@ function Builder({ pipelineId }: { pipelineId: string }) {
                   <button
                     key={item.type}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
-                    onClick={() => addNode(item.type, menu.x, menu.y)}
+                    onClick={() => addNode(item.type)}
                   >
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded text-xs text-white"

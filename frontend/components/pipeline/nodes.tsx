@@ -81,11 +81,13 @@ function Card({ type, data, selected }: NodeProps & { type: string }) {
   );
 }
 
+// Vertical (top-to-bottom) is the default flow direction: inbound edges land on
+// the top handle, outbound edges leave from the bottom handle.
 const IN = (
-  <Handle type="target" position={Position.Left} style={{ background: "#94a3b8" }} />
+  <Handle type="target" position={Position.Top} style={{ background: "#94a3b8" }} />
 );
 const OUT = (
-  <Handle type="source" position={Position.Right} style={{ background: "#94a3b8" }} />
+  <Handle type="source" position={Position.Bottom} style={{ background: "#94a3b8" }} />
 );
 
 export function DatasourceNode(p: NodeProps) {
