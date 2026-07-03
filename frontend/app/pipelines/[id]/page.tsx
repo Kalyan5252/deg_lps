@@ -5,6 +5,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
   Background,
+  BackgroundVariant,
   Controls,
   addEdge,
   useNodesState,
@@ -182,7 +183,7 @@ function Builder({ pipelineId }: { pipelineId: string }) {
 
       {/* body */}
       <div className="flex min-h-0 flex-1">
-        <div ref={wrap} className="relative min-w-0 flex-1">
+        <div ref={wrap} className="relative min-w-0 flex-1 bg-[#f7f8fa]">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -202,7 +203,12 @@ function Builder({ pipelineId }: { pipelineId: string }) {
             fitView
             proOptions={{ hideAttribution: true }}
           >
-            <Background gap={16} color="#e5e7eb" />
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={22}
+              size={2}
+              color="#c2c8d0"
+            />
             <Controls />
           </ReactFlow>
 
