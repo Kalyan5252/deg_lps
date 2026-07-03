@@ -104,6 +104,68 @@ export const api = {
   progress: () => request<any>("/progress"),
   attempts: () => request<any[]>("/history"),
 
+  // ---- RegHunt (endless adaptive challenge) ----
+  huntStart: (payload: {
+    source: string;
+    key?: string;
+    track_id?: number;
+    creativity: number;
+  }) => request<any>("/hunt/start", { method: "POST", body: JSON.stringify(payload) }),
+  huntNext: (sid: number, mock = false) =>
+    request<any>(`/hunt/${sid}/next${mock ? "?mock=true" : ""}`, { method: "POST" }),
+  huntHistory: () => request<any>("/hunt/history"),
+  huntRun: (sid: number, sql: string) =>
+    request<any>(`/hunt/${sid}/run`, { method: "POST", body: JSON.stringify({ sql }) }),
+  huntSubmit: (sid: number, checkpoint_id: number, sql: string) =>
+    request<any>(`/hunt/${sid}/submit`, {
+      method: "POST",
+      body: JSON.stringify({ checkpoint_id, sql }),
+    }),
+  huntHint: (sid: number, checkpoint_id: number, sql?: string) =>
+    request<any>(`/hunt/${sid}/hint`, {
+      method: "POST",
+      body: JSON.stringify({ checkpoint_id, sql }),
+    }),
+  huntOptimize: (sid: number, sql: string) =>
+    request<any>(`/hunt/${sid}/optimize`, {
+      method: "POST",
+      body: JSON.stringify({ sql }),
+    }),
+  huntReason: (
+    sid: number,
+    checkpoint_id: number,
+    reasoning?: string,
+    skip = false
+  ) =>
+    request<any>(`/hunt/${sid}/reason`, {
+      method: "POST",
+      body: JSON.stringify({ checkpoint_id, reasoning, skip }),
+    }),
+  huntSetCreativity: (sid: number, creativity: number) =>
+    request<any>(`/hunt/${sid}/creativity`, {
+      method: "POST",
+      body: JSON.stringify({ creativity }),
+    }),
+  huntOptimizedQuery: (sid: number, checkpoint_id: number, sql: string) =>
+    request<any>(`/hunt/${sid}/optimized-query`, {
+      method: "POST",
+      body: JSON.stringify({ checkpoint_id, sql }),
+    }),
+  huntFinish: (sid: number) =>
+    request<any>(`/hunt/${sid}/finish`, { method: "POST" }),
+  huntAnalysis: (sid: number) => request<any>(`/hunt/${sid}/analysis`),
+
+  // ---- Global (public) datasets ----
+  globalDatasets: () => request<any[]>("/global-datasets"),
+  globalDatasetSchema: (key: string) =>
+    request<any>(`/global-datasets/${key}/schema`),
+  globalDatasetPreview: (key: string, table: string) =>
+    request<any>(
+      `/global-datasets/${key}/tables/${encodeURIComponent(table)}/preview`
+    ),
+  useGlobalDataset: (key: string) =>
+    request<any>(`/global-datasets/${key}/use`, { method: "POST" }),
+
   // ---- Custom Tracks ----
   tracks: () => request<any[]>("/tracks"),
   track: (id: number | string) => request<any>(`/tracks/${id}`),
