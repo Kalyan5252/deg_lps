@@ -80,6 +80,8 @@ function Builder({ pipelineId }: { pipelineId: string }) {
         id: e.id,
         source: e.source,
         target: e.target,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
       })),
     };
   }
@@ -144,6 +146,13 @@ function Builder({ pipelineId }: { pipelineId: string }) {
   }
 
   const selectedNode = nodes.find((n) => n.id === selectedId) || null;
+  const configOpen = !!selectedNode && !showActivity;
+  // Retain the last node so the Config panel keeps its content while it slides
+  // closed (selectedNode goes null the instant you close it).
+  const [panelNode, setPanelNode] = useState<any | null>(null);
+  useEffect(() => {
+    if (selectedNode) setPanelNode(selectedNode);
+  }, [selectedNode]);
 
   return (
     <div className="flex h-screen flex-col">
@@ -251,24 +260,74 @@ function Builder({ pipelineId }: { pipelineId: string }) {
           )}
         </div>
 
-        {selectedNode && !showActivity && (
+        <SidePanel open={configOpen} width={520}>
           <ConfigPanel
             pipelineId={pipelineId}
-            node={selectedNode}
+            node={selectedNode ?? panelNode}
             edges={edges}
             nodes={nodes}
             onChange={patchNode}
+            getGraph={graph}
             onClose={() => setSelectedId(null)}
           />
-        )}
+        </SidePanel>
 
-        {showActivity && (
+        <SidePanel open={showActivity} width={420}>
           <ActivityPanel
             pipelineId={pipelineId}
             activeRunId={activeRunId}
             onClose={() => setShowActivity(false)}
           />
-        )}
+        </SidePanel>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A right-docked panel that smoothly slides + expands open and collapses closed.
+ * It animates its flex width (so the canvas eases alongside it) and translates
+ * its content in, keeping children mounted for the duration of the close so the
+ * exit animation can play.
+ */
+function SidePanel({
+  open,
+  width,
+  children,
+}: {
+  open: boolean;
+  width: number;
+  children: React.ReactNode;
+}) {
+  // The wrapper stays mounted so toggling `open` is a style change on an
+  // existing element — CSS transitions always fire (no requestAnimationFrame,
+  // which can be starved on backgrounded/headless tabs). Children unmount only
+  // after the close animation finishes, so panels stop polling when hidden.
+  const [mounted, setMounted] = useState(open);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+    const t = setTimeout(() => setMounted(false), 300);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  return (
+    <div
+      className="h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out"
+      style={{ width: open ? width : 0 }}
+    >
+      <div
+        style={{
+          width,
+          transform: open ? "translateX(0)" : "translateX(24px)",
+          opacity: open ? 1 : 0,
+        }}
+        className="h-full transition-[transform,opacity] duration-300 ease-out"
+      >
+        {mounted ? children : null}
       </div>
     </div>
   );

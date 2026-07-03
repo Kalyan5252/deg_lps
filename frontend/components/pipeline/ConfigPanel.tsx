@@ -12,6 +12,14 @@ const DEFAULT_CODE = `def transform(df):
     return df
 `;
 
+const DEFAULT_GATE_BODY = `    # each input is a list of dict rows; return the combined rows
+    return input_1`;
+
+const COINBASE_SUBSCRIBE = [
+  '{"type":"subscribe","product_ids":["BTC-USD","ETH-USD","SOL-USD"],"channel":"market_trades"}',
+  '{"type":"subscribe","channel":"heartbeats"}',
+].join("\n");
+
 const COMING_SOON = (
   <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
     coming soon
@@ -36,6 +44,7 @@ export default function ConfigPanel({
   edges,
   nodes,
   onChange,
+  getGraph,
   onClose,
 }: {
   pipelineId: number | string;
@@ -43,6 +52,7 @@ export default function ConfigPanel({
   edges: any[];
   nodes: any[];
   onChange: (nodeId: string, patch: any) => void;
+  getGraph: () => any;
   onClose: () => void;
 }) {
   const [preview, setPreview] = useState<any>(null);
@@ -50,13 +60,15 @@ export default function ConfigPanel({
   const [msg, setMsg] = useState<string | null>(null);
   const [intent, setIntent] = useState("");
   const [catalog, setCatalog] = useState<any[]>([]);
+  const [hdrs, setHdrs] = useState<{ k: string; v: string }[]>([]);
 
   useEffect(() => {
     setPreview(null);
     setMsg(null);
+    const h = (node?.data?.headers || {}) as Record<string, string>;
+    setHdrs(Object.entries(h).map(([k, v]) => ({ k, v: String(v) })));
   }, [node?.id]);
 
-  // catalog of public datasets (for the datasource dropdown)
   useEffect(() => {
     if (node?.type === "datasource" && catalog.length === 0) {
       api.globalDatasets().then(setCatalog).catch(() => {});
@@ -72,8 +84,9 @@ export default function ConfigPanel({
   async function loadPreview() {
     setPreviewBusy(true);
     setMsg(null);
+    setPreview(null);
     try {
-      setPreview(await api.pipelineNodePreview(pipelineId, node.id));
+      setPreview(await api.pipelineNodePreview(pipelineId, node.id, getGraph()));
     } catch (e: any) {
       setMsg(e.message);
     } finally {
@@ -115,14 +128,29 @@ export default function ConfigPanel({
     }
   }
 
+  // --- dynamic API headers -------------------------------------------------
+  function syncHeaders(next: { k: string; v: string }[]) {
+    setHdrs(next);
+    const obj: Record<string, string> = {};
+    next.forEach(({ k, v }) => {
+      if (k.trim()) obj[k.trim()] = v;
+    });
+    set({ headers: obj });
+  }
+
   const outEdges = edges.filter((e) => e.source === node.id);
   const nodeLabel = (id: string) =>
     nodes.find((n) => n.id === id)?.data?.label ||
     nodes.find((n) => n.id === id)?.type ||
     id;
 
+  // gate signature (locked) from the declared input count
+  const gateInputs = Math.max(1, Number(data.inputs) || 1);
+  const gateArgs = Array.from({ length: gateInputs }, (_, i) => `input_${i + 1}`);
+  const gateSignature = `def conditional_function(${gateArgs.join(", ")}):`;
+
   return (
-    <aside className="flex h-full w-[380px] shrink-0 flex-col border-l border-line bg-white">
+    <aside className="flex h-full w-[520px] shrink-0 flex-col border-l border-line bg-white">
       <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
         <div className="flex items-center gap-2">
           <span
@@ -164,11 +192,11 @@ export default function ConfigPanel({
                 <option value="public">Public dataset</option>
                 <option value="postgres">Postgres database</option>
                 <option value="api">HTTP API</option>
-                <option value="ws">WebSocket (real-time)</option>
+                <option value="ws">WebSocket (live stream)</option>
               </select>
             </Field>
 
-            {data.kind === "csv" || !data.kind ? (
+            {(data.kind === "csv" || !data.kind) && (
               <Field label="CSV file">
                 <input
                   type="file"
@@ -184,7 +212,7 @@ export default function ConfigPanel({
                   </div>
                 )}
               </Field>
-            ) : null}
+            )}
 
             {data.kind === "public" && (
               <>
@@ -268,18 +296,147 @@ export default function ConfigPanel({
                     <option>POST</option>
                   </select>
                 </Field>
+
+                {/* dynamic headers */}
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-medium text-sub">Headers</span>
+                    <button
+                      className="text-xs text-accent hover:underline"
+                      onClick={() => syncHeaders([...hdrs, { k: "", v: "" }])}
+                    >
+                      + Add header
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {hdrs.length === 0 && (
+                      <p className="text-[11px] text-sub">
+                        No headers. Add e.g. <code>Authorization: Bearer …</code>
+                      </p>
+                    )}
+                    {hdrs.map((h, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <input
+                          className={`${inputCls} flex-1`}
+                          placeholder="Header"
+                          value={h.k}
+                          onChange={(e) => {
+                            const next = [...hdrs];
+                            next[i] = { ...h, k: e.target.value };
+                            syncHeaders(next);
+                          }}
+                        />
+                        <input
+                          className={`${inputCls} flex-1`}
+                          placeholder="Value"
+                          value={h.v}
+                          onChange={(e) => {
+                            const next = [...hdrs];
+                            next[i] = { ...h, v: e.target.value };
+                            syncHeaders(next);
+                          }}
+                        />
+                        <button
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sub hover:bg-canvas hover:text-bad"
+                          onClick={() =>
+                            syncHeaders(hdrs.filter((_, j) => j !== i))
+                          }
+                          title="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {data.method === "POST" && (
+                  <Field label="Body (JSON)">
+                    <textarea
+                      className={`${inputCls} h-20 font-mono`}
+                      placeholder='{"key": "value"}'
+                      value={
+                        typeof data.body === "string"
+                          ? data.body
+                          : data.body
+                          ? JSON.stringify(data.body, null, 2)
+                          : ""
+                      }
+                      onChange={(e) => {
+                        try {
+                          set({ body: JSON.parse(e.target.value) });
+                        } catch {
+                          set({ body: e.target.value });
+                        }
+                      }}
+                    />
+                  </Field>
+                )}
               </>
             )}
 
             {data.kind === "ws" && (
-              <div className="rounded-md border border-line bg-canvas p-3 text-xs text-sub">
-                Real-time WebSocket ingestion {COMING_SOON}
-                <input
-                  className={`${inputCls} mt-2`}
-                  placeholder="wss://stream.example.com"
-                  value={data.ws_url || ""}
-                  onChange={(e) => set({ ws_url: e.target.value })}
-                />
+              <div className="space-y-3 rounded-md border border-line bg-canvas p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-ink">
+                    Live WebSocket connector
+                  </span>
+                  <button
+                    className="text-xs text-accent hover:underline"
+                    onClick={() =>
+                      set({
+                        ws_url: "wss://advanced-trade-ws.coinbase.com",
+                        subscribe: COINBASE_SUBSCRIBE,
+                        max_messages: 20,
+                        max_seconds: 15,
+                      })
+                    }
+                  >
+                    Load Coinbase example
+                  </button>
+                </div>
+                <Field label="WebSocket URL">
+                  <input
+                    className={inputCls}
+                    placeholder="wss://stream.example.com"
+                    value={data.ws_url || ""}
+                    onChange={(e) => set({ ws_url: e.target.value })}
+                  />
+                </Field>
+                <Field label="Subscribe messages (one JSON per line)">
+                  <textarea
+                    className={`${inputCls} h-24 font-mono text-xs`}
+                    placeholder='{"type":"subscribe","channel":"…"}'
+                    value={data.subscribe || ""}
+                    onChange={(e) => set({ subscribe: e.target.value })}
+                  />
+                </Field>
+                <div className="flex gap-2">
+                  <Field label="Max messages">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.max_messages ?? 20}
+                      onChange={(e) =>
+                        set({ max_messages: Number(e.target.value) })
+                      }
+                    />
+                  </Field>
+                  <Field label="Max seconds">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.max_seconds ?? 10}
+                      onChange={(e) =>
+                        set({ max_seconds: Number(e.target.value) })
+                      }
+                    />
+                  </Field>
+                </div>
+                <p className="text-[11px] text-sub">
+                  Collects a bounded window (until max messages or seconds) then
+                  feeds those rows into the pipeline.
+                </p>
               </div>
             )}
           </>
@@ -310,45 +467,111 @@ export default function ConfigPanel({
 
         {/* ---------------- Gate ---------------- */}
         {type === "gate" && (
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-sub">
-              Branch conditions (per outgoing edge)
-            </div>
-            {outEdges.length === 0 && (
+          <div className="space-y-4">
+            {/* dynamic inputs */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs font-medium text-sub">Inputs</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="flex h-6 w-6 items-center justify-center rounded border border-line text-sub hover:bg-canvas disabled:opacity-40"
+                    disabled={gateInputs <= 1}
+                    onClick={() => set({ inputs: gateInputs - 1 })}
+                  >
+                    −
+                  </button>
+                  <span className="w-4 text-center text-sm font-semibold">
+                    {gateInputs}
+                  </span>
+                  <button
+                    className="flex h-6 w-6 items-center justify-center rounded border border-line text-sub hover:bg-canvas"
+                    onClick={() => set({ inputs: gateInputs + 1 })}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
               <p className="text-[11px] text-sub">
-                Connect this gate to downstream nodes, then set a predicate for
-                each branch.
+                Each input is a handle on top of the node (
+                {gateArgs.join(", ")}). Connect a node to each.
               </p>
-            )}
-            {outEdges.map((e) => {
-              const cond = (data.conditions || []).find(
-                (c: any) => c.target === e.target
-              );
-              return (
-                <Field key={e.id} label={`→ ${nodeLabel(e.target)}`}>
-                  <input
-                    className={`${inputCls} font-mono`}
-                    placeholder="e.g. amount > 100"
-                    value={cond?.expr || ""}
-                    onChange={(ev) => {
-                      const others = (data.conditions || []).filter(
-                        (c: any) => c.target !== e.target
-                      );
-                      set({
-                        conditions: [
-                          ...others,
-                          { target: e.target, expr: ev.target.value },
-                        ],
-                      });
-                    }}
-                  />
-                </Field>
-              );
-            })}
-            <p className="text-[11px] text-sub">
-              Expressions use row columns as variables. Rows matching a branch
-              flow to that path; a blank predicate passes everything.
-            </p>
+            </div>
+
+            {/* conditional_function (locked signature) */}
+            <div>
+              <div className="mb-1 text-xs font-medium text-sub">
+                conditional_function{" "}
+                {gateInputs >= 2 ? (
+                  <span className="text-bad">(required for multiple inputs)</span>
+                ) : (
+                  <span className="text-sub">(optional)</span>
+                )}
+              </div>
+              <div className="overflow-hidden rounded-md border border-line">
+                <div className="border-b border-line bg-canvas px-3 py-1.5 font-mono text-xs text-ink">
+                  {gateSignature}
+                </div>
+                <Editor
+                  height="180px"
+                  defaultLanguage="python"
+                  value={data.code || DEFAULT_GATE_BODY}
+                  onChange={(v) => set({ code: v ?? "" })}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 12,
+                    scrollBeyondLastLine: false,
+                    lineNumbers: "off",
+                  }}
+                />
+              </div>
+              {gateInputs >= 2 && !(data.code || "").trim() && (
+                <p className="mt-1 text-[11px] text-bad">
+                  Multiple inputs must be combined by your code (e.g.{" "}
+                  <code>return input_1 + input_2</code>).
+                </p>
+              )}
+              <p className="mt-1 text-[11px] text-sub">
+                Each arg is a list of dict rows. Return the combined rows. The
+                signature is fixed — edit the body only.
+              </p>
+            </div>
+
+            {/* routing branches */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-sub">
+                Branch conditions (route the result per outgoing edge)
+              </div>
+              {outEdges.length === 0 && (
+                <p className="text-[11px] text-sub">
+                  Connect this gate to downstream nodes to set branch predicates.
+                </p>
+              )}
+              {outEdges.map((e) => {
+                const cond = (data.conditions || []).find(
+                  (c: any) => c.target === e.target
+                );
+                return (
+                  <Field key={e.id} label={`→ ${nodeLabel(e.target)}`}>
+                    <input
+                      className={`${inputCls} font-mono`}
+                      placeholder="e.g. price > 100 (blank = all)"
+                      value={cond?.expr || ""}
+                      onChange={(ev) => {
+                        const others = (data.conditions || []).filter(
+                          (c: any) => c.target !== e.target
+                        );
+                        set({
+                          conditions: [
+                            ...others,
+                            { target: e.target, expr: ev.target.value },
+                          ],
+                        });
+                      }}
+                    />
+                  </Field>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -431,23 +654,31 @@ export default function ConfigPanel({
 
         {msg && <div className="text-[11px] text-sub">{msg}</div>}
 
-        {/* ---- Output preview (last run) ---- */}
-        {type !== "output" && (
-          <div className="border-t border-line pt-3">
-            <button
-              className="btn w-full"
-              onClick={loadPreview}
-              disabled={previewBusy}
-            >
-              {previewBusy ? "Loading…" : "Preview output (last run)"}
-            </button>
-            {preview && (
-              <div className="mt-2 max-h-64 overflow-auto rounded-md border border-line">
-                <ResultsTable result={preview} />
+        {/* ---- Live preview (runs this node + its ancestors) ---- */}
+        <div className="border-t border-line pt-3">
+          <button
+            className="btn w-full"
+            onClick={loadPreview}
+            disabled={previewBusy}
+          >
+            {previewBusy ? "Running preview…" : "Preview output"}
+          </button>
+          {preview &&
+            (preview.empty || (preview.rows || []).length === 0 ? (
+              <div className="mt-2 rounded-md border border-line bg-canvas p-3 text-xs text-sub">
+                No output rows for this node with the current configuration.
               </div>
-            )}
-          </div>
-        )}
+            ) : (
+              <div className="mt-2">
+                <div className="mb-1 text-[11px] text-sub">
+                  {preview.row_count} rows
+                </div>
+                <div className="max-h-72 overflow-auto rounded-md border border-line">
+                  <ResultsTable result={preview} />
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
     </aside>
   );

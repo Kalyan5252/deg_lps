@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
     await db.close_pool()
 
 
-app = FastAPI(title="SQLForge", lifespan=lifespan)
+app = FastAPI(title="D.E.G", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origin_list,
@@ -1394,11 +1394,18 @@ async def upload_pipeline_csv(
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.get("/api/pipelines/{pipeline_id}/nodes/{node_id}/preview")
+@app.post("/api/pipelines/{pipeline_id}/nodes/{node_id}/preview")
 async def pipeline_node_preview(pipeline_id: int, node_id: str,
+                                body: GraphIn | None = None,
                                 user: dict = auth.CurrentUser):
-    await _own_pipeline(pipeline_id, user["id"])
-    return await pipelines.node_preview(pipeline_id, node_id)
+    row = await _own_pipeline(pipeline_id, user["id"])
+    graph = body.graph if body else row["graph"]
+    if isinstance(graph, str):
+        graph = json.loads(graph)
+    try:
+        return await pipelines.preview_node(pipeline_id, graph, node_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.post("/api/pipelines/{pipeline_id}/run")

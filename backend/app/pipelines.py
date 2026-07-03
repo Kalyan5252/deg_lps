@@ -15,6 +15,7 @@ on-demand provision/teardown, CSV parsing/inference reuse).
 """
 from __future__ import annotations
 
+import asyncio
 import csv
 import io
 import json
@@ -197,8 +198,8 @@ def _flatten(obj: Any) -> list[dict]:
     if isinstance(obj, list):
         rows = obj
     elif isinstance(obj, dict):
-        # common shapes: {data: [...]}, {results: [...]}, {items: [...]}
-        for key in ("data", "results", "items", "records", "rows"):
+        # common shapes: {data: [...]}, {results: [...]}, {events: [...]} (Coinbase)
+        for key in ("data", "results", "items", "records", "rows", "events"):
             if isinstance(obj.get(key), list):
                 rows = obj[key]
                 break
@@ -230,6 +231,77 @@ async def _rows_from_api(data: dict) -> list[dict]:
         resp.raise_for_status()
         payload = resp.json()
     return _flatten(payload)[:MAX_ROWS]
+
+
+def _dig(obj: Any, path: str) -> Any:
+    """Resolve a dotted path (with numeric indices) into a nested structure."""
+    cur = obj
+    for part in path.split("."):
+        if part == "":
+            continue
+        if isinstance(cur, list):
+            try:
+                cur = cur[int(part)]
+            except (ValueError, IndexError):
+                return None
+        elif isinstance(cur, dict):
+            cur = cur.get(part)
+        else:
+            return None
+    return cur
+
+
+def _ws_rows(payload: Any, path: str | None) -> list[dict]:
+    target = _dig(payload, path) if path else payload
+    return _flatten(target)
+
+
+async def _rows_from_ws(data: dict) -> list[dict]:
+    """Connect to a WebSocket feed, subscribe, and collect a bounded window.
+
+    The engine is batch, so a live source is treated as a "connector": we open
+    the socket, send the subscribe payload(s), collect messages until we hit
+    ``max_messages`` or ``max_seconds``, then hand those rows to the pipeline.
+    """
+    import time
+
+    import websockets  # lazy: only needed for WS sources
+
+    url = (data.get("ws_url") or "").strip()
+    if not url:
+        raise ValueError("WebSocket source needs a ws_url.")
+    subs = data.get("subscribe") or []
+    if isinstance(subs, str):
+        subs = [ln for ln in subs.splitlines() if ln.strip()]
+    max_messages = int(data.get("max_messages") or 20)
+    max_seconds = float(data.get("max_seconds") or 10)
+    path = (data.get("json_path") or "").strip() or None
+
+    rows: list[dict] = []
+    try:
+        async with websockets.connect(url, open_timeout=10, max_size=2 ** 22) as ws:
+            for s in subs:
+                await ws.send(s if isinstance(s, str) else json.dumps(s))
+            deadline = time.monotonic() + max_seconds
+            while len(rows) < max_messages and time.monotonic() < deadline:
+                remaining = deadline - time.monotonic()
+                try:
+                    msg = await asyncio.wait_for(ws.recv(), timeout=max(0.1, remaining))
+                except asyncio.TimeoutError:
+                    break
+                try:
+                    payload = json.loads(msg)
+                except (json.JSONDecodeError, TypeError):
+                    payload = {"raw": str(msg)}
+                for r in _ws_rows(payload, path):
+                    rows.append(r)
+                    if len(rows) >= max_messages:
+                        break
+    except ValueError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError(f"WebSocket error: {exc}")
+    return rows[:max_messages]
 
 
 async def _rows_from_postgres(data: dict) -> list[dict]:
@@ -325,6 +397,59 @@ def _node_label(node: dict) -> str:
     return (node.get("data") or {}).get("label") or node.get("type") or node["id"]
 
 
+async def _gather_inputs(schema: str, node_map: dict, edges: list[dict], nid: str):
+    """Read a node's upstream rows. Returns (all_rows, by_handle) where by_handle
+    keys on each incoming edge's targetHandle (input_1, input_2, …)."""
+    all_rows: list[dict] = []
+    by_handle: dict[str, list[dict]] = {}
+    for e in [e for e in edges if e["target"] == nid]:
+        src = node_map.get(e["source"], {})
+        is_gate = src.get("type") == "gate"
+        rows = await _read_table(schema, _out_table(e["source"], nid, is_gate))
+        all_rows.extend(rows)
+        handle = e.get("targetHandle") or "input_1"
+        by_handle.setdefault(handle, []).extend(rows)
+    return all_rows, by_handle
+
+
+async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
+                        edges: list[dict], all_rows: list[dict],
+                        by_handle: dict[str, list[dict]]):
+    """Run a single node into the sandbox schema. Returns (subtasks, out_rows).
+    Shared by the full run and by live previews."""
+    nid = node["id"]
+    ntype = node.get("type", "?")
+    data = node.get("data") or {}
+    if ntype == "datasource":
+        subtasks, out_rows = await _run_datasource(pipeline_id, node)
+    elif ntype == "function":
+        subtasks, out_rows = await _run_function(data, all_rows)
+    elif ntype == "gate":
+        return await _run_gate(conn, schema, nid, node, edges, all_rows, by_handle)
+    elif ntype == "llm":
+        subtasks, out_rows = _run_llm_stub(data, all_rows)
+    elif ntype == "output":
+        subtasks, out_rows = _run_output_stub(data, all_rows)
+    else:
+        subtasks, out_rows = [], all_rows
+    await _write_table(conn, schema, f"node_{nid}", out_rows)
+    return subtasks, out_rows
+
+
+def _ancestors(node_id: str, edges: list[dict]) -> set[str]:
+    parents: dict[str, list[str]] = {}
+    for e in edges:
+        parents.setdefault(e["target"], []).append(e["source"])
+    seen: set[str] = set()
+    stack = [node_id]
+    while stack:
+        for p in parents.get(stack.pop(), []):
+            if p not in seen:
+                seen.add(p)
+                stack.append(p)
+    return seen
+
+
 async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
     """Execute the pipeline DAG. Returns the run id."""
     nodes = graph.get("nodes") or []
@@ -361,52 +486,24 @@ async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
                 failed.add(nid)
                 continue
 
-            # gather input rows from upstream output tables
-            in_rows: list[dict] = []
-            for e in incoming:
-                src = node_map[e["source"]]
-                is_gate = src.get("type") == "gate"
-                tbl = _out_table(e["source"], nid, is_gate)
-                in_rows.extend(await _read_table(schema, tbl))
-
+            all_rows, by_handle = await _gather_inputs(schema, node_map, edges, nid)
             subtasks: list[dict] = []
             try:
-                if ntype == "datasource":
-                    subtasks, out_rows = await _run_datasource(pipeline_id, node)
-                elif ntype == "function":
-                    subtasks, out_rows = await _run_function(data, in_rows)
-                elif ntype == "gate":
-                    await _run_gate(conn, schema, nid, node, edges, in_rows)
-                    dur = (datetime.utcnow() - t0).total_seconds() * 1000
-                    await _log(conn, run_id, node, task=f"Route {label}",
-                               subtasks=[{"label": f"routed {len(in_rows)} rows",
-                                          "status": "success"}],
-                               status="success", rows_in=len(in_rows),
-                               rows_out=len(in_rows), duration_ms=round(dur, 1))
-                    produced.add(nid)
-                    ok_count += 1
-                    continue
-                elif ntype == "llm":
-                    subtasks, out_rows = _run_llm_stub(data, in_rows)
-                elif ntype == "output":
-                    subtasks, out_rows = _run_output_stub(data, in_rows)
-                else:
-                    subtasks, out_rows = [], in_rows
-
-                await _write_table(conn, schema, f"node_{nid}", out_rows)
+                subtasks, out_rows = await _execute_node(
+                    pipeline_id, conn, schema, node, edges, all_rows, by_handle)
                 produced.add(nid)
                 ok_count += 1
                 dur = (datetime.utcnow() - t0).total_seconds() * 1000
                 await _log(conn, run_id, node, task=f"Run {label}",
                            subtasks=subtasks, status="success",
-                           rows_in=len(in_rows), rows_out=len(out_rows),
+                           rows_in=len(all_rows), rows_out=len(out_rows),
                            duration_ms=round(dur, 1))
             except Exception as exc:  # noqa: BLE001
                 failed.add(nid)
                 dur = (datetime.utcnow() - t0).total_seconds() * 1000
                 await _log(conn, run_id, node, task=f"Run {label}",
                            subtasks=subtasks + [{"label": "error", "status": "error"}],
-                           status="error", rows_in=len(in_rows),
+                           status="error", rows_in=len(all_rows),
                            duration_ms=round(dur, 1), message=str(exc))
 
     status = "error" if failed else "success"
@@ -431,7 +528,7 @@ async def _run_datasource(pipeline_id: int, node: dict):
     elif kind == "postgres":
         rows = await _rows_from_postgres(data)
     elif kind == "ws":
-        raise ValueError("WebSocket sources are coming soon.")
+        rows = await _rows_from_ws(data)
     else:
         raise ValueError(f"Unknown datasource kind: {kind!r}")
     subtasks.append({"label": f"fetched {len(rows)} rows", "status": "success"})
@@ -448,16 +545,57 @@ async def _run_function(data: dict, in_rows: list[dict]):
     return subtasks, res["rows"]
 
 
-async def _run_gate(conn, schema: str, nid: str, node: dict,
-                    edges: list[dict], in_rows: list[dict]) -> None:
-    """Route rows to a per-target output table based on each branch predicate."""
-    conds = {c["target"]: c.get("expr", "")
-             for c in (node.get("data") or {}).get("conditions") or []}
+async def _run_gate(conn, schema: str, nid: str, node: dict, edges: list[dict],
+                    all_rows: list[dict], by_handle: dict[str, list[dict]]):
+    """Combine the gate's inputs (via an optional/required conditional_function),
+    write the combined result to ``node_<gate>`` (for preview), then route rows to
+    each outgoing branch's table by its predicate. Returns (subtasks, rows)."""
+    data = node.get("data") or {}
+    n_inputs = int(data.get("inputs") or 1)
+    code = (data.get("code") or "").strip()
+    subtasks: list[dict] = []
+
+    # gather named inputs; fall back to concatenated rows on input_1 if the edges
+    # carry no handle ids (older graphs)
+    inputs = {f"input_{i}": list(by_handle.get(f"input_{i}", []))
+              for i in range(1, n_inputs + 1)}
+    if not any(inputs.values()) and all_rows:
+        inputs["input_1"] = all_rows
+
+    if n_inputs >= 2:
+        if not code:
+            raise ValueError(
+                "A gate with multiple inputs requires a conditional_function "
+                "to combine them.")
+        res = await func_runner.run_conditional(code, inputs)
+        if not res["ok"]:
+            raise ValueError(res.get("error") or "conditional_function failed.")
+        combined = res["rows"]
+        subtasks.append({"label": f"combined {n_inputs} inputs → {len(combined)} rows",
+                         "status": "success"})
+    else:
+        base = inputs.get("input_1") or all_rows
+        if code:
+            res = await func_runner.run_conditional(code, {"input_1": base})
+            if not res["ok"]:
+                raise ValueError(res.get("error") or "conditional_function failed.")
+            combined = res["rows"]
+            subtasks.append({"label": "applied conditional_function",
+                             "status": "success"})
+        else:
+            combined = base
+
+    # combined result (feeds preview + is the source for routing)
+    await _write_table(conn, schema, f"node_{nid}", combined)
+
+    conds = {c["target"]: c.get("expr", "") for c in data.get("conditions") or []}
     out_edges = [e for e in edges if e["source"] == nid]
     for e in out_edges:
-        expr = conds.get(e["target"], "")
-        matched = [r for r in in_rows if _eval_predicate(expr, r)]
+        matched = [r for r in combined if _eval_predicate(conds.get(e["target"], ""), r)]
         await _write_table(conn, schema, _out_table(nid, e["target"], True), matched)
+    subtasks.append({"label": f"routed {len(combined)} rows → "
+                              f"{len(out_edges)} branch(es)", "status": "success"})
+    return subtasks, combined
 
 
 def _run_llm_stub(data: dict, in_rows: list[dict]):
@@ -487,8 +625,34 @@ async def node_preview(pipeline_id: int, node_id: str, limit: int = 100) -> dict
     schema = schema_for(pipeline_id)
     rows = await _read_table(schema, f"node_{node_id}")
     columns = list(rows[0].keys()) if rows else []
-    return {"ok": True, "columns": columns,
-            "rows": rows[:limit], "row_count": len(rows)}
+    return {"ok": True, "columns": columns, "rows": rows[:limit],
+            "row_count": len(rows), "empty": len(rows) == 0}
+
+
+async def preview_node(pipeline_id: int, graph: dict, node_id: str,
+                       limit: int = 100) -> dict:
+    """Live preview: execute the target node and all its ancestors on the CURRENT
+    (possibly unsaved) graph, then return the node's output rows. This makes
+    previews accurate for every node type instead of reading a stale last run."""
+    nodes = graph.get("nodes") or []
+    edges = graph.get("edges") or []
+    node_map = {n["id"]: n for n in nodes}
+    if node_id not in node_map:
+        return {"ok": True, "columns": [], "rows": [], "row_count": 0, "empty": True}
+
+    needed = _ancestors(node_id, edges) | {node_id}
+    sub_nodes = [n for n in nodes if n["id"] in needed]
+    sub_edges = [e for e in edges
+                 if e["source"] in needed and e["target"] in needed]
+    schema = schema_for(pipeline_id)
+    await provision(pipeline_id)
+    async with db.pool().acquire() as conn:
+        for nid in _topo_order(sub_nodes, sub_edges):
+            node = node_map[nid]
+            all_rows, by_handle = await _gather_inputs(schema, node_map, sub_edges, nid)
+            await _execute_node(pipeline_id, conn, schema, node, sub_edges,
+                                all_rows, by_handle)
+    return await node_preview(pipeline_id, node_id, limit)
 
 
 # --------------------------------------------------------------------------
