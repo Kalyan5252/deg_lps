@@ -12,11 +12,13 @@ const DEFAULT_CODE = `def transform(df):
     return df
 `;
 
-const COMING_SOON = (
-  <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-    coming soon
-  </span>
-);
+const DEFAULT_GATE_BODY = `    # each input is a list of dict rows; return the combined rows
+    return input_1`;
+
+const COINBASE_SUBSCRIBE = [
+  '{"type":"subscribe","product_ids":["BTC-USD","ETH-USD","SOL-USD"],"channel":"market_trades"}',
+  '{"type":"subscribe","channel":"heartbeats"}',
+].join("\n");
 
 function Field({ label, children }: { label: string; children: any }) {
   return (
@@ -30,12 +32,66 @@ function Field({ label, children }: { label: string; children: any }) {
 const inputCls =
   "w-full rounded-md border border-line px-2.5 py-1.5 text-sm outline-none focus:border-accent";
 
+// A reusable key/value list editor (used for headers and form body fields).
+function KVList({
+  rows,
+  onChange,
+  addLabel,
+}: {
+  rows: { k: string; v: string }[];
+  onChange: (next: { k: string; v: string }[]) => void;
+  addLabel: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      {rows.map((h, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <input
+            className={`${inputCls} flex-1`}
+            placeholder="Key"
+            value={h.k}
+            onChange={(e) => {
+              const next = [...rows];
+              next[i] = { ...h, k: e.target.value };
+              onChange(next);
+            }}
+          />
+          <input
+            className={`${inputCls} flex-1`}
+            placeholder="Value"
+            value={h.v}
+            onChange={(e) => {
+              const next = [...rows];
+              next[i] = { ...h, v: e.target.value };
+              onChange(next);
+            }}
+          />
+          <button
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sub hover:bg-canvas hover:text-bad"
+            onClick={() => onChange(rows.filter((_, j) => j !== i))}
+            title="Remove"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        className="text-xs text-accent hover:underline"
+        onClick={() => onChange([...rows, { k: "", v: "" }])}
+      >
+        {addLabel}
+      </button>
+    </div>
+  );
+}
+
 export default function ConfigPanel({
   pipelineId,
   node,
   edges,
   nodes,
   onChange,
+  getGraph,
   onClose,
 }: {
   pipelineId: number | string;
@@ -43,6 +99,7 @@ export default function ConfigPanel({
   edges: any[];
   nodes: any[];
   onChange: (nodeId: string, patch: any) => void;
+  getGraph: () => any;
   onClose: () => void;
 }) {
   const [preview, setPreview] = useState<any>(null);
@@ -50,13 +107,22 @@ export default function ConfigPanel({
   const [msg, setMsg] = useState<string | null>(null);
   const [intent, setIntent] = useState("");
   const [catalog, setCatalog] = useState<any[]>([]);
+  const [hdrs, setHdrs] = useState<{ k: string; v: string }[]>([]);
+  const [bodyFields, setBodyFields] = useState<{ k: string; v: string }[]>([]);
 
   useEffect(() => {
     setPreview(null);
     setMsg(null);
+    const h = (node?.data?.headers || {}) as Record<string, string>;
+    setHdrs(Object.entries(h).map(([k, v]) => ({ k, v: String(v) })));
+    setBodyFields(
+      (node?.data?.body_fields || []).map((f: any) => ({
+        k: f.key ?? "",
+        v: f.value ?? "",
+      }))
+    );
   }, [node?.id]);
 
-  // catalog of public datasets (for the datasource dropdown)
   useEffect(() => {
     if (node?.type === "datasource" && catalog.length === 0) {
       api.globalDatasets().then(setCatalog).catch(() => {});
@@ -72,8 +138,9 @@ export default function ConfigPanel({
   async function loadPreview() {
     setPreviewBusy(true);
     setMsg(null);
+    setPreview(null);
     try {
-      setPreview(await api.pipelineNodePreview(pipelineId, node.id));
+      setPreview(await api.pipelineNodePreview(pipelineId, node.id, getGraph()));
     } catch (e: any) {
       setMsg(e.message);
     } finally {
@@ -115,14 +182,33 @@ export default function ConfigPanel({
     }
   }
 
+  function syncHeaders(next: { k: string; v: string }[]) {
+    setHdrs(next);
+    const obj: Record<string, string> = {};
+    next.forEach(({ k, v }) => {
+      if (k.trim()) obj[k.trim()] = v;
+    });
+    set({ headers: obj });
+  }
+
+  function syncBodyFields(next: { k: string; v: string }[]) {
+    setBodyFields(next);
+    set({ body_fields: next.filter((f) => f.k.trim()).map((f) => ({ key: f.k, value: f.v })) });
+  }
+
   const outEdges = edges.filter((e) => e.source === node.id);
   const nodeLabel = (id: string) =>
     nodes.find((n) => n.id === id)?.data?.label ||
     nodes.find((n) => n.id === id)?.type ||
     id;
 
+  const gateInputs = Math.max(1, Number(data.inputs) || 1);
+  const gateArgs = Array.from({ length: gateInputs }, (_, i) => `input_${i + 1}`);
+  const gateSignature = `def conditional_function(${gateArgs.join(", ")}):`;
+  const bodyType = data.body_type || "none";
+
   return (
-    <aside className="flex h-full w-[380px] shrink-0 flex-col border-l border-line bg-white">
+    <aside className="flex h-full w-[520px] shrink-0 flex-col border-l border-line bg-white">
       <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
         <div className="flex items-center gap-2">
           <span
@@ -164,11 +250,11 @@ export default function ConfigPanel({
                 <option value="public">Public dataset</option>
                 <option value="postgres">Postgres database</option>
                 <option value="api">HTTP API</option>
-                <option value="ws">WebSocket (real-time)</option>
+                <option value="ws">WebSocket (live stream)</option>
               </select>
             </Field>
 
-            {data.kind === "csv" || !data.kind ? (
+            {(data.kind === "csv" || !data.kind) && (
               <Field label="CSV file">
                 <input
                   type="file"
@@ -184,7 +270,7 @@ export default function ConfigPanel({
                   </div>
                 )}
               </Field>
-            ) : null}
+            )}
 
             {data.kind === "public" && (
               <>
@@ -192,9 +278,7 @@ export default function ConfigPanel({
                   <select
                     className={inputCls}
                     value={data.dataset_key || ""}
-                    onChange={(e) =>
-                      set({ dataset_key: e.target.value, table: "" })
-                    }
+                    onChange={(e) => set({ dataset_key: e.target.value, table: "" })}
                   >
                     <option value="">
                       {catalog.length ? "Select a dataset…" : "Loading…"}
@@ -214,14 +298,13 @@ export default function ConfigPanel({
                     onChange={(e) => set({ table: e.target.value })}
                   >
                     <option value="">First table</option>
-                    {(
-                      catalog.find((d) => d.key === data.dataset_key)?.tables ||
-                      []
-                    ).map((t: any) => (
-                      <option key={t.name} value={t.name}>
-                        {t.name} ({t.row_count} rows)
-                      </option>
-                    ))}
+                    {(catalog.find((d) => d.key === data.dataset_key)?.tables || []).map(
+                      (t: any) => (
+                        <option key={t.name} value={t.name}>
+                          {t.name} ({t.row_count} rows)
+                        </option>
+                      )
+                    )}
                   </select>
                 </Field>
               </>
@@ -266,20 +349,157 @@ export default function ConfigPanel({
                   >
                     <option>GET</option>
                     <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
                   </select>
                 </Field>
+
+                <div>
+                  <div className="mb-1 text-xs font-medium text-sub">Headers</div>
+                  <KVList rows={hdrs} onChange={syncHeaders} addLabel="+ Add header" />
+                </div>
+
+                {data.method && data.method !== "GET" && (
+                  <>
+                    <Field label="Body type">
+                      <select
+                        className={inputCls}
+                        value={bodyType}
+                        onChange={(e) => set({ body_type: e.target.value })}
+                      >
+                        <option value="none">None</option>
+                        <option value="json">JSON</option>
+                        <option value="urlencoded">x-www-form-urlencoded</option>
+                        <option value="formdata">form-data</option>
+                        <option value="raw">Raw</option>
+                        <option value="xml">XML</option>
+                      </select>
+                    </Field>
+
+                    {bodyType === "json" && (
+                      <Field label="JSON body">
+                        <textarea
+                          className={`${inputCls} h-24 font-mono`}
+                          placeholder='{"key": "value"}'
+                          value={
+                            typeof data.body === "string"
+                              ? data.body
+                              : data.body
+                              ? JSON.stringify(data.body, null, 2)
+                              : ""
+                          }
+                          onChange={(e) => {
+                            try {
+                              set({ body: JSON.parse(e.target.value) });
+                            } catch {
+                              set({ body: e.target.value });
+                            }
+                          }}
+                        />
+                      </Field>
+                    )}
+
+                    {(bodyType === "urlencoded" || bodyType === "formdata") && (
+                      <div>
+                        <div className="mb-1 text-xs font-medium text-sub">
+                          {bodyType === "formdata" ? "Form-data fields" : "URL-encoded fields"}
+                        </div>
+                        <KVList
+                          rows={bodyFields}
+                          onChange={syncBodyFields}
+                          addLabel="+ Add field"
+                        />
+                      </div>
+                    )}
+
+                    {(bodyType === "raw" || bodyType === "xml") && (
+                      <>
+                        <Field label={bodyType === "xml" ? "XML body" : "Raw body"}>
+                          <textarea
+                            className={`${inputCls} h-24 font-mono`}
+                            value={data.raw_body || ""}
+                            onChange={(e) => set({ raw_body: e.target.value })}
+                          />
+                        </Field>
+                        {bodyType === "raw" && (
+                          <Field label="Content-Type">
+                            <input
+                              className={inputCls}
+                              placeholder="text/plain"
+                              value={data.raw_content_type || ""}
+                              onChange={(e) => set({ raw_content_type: e.target.value })}
+                            />
+                          </Field>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
               </>
             )}
 
             {data.kind === "ws" && (
-              <div className="rounded-md border border-line bg-canvas p-3 text-xs text-sub">
-                Real-time WebSocket ingestion {COMING_SOON}
-                <input
-                  className={`${inputCls} mt-2`}
-                  placeholder="wss://stream.example.com"
-                  value={data.ws_url || ""}
-                  onChange={(e) => set({ ws_url: e.target.value })}
-                />
+              <div className="space-y-3 rounded-md border border-line bg-canvas p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-ink">
+                    Live WebSocket connector
+                  </span>
+                  <button
+                    className="text-xs text-accent hover:underline"
+                    onClick={() =>
+                      set({
+                        ws_url: "wss://advanced-trade-ws.coinbase.com",
+                        subscribe: COINBASE_SUBSCRIBE,
+                        max_messages: 20,
+                        max_seconds: 15,
+                      })
+                    }
+                  >
+                    Load Coinbase example
+                  </button>
+                </div>
+                <Field label="WebSocket URL">
+                  <input
+                    className={inputCls}
+                    placeholder="wss://stream.example.com"
+                    value={data.ws_url || ""}
+                    onChange={(e) => set({ ws_url: e.target.value })}
+                  />
+                </Field>
+                <Field label="Subscribe messages (one JSON per line)">
+                  <textarea
+                    className={`${inputCls} h-24 font-mono text-xs`}
+                    placeholder='{"type":"subscribe","channel":"…"}'
+                    value={data.subscribe || ""}
+                    onChange={(e) => set({ subscribe: e.target.value })}
+                  />
+                </Field>
+                <div className="flex gap-2">
+                  <Field label="Max messages">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.max_messages ?? 20}
+                      onChange={(e) => set({ max_messages: Number(e.target.value) })}
+                    />
+                  </Field>
+                  <Field label="Max seconds">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.max_seconds ?? 10}
+                      onChange={(e) => set({ max_seconds: Number(e.target.value) })}
+                    />
+                  </Field>
+                </div>
+                <Field label="JSON path (optional, e.g. events.0.trades)">
+                  <input
+                    className={inputCls}
+                    value={data.json_path || ""}
+                    onChange={(e) => set({ json_path: e.target.value })}
+                  />
+                </Field>
               </div>
             )}
           </>
@@ -310,60 +530,131 @@ export default function ConfigPanel({
 
         {/* ---------------- Gate ---------------- */}
         {type === "gate" && (
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-sub">
-              Branch conditions (per outgoing edge)
-            </div>
-            {outEdges.length === 0 && (
+          <div className="space-y-4">
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs font-medium text-sub">Inputs</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="flex h-6 w-6 items-center justify-center rounded border border-line text-sub hover:bg-canvas disabled:opacity-40"
+                    disabled={gateInputs <= 1}
+                    onClick={() => set({ inputs: gateInputs - 1 })}
+                  >
+                    −
+                  </button>
+                  <span className="w-4 text-center text-sm font-semibold">
+                    {gateInputs}
+                  </span>
+                  <button
+                    className="flex h-6 w-6 items-center justify-center rounded border border-line text-sub hover:bg-canvas"
+                    onClick={() => set({ inputs: gateInputs + 1 })}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
               <p className="text-[11px] text-sub">
-                Connect this gate to downstream nodes, then set a predicate for
-                each branch.
+                Each input is an orange handle on top of the node (
+                {gateArgs.join(", ")}). Drag a connection onto each.
               </p>
-            )}
-            {outEdges.map((e) => {
-              const cond = (data.conditions || []).find(
-                (c: any) => c.target === e.target
-              );
-              return (
-                <Field key={e.id} label={`→ ${nodeLabel(e.target)}`}>
-                  <input
-                    className={`${inputCls} font-mono`}
-                    placeholder="e.g. amount > 100"
-                    value={cond?.expr || ""}
-                    onChange={(ev) => {
-                      const others = (data.conditions || []).filter(
-                        (c: any) => c.target !== e.target
-                      );
-                      set({
-                        conditions: [
-                          ...others,
-                          { target: e.target, expr: ev.target.value },
-                        ],
-                      });
-                    }}
-                  />
-                </Field>
-              );
-            })}
-            <p className="text-[11px] text-sub">
-              Expressions use row columns as variables. Rows matching a branch
-              flow to that path; a blank predicate passes everything.
-            </p>
+            </div>
+
+            <div>
+              <div className="mb-1 text-xs font-medium text-sub">
+                conditional_function{" "}
+                {gateInputs >= 2 ? (
+                  <span className="text-bad">(required for multiple inputs)</span>
+                ) : (
+                  <span className="text-sub">(optional)</span>
+                )}
+              </div>
+              <div className="overflow-hidden rounded-md border border-line">
+                <div className="border-b border-line bg-canvas px-3 py-1.5 font-mono text-xs text-ink">
+                  {gateSignature}
+                </div>
+                <Editor
+                  height="180px"
+                  defaultLanguage="python"
+                  value={data.code || DEFAULT_GATE_BODY}
+                  onChange={(v) => set({ code: v ?? "" })}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 12,
+                    scrollBeyondLastLine: false,
+                    lineNumbers: "off",
+                  }}
+                />
+              </div>
+              {gateInputs >= 2 && !(data.code || "").trim() && (
+                <p className="mt-1 text-[11px] text-bad">
+                  Multiple inputs must be combined by your code (e.g.{" "}
+                  <code>return input_1 + input_2</code>).
+                </p>
+              )}
+              <p className="mt-1 text-[11px] text-sub">
+                Each arg is a list of dict rows. Return the combined rows. The
+                signature is fixed — edit the body only.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-sub">
+                Branch conditions (route the result per outgoing edge)
+              </div>
+              {outEdges.length === 0 && (
+                <p className="text-[11px] text-sub">
+                  Connect this gate to downstream nodes to set branch predicates.
+                </p>
+              )}
+              {outEdges.map((e) => {
+                const cond = (data.conditions || []).find(
+                  (c: any) => c.target === e.target
+                );
+                return (
+                  <Field key={e.id} label={`→ ${nodeLabel(e.target)}`}>
+                    <input
+                      className={`${inputCls} font-mono`}
+                      placeholder="e.g. price > 100 (blank = all)"
+                      value={cond?.expr || ""}
+                      onChange={(ev) => {
+                        const others = (data.conditions || []).filter(
+                          (c: any) => c.target !== e.target
+                        );
+                        set({
+                          conditions: [
+                            ...others,
+                            { target: e.target, expr: ev.target.value },
+                          ],
+                        });
+                      }}
+                    />
+                  </Field>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* ---------------- LLM ---------------- */}
         {type === "llm" && (
           <>
-            <Field label="AI model">
+            <Field label="Model">
               <input
                 className={inputCls}
-                placeholder="e.g. gpt-4o-mini, lightning-ai/gemma-4-31B-it"
+                placeholder="e.g. gpt-4o-mini, llama3 (blank = platform default)"
                 value={data.model || ""}
                 onChange={(e) => set({ model: e.target.value })}
               />
             </Field>
-            <Field label="API key (stored on this node)">
+            <Field label="Base URL (OpenAI-compatible)">
+              <input
+                className={inputCls}
+                placeholder="https://api.openai.com/v1"
+                value={data.base_url || ""}
+                onChange={(e) => set({ base_url: e.target.value })}
+              />
+            </Field>
+            <Field label="API key">
               <input
                 className={inputCls}
                 type="password"
@@ -371,6 +662,36 @@ export default function ConfigPanel({
                 onChange={(e) => set({ api_key: e.target.value })}
               />
             </Field>
+            <div className="flex gap-2">
+              <Field label="Mode">
+                <select
+                  className={inputCls}
+                  value={data.mode || "per_row"}
+                  onChange={(e) => set({ mode: e.target.value })}
+                >
+                  <option value="per_row">Per row (add a column)</option>
+                  <option value="aggregate">Aggregate (one answer)</option>
+                </select>
+              </Field>
+              <Field label="Max rows">
+                <input
+                  type="number"
+                  className={inputCls}
+                  value={data.max_rows ?? 20}
+                  onChange={(e) => set({ max_rows: Number(e.target.value) })}
+                />
+              </Field>
+            </div>
+            {data.mode !== "aggregate" && (
+              <Field label="Output column name">
+                <input
+                  className={inputCls}
+                  placeholder="llm_output"
+                  value={data.output_field || ""}
+                  onChange={(e) => set({ output_field: e.target.value })}
+                />
+              </Field>
+            )}
             <Field label="System prompt">
               <textarea
                 className={`${inputCls} h-24`}
@@ -392,10 +713,6 @@ export default function ConfigPanel({
                 Generate prompt
               </button>
             </div>
-            <div className="text-[11px] text-sub">
-              Row-by-row reasoning execution {COMING_SOON} (rows pass through for
-              now).
-            </div>
           </>
         )}
 
@@ -408,46 +725,82 @@ export default function ConfigPanel({
                 value={data.kind || "api"}
                 onChange={(e) => set({ kind: e.target.value })}
               >
-                <option value="sse">Server-Sent Events (SSE)</option>
-                <option value="api">REST API endpoint</option>
-                <option value="ws">WebSocket</option>
-                <option value="sheets">Google Sheets</option>
-                <option value="alert">Alert on trigger</option>
+                <option value="api">REST API (POST rows)</option>
+                <option value="webhook">Webhook (POST rows)</option>
+                <option value="sheets">Google Sheets (Apps Script webhook)</option>
+                <option value="alert">Alert (POST message + rows)</option>
+                <option value="ws">WebSocket (push rows)</option>
+                <option value="sse">Server-Sent Events</option>
               </select>
             </Field>
-            <Field label="Target (URL / sheet id / channel)">
+            <Field
+              label={
+                data.kind === "ws"
+                  ? "Target ws:// URL"
+                  : data.kind === "sse"
+                  ? "SSE endpoint"
+                  : "Target URL"
+              }
+            >
               <input
                 className={inputCls}
+                placeholder={
+                  data.kind === "ws"
+                    ? "wss://example.com/ingest"
+                    : "https://example.com/webhook"
+                }
                 value={data.target || ""}
                 onChange={(e) => set({ target: e.target.value })}
               />
             </Field>
-            <div className="text-[11px] text-sub">
-              Delivery execution {COMING_SOON} — config is saved and rows pass
-              through so you can chain further.
-            </div>
+            {data.kind === "alert" && (
+              <Field label="Alert message">
+                <input
+                  className={inputCls}
+                  placeholder="High-value orders detected"
+                  value={data.message || ""}
+                  onChange={(e) => set({ message: e.target.value })}
+                />
+              </Field>
+            )}
+            {(data.kind === "api" ||
+              data.kind === "webhook" ||
+              data.kind === "sheets" ||
+              data.kind === "alert") && (
+              <div>
+                <div className="mb-1 text-xs font-medium text-sub">Headers</div>
+                <KVList rows={hdrs} onChange={syncHeaders} addLabel="+ Add header" />
+              </div>
+            )}
+            <p className="text-[11px] text-sub">
+              {data.kind === "sse"
+                ? "SSE needs the live streaming server; rows pass through for now."
+                : "Rows are delivered on Run and also passed through so you can chain further."}
+            </p>
           </>
         )}
 
         {msg && <div className="text-[11px] text-sub">{msg}</div>}
 
-        {/* ---- Output preview (last run) ---- */}
-        {type !== "output" && (
-          <div className="border-t border-line pt-3">
-            <button
-              className="btn w-full"
-              onClick={loadPreview}
-              disabled={previewBusy}
-            >
-              {previewBusy ? "Loading…" : "Preview output (last run)"}
-            </button>
-            {preview && (
-              <div className="mt-2 max-h-64 overflow-auto rounded-md border border-line">
-                <ResultsTable result={preview} />
+        {/* ---- Live preview (runs this node + its ancestors) ---- */}
+        <div className="border-t border-line pt-3">
+          <button className="btn w-full" onClick={loadPreview} disabled={previewBusy}>
+            {previewBusy ? "Running preview…" : "Preview output"}
+          </button>
+          {preview &&
+            (preview.empty || (preview.rows || []).length === 0 ? (
+              <div className="mt-2 rounded-md border border-line bg-canvas p-3 text-xs text-sub">
+                No output rows for this node with the current configuration.
               </div>
-            )}
-          </div>
-        )}
+            ) : (
+              <div className="mt-2">
+                <div className="mb-1 text-[11px] text-sub">{preview.row_count} rows</div>
+                <div className="max-h-72 overflow-auto rounded-md border border-line">
+                  <ResultsTable result={preview} />
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
     </aside>
   );

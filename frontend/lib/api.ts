@@ -291,8 +291,11 @@ export const api = {
     request<any[]>(`/pipelines/${id}/runs`),
   pipelineRunLogs: (runId: number) =>
     request<any[]>(`/pipelines/runs/${runId}/logs`),
-  pipelineNodePreview: (id: number | string, nodeId: string) =>
-    request<any>(`/pipelines/${id}/nodes/${encodeURIComponent(nodeId)}/preview`),
+  pipelineNodePreview: (id: number | string, nodeId: string, graph: any) =>
+    request<any>(`/pipelines/${id}/nodes/${encodeURIComponent(nodeId)}/preview`, {
+      method: "POST",
+      body: JSON.stringify({ graph }),
+    }),
   pipelineGenPrompt: (id: number | string, intent: string, columns: string[]) =>
     request<{ prompt: string }>(`/pipelines/${id}/llm/gen-prompt`, {
       method: "POST",

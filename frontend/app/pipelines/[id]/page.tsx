@@ -10,6 +10,7 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   MarkerType,
 } from "@xyflow/react";
 import { useRouter, useParams } from "next/navigation";
@@ -30,10 +31,12 @@ const MENU_ITEMS: { type: string; label: string }[] = [
 
 function Builder({ pipelineId }: { pipelineId: string }) {
   const router = useRouter();
+  const rf = useReactFlow();
   const [name, setName] = useState("");
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelNode, setPanelNode] = useState<any | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [showActivity, setShowActivity] = useState(false);
   const [activeRunId, setActiveRunId] = useState<number | null>(null);
@@ -80,29 +83,25 @@ function Builder({ pipelineId }: { pipelineId: string }) {
         id: e.id,
         source: e.source,
         target: e.target,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
       })),
     };
   }
 
-  function addNode(type: string) {
+  // place the new node where the user right-clicked (fall back to canvas center)
+  function addNode(type: string, screenX?: number, screenY?: number) {
     const id = `${type}_${Date.now().toString(36)}`;
     const data: any = { label: NODE_META[type].label };
-    if (type === "gate") data.conditions = [];
-    // Vertical-by-default: stack each new node in a column beneath the
-    // lowest existing node (aligned to it), rather than at the cursor.
-    const V_GAP = 150; // node height (~90) + breathing room
-    setNodes((nds) => {
-      let pos: { x: number; y: number };
-      if (nds.length === 0) {
-        pos = { x: 250, y: 80 };
-      } else {
-        const bottom = nds.reduce((a, b) =>
-          b.position.y > a.position.y ? b : a
-        );
-        pos = { x: bottom.position.x, y: bottom.position.y + V_GAP };
-      }
-      return [...nds, { id, type, position: pos, data }];
-    });
+    if (type === "gate") {
+      data.conditions = [];
+      data.inputs = 1;
+    }
+    const pos =
+      screenX != null && screenY != null
+        ? rf.screenToFlowPosition({ x: screenX, y: screenY })
+        : { x: 250, y: 120 };
+    setNodes((nds) => [...nds, { id, type, position: pos, data }]);
     setMenu(null);
     setSelectedId(id);
   }
@@ -144,6 +143,10 @@ function Builder({ pipelineId }: { pipelineId: string }) {
   }
 
   const selectedNode = nodes.find((n) => n.id === selectedId) || null;
+  const configOpen = !!selectedNode && !showActivity;
+  useEffect(() => {
+    if (selectedNode) setPanelNode(selectedNode);
+  }, [selectedNode]);
 
   return (
     <div className="flex h-screen flex-col">
@@ -235,7 +238,7 @@ function Builder({ pipelineId }: { pipelineId: string }) {
                   <button
                     key={item.type}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
-                    onClick={() => addNode(item.type)}
+                    onClick={() => addNode(item.type, menu.x, menu.y)}
                   >
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded text-xs text-white"
@@ -251,24 +254,69 @@ function Builder({ pipelineId }: { pipelineId: string }) {
           )}
         </div>
 
-        {selectedNode && !showActivity && (
+        <SidePanel open={configOpen} width={520}>
           <ConfigPanel
             pipelineId={pipelineId}
-            node={selectedNode}
+            node={selectedNode ?? panelNode}
             edges={edges}
             nodes={nodes}
             onChange={patchNode}
+            getGraph={graph}
             onClose={() => setSelectedId(null)}
           />
-        )}
+        </SidePanel>
 
-        {showActivity && (
+        <SidePanel open={showActivity} width={420}>
           <ActivityPanel
             pipelineId={pipelineId}
             activeRunId={activeRunId}
             onClose={() => setShowActivity(false)}
           />
-        )}
+        </SidePanel>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A right-docked panel that smoothly slides + expands open and collapses closed.
+ * Wrapper stays mounted so toggling `open` transitions width via CSS (no
+ * requestAnimationFrame, which is starved on backgrounded tabs). Children unmount
+ * after the close animation so panels stop polling when hidden.
+ */
+function SidePanel({
+  open,
+  width,
+  children,
+}: {
+  open: boolean;
+  width: number;
+  children: React.ReactNode;
+}) {
+  const [mounted, setMounted] = useState(open);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+    const t = setTimeout(() => setMounted(false), 300);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  return (
+    <div
+      className="h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out"
+      style={{ width: open ? width : 0 }}
+    >
+      <div
+        style={{
+          width,
+          transform: open ? "translateX(0)" : "translateX(24px)",
+          opacity: open ? 1 : 0,
+        }}
+        className="h-full transition-[transform,opacity] duration-300 ease-out"
+      >
+        {mounted ? children : null}
       </div>
     </div>
   );

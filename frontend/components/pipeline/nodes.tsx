@@ -41,10 +41,11 @@ export const NODE_META: Record<
 function subtitle(type: string, data: any): string {
   if (type === "datasource") return `source: ${data.kind || "csv"}`;
   if (type === "function") return "python transform";
-  if (type === "gate")
-    return `${(data.conditions || []).length} branch${
-      (data.conditions || []).length === 1 ? "" : "es"
-    }`;
+  if (type === "gate") {
+    const inputs = Math.max(1, Number(data.inputs) || 1);
+    const branches = (data.conditions || []).length;
+    return `${inputs} in · ${branches} branch${branches === 1 ? "" : "es"}`;
+  }
   if (type === "llm") return data.model || "model unset";
   if (type === "output") return `target: ${data.kind || "api"}`;
   return "";
@@ -108,9 +109,21 @@ export function FunctionNode(p: NodeProps) {
   );
 }
 export function GateNode(p: NodeProps) {
+  // dynamic inputs: one target handle per declared input (input_1…input_N),
+  // spaced along the top edge so each incoming edge maps to a named arg.
+  const n = Math.max(1, Number((p.data as any)?.inputs) || 1);
   return (
     <>
-      {IN}
+      {Array.from({ length: n }).map((_, i) => (
+        <Handle
+          key={i}
+          id={`input_${i + 1}`}
+          type="target"
+          position={Position.Top}
+          isConnectable
+          style={{ background: "#d97706", left: `${((i + 1) / (n + 1)) * 100}%` }}
+        />
+      ))}
       <Card {...p} type="gate" />
       {OUT}
     </>
