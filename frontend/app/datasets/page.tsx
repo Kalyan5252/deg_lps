@@ -16,12 +16,26 @@ function singular(name: string) {
   return name;
 }
 
+function normalizeColumn(column: any, tableName: string) {
+  const name = typeof column === "string" ? column : column?.name;
+  const prefix = name?.endsWith("_id") ? name.slice(0, -3) : "";
+  const inferredPk =
+    name === "id" || (Boolean(prefix) && tableName.includes(prefix));
+  return {
+    type: "",
+    ...(typeof column === "string" ? {} : column),
+    name,
+    pk: Boolean((typeof column === "string" ? false : column?.pk) || inferredPk),
+    unique: Boolean(
+      (typeof column === "string" ? false : column?.unique) || inferredPk
+    ),
+  };
+}
+
 function schemaFromDataset(dataset: any) {
   const tables = (dataset.tables || []).map((t: any) => ({
     ...t,
-    columns: (t.columns || []).map((c: any) =>
-      typeof c === "string" ? { name: c, type: "", pk: false, unique: false } : c
-    ),
+    columns: (t.columns || []).map((c: any) => normalizeColumn(c, t.name)),
   }));
   const tableMap = new Map<string, any>(tables.map((t: any) => [t.name, t]));
   const aliases = new Map<string, string>();
@@ -70,9 +84,14 @@ function schemaFromDataset(dataset: any) {
         const target = aliases.get(base) || aliases.get(`${base}s`);
         if (
           target &&
-          tableMap.get(target)?.columns.some((tc: any) => tc.name === "id")
+          tableMap
+            .get(target)
+            ?.columns.some((tc: any) => tc.name === "id" || tc.name === col)
         ) {
-          add(t.name, col, target, "id");
+          const targetCol = tableMap
+            .get(target)
+            ?.columns.find((tc: any) => tc.name === "id" || tc.name === col);
+          add(t.name, col, target, targetCol?.name || "id");
           return;
         }
       }
@@ -180,7 +199,9 @@ export default function DatasetsPage() {
                 {d.tables.map((t: any) => (
                   <span
                     key={t.name}
-                    title={`${t.columns.join(", ")}\n${t.row_count} rows`}
+                    title={`${t.columns
+                      .map((c: any) => (typeof c === "string" ? c : c.name))
+                      .join(", ")}\n${t.row_count} rows`}
                     className="rounded-md border border-line bg-canvas px-2 py-1 font-mono text-xs text-ink"
                   >
                     {t.name}

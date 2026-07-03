@@ -231,7 +231,7 @@ def _summary(key: str) -> tuple:
         tables.append({
             "name": tname,
             "row_count": parsed["row_count"],
-            "columns": [c["name"] for c in parsed["columns"]],
+            "columns": parsed["columns"],
         })
     return tables, total
 
