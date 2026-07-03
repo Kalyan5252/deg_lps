@@ -18,6 +18,7 @@ Run::
 """
 from __future__ import annotations
 
+import json
 import os
 import time
 
@@ -138,10 +139,36 @@ def main() -> int:
         check(all(s for s in by["ds"]["subtasks"]),
               "logs: subtasks present on nodes")
 
-        # 8. node preview (Config panel "preview output")
-        r = client.get(f"/pipelines/{pid}/nodes/big/preview")
-        check(r.status_code == 200 and r.json()["row_count"] == 3,
-              "preview: big branch has 3 rows", r.text[:200])
+        # 8. LIVE node preview (POST current graph, runs node + ancestors)
+        r = client.post(f"/pipelines/{pid}/nodes/gate/preview",
+                        json={"graph": _graph(GOOD_FN)})
+        check(r.status_code == 200 and r.json()["row_count"] == 5,
+              "preview: live gate output = 5 rows", r.text[:200])
+        r = client.post(f"/pipelines/{pid}/nodes/fn/preview",
+                        json={"graph": _graph(GOOD_FN)})
+        check(r.status_code == 200 and r.json()["row_count"] == 5,
+              "preview: live function output = 5 rows", r.text[:200])
+
+        # 8b. API source with dynamic custom headers (echo via httpbin; skips
+        #     cleanly if the network/httpbin is unavailable)
+        api_graph = {
+            "nodes": [{"id": "apisrc", "type": "datasource",
+                       "position": {"x": 0, "y": 0},
+                       "data": {"kind": "api", "method": "GET",
+                                "url": "https://httpbin.org/headers",
+                                "headers": {"X-Pipe-Test": "hello-dei"}}}],
+            "edges": [],
+        }
+        try:
+            r = client.post(f"/pipelines/{pid}/nodes/apisrc/preview",
+                            json={"graph": api_graph}, timeout=25)
+            if r.status_code == 200:
+                check("hello-dei" in json.dumps(r.json().get("rows", [])),
+                      "api headers: custom header sent & echoed", r.text[:200])
+            else:
+                print(f"  [SKIP] api headers (status {r.status_code})")
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [SKIP] api headers (network unavailable: {exc})")
 
         # 9. LLM system-prompt generation (AI or graceful fallback)
         r = client.post(f"/pipelines/{pid}/llm/gen-prompt",
