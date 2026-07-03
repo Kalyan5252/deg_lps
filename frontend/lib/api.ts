@@ -157,6 +157,12 @@ export const api = {
 
   // ---- Global (public) datasets ----
   globalDatasets: () => request<any[]>("/global-datasets"),
+  globalDatasetSchema: (key: string) =>
+    request<any>(`/global-datasets/${key}/schema`),
+  globalDatasetPreview: (key: string, table: string) =>
+    request<any>(
+      `/global-datasets/${key}/tables/${encodeURIComponent(table)}/preview`
+    ),
   useGlobalDataset: (key: string) =>
     request<any>(`/global-datasets/${key}/use`, { method: "POST" }),
 

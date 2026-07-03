@@ -12,6 +12,8 @@ Northwind's ``customerID`` -> ``customer_id`` -> ``customers``).
 """
 from __future__ import annotations
 
+import csv
+import io
 import os
 import re
 from functools import lru_cache
@@ -249,3 +251,87 @@ def listing() -> list[dict]:
             "tables": tables,
         })
     return items
+
+
+def _singular(name: str) -> str:
+    if name.endswith("ies"):
+        return name[:-3] + "y"
+    if name.endswith("s"):
+        return name[:-1]
+    return name
+
+
+def schema_graph(key: str) -> dict:
+    """Return table metadata and inferred relations for a bundled dataset."""
+    tables, _total = _summary(key)
+    tmap = {t["name"]: t for t in tables}
+    if not tmap and key not in _BY_KEY:
+        raise KeyError(key)
+    names = set(tmap)
+    alias = {}
+    for n in names:
+        alias[n] = n
+        alias[_singular(n)] = n
+        alias[n + "s"] = n
+        alias[_singular(n) + "s"] = n
+
+    colmap: dict[str, list[str]] = {}
+    for t in tables:
+        for c in t["columns"]:
+            colmap.setdefault(c["name"], []).append(t["name"])
+
+    def _flag(table: str, col: str, flag: str) -> bool:
+        return any(cc["name"] == col and cc.get(flag) for cc in tmap[table]["columns"])
+
+    relations = []
+    seen: set[tuple] = set()
+
+    def add(ft: str, fc: str, tt: str, tc: str) -> None:
+        k = (ft, fc, tt)
+        if ft != tt and tt in tmap and k not in seen:
+            seen.add(k)
+            relations.append({
+                "from_table": ft,
+                "from_col": fc,
+                "to_table": tt,
+                "to_col": tc,
+            })
+
+    for t in tables:
+        for c in t["columns"]:
+            col = c["name"]
+            if col.endswith("_id") and col != "id":
+                base = col[:-3]
+                target = alias.get(base) or alias.get(base + "s")
+                if target and any(cc["name"] == "id" for cc in tmap[target]["columns"]):
+                    add(t["name"], col, target, "id")
+                    continue
+            if col.endswith("_id") or col.endswith("_name"):
+                holders = [h for h in colmap.get(col, []) if h != t["name"]]
+                owner = next((h for h in holders if _flag(h, col, "pk")), None) \
+                    or next((h for h in holders if _flag(h, col, "unique")), None)
+                if owner and not _flag(t["name"], col, "pk"):
+                    add(t["name"], col, owner, col)
+    return {"tables": tables, "relations": relations}
+
+
+def preview_table(key: str, table_name: str, limit: int = 200) -> dict:
+    """Return a ResultsTable-compatible preview for one bundled CSV table."""
+    table = next((t for t in load_tables(key) if t[0] == table_name), None)
+    if not table:
+        raise KeyError(table_name)
+    parsed = csv.DictReader(io.StringIO(table[1]))
+    columns = parsed.fieldnames or []
+    rows = []
+    for row in parsed:
+        rows.append(row)
+        if len(rows) >= limit:
+            break
+    return {
+        "ok": True,
+        "columns": columns,
+        "rows": rows,
+        "row_count": len(rows),
+        "truncated": False,
+        "duration_ms": 0,
+    }

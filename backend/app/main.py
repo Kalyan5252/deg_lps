@@ -499,6 +499,30 @@ async def list_global_datasets(user: dict = auth.CurrentUser):
     return global_datasets.listing()
 
 
+@app.get("/api/global-datasets/{key}/schema")
+async def global_dataset_schema(key: str, user: dict = auth.CurrentUser):
+    """Read-only schema graph for a public dataset before cloning it."""
+    try:
+        return global_datasets.schema_graph(key)
+    except KeyError:
+        raise HTTPException(404, "Dataset not found")
+
+
+@app.get("/api/global-datasets/{key}/tables/{table_name}/preview")
+async def global_dataset_table_preview(
+    key: str,
+    table_name: str,
+    user: dict = auth.CurrentUser,
+):
+    """Read-only preview of a public dataset table before cloning it."""
+    if not global_datasets.get(key):
+        raise HTTPException(404, "Dataset not found")
+    try:
+        return global_datasets.preview_table(key, table_name)
+    except KeyError:
+        raise HTTPException(404, "Table not found")
+
+
 @app.post("/api/global-datasets/{key}/use")
 async def use_global_dataset(key: str, user: dict = auth.CurrentUser):
     """Clone a global dataset into a fresh private track (the user's replica)."""

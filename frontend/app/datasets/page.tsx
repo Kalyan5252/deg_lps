@@ -4,13 +4,24 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { PageHeader } from "@/components/ui";
+import ResultsTable from "@/components/ResultsTable";
+import SchemaCanvas from "@/components/SchemaCanvas";
 import { api } from "@/lib/api";
+
+type DrawerTab = "schema" | "data";
 
 export default function DatasetsPage() {
   const router = useRouter();
   const [datasets, setDatasets] = useState<any[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [drawerDataset, setDrawerDataset] = useState<any | null>(null);
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>("schema");
+  const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
+  const [dataTable, setDataTable] = useState<string | null>(null);
+  const [dataResult, setDataResult] = useState<any>(null);
+  const [dataBusy, setDataBusy] = useState(false);
+  const [drawerErr, setDrawerErr] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -29,6 +40,34 @@ export default function DatasetsPage() {
     } catch (e: any) {
       setErr(e.message);
       setBusy(null);
+    }
+  }
+
+  async function explore(dataset: any) {
+    setDrawerDataset(dataset);
+    setDrawerTab("schema");
+    setSchema({ tables: [], relations: [] });
+    setDataTable(null);
+    setDataResult(null);
+    setDrawerErr(null);
+    try {
+      setSchema(await api.globalDatasetSchema(dataset.key));
+    } catch (e: any) {
+      setDrawerErr(e.message);
+    }
+  }
+
+  async function loadTable(name: string) {
+    if (!drawerDataset) return;
+    setDataTable(name);
+    setDataBusy(true);
+    setDrawerErr(null);
+    try {
+      setDataResult(await api.globalDatasetPreview(drawerDataset.key, name));
+    } catch (e: any) {
+      setDrawerErr(e.message);
+    } finally {
+      setDataBusy(false);
     }
   }
 
@@ -76,22 +115,146 @@ export default function DatasetsPage() {
                 ))}
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-xs text-sub">
-                  Creates a private copy you can query and reset freely.
-                </span>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  className="btn"
+                  onClick={() => explore(d)}
+                  disabled={!!busy}
+                >
+                  Explore Dataset
+                </button>
                 <button
                   className="btn btn-primary"
                   onClick={() => use(d.key)}
                   disabled={!!busy}
                 >
-                  {busy === d.key ? "Cloning…" : "Use dataset →"}
+                  {busy === d.key ? "Cloning…" : "Use Dataset"}
                 </button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {drawerDataset && (
+        <div className="fixed inset-0 z-50">
+          <button
+            className="absolute inset-0 cursor-default bg-ink/20"
+            aria-label="Close dataset explorer"
+            onClick={() => setDrawerDataset(null)}
+          />
+          <aside className="absolute right-0 top-0 flex h-full w-full flex-col border-l border-line bg-white shadow-2xl md:w-1/2">
+            <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-semibold">
+                  {drawerDataset.name}
+                </h2>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-sub">
+                  <span className="tag">{drawerDataset.category}</span>
+                  <span>{drawerDataset.table_count} tables</span>
+                  <span>{drawerDataset.total_rows.toLocaleString()} rows</span>
+                </div>
+              </div>
+              <button
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sub hover:bg-canvas hover:text-ink"
+                onClick={() => setDrawerDataset(null)}
+                aria-label="Close dataset explorer"
+                title="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 border-b border-line px-4">
+              {(["schema", "data"] as DrawerTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setDrawerTab(tab)}
+                  className={`border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                    drawerTab === tab
+                      ? "border-accent text-ink"
+                      : "border-transparent text-sub hover:text-ink"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {drawerErr && (
+              <div className="border-b border-bad/20 bg-bad/5 px-4 py-2 text-xs text-bad">
+                {drawerErr}
+              </div>
+            )}
+
+            {drawerTab === "schema" && (
+              <div className="min-h-0 flex-1">
+                {schema.tables.length === 0 && !drawerErr ? (
+                  <div className="flex h-full items-center justify-center text-sm text-sub">
+                    Loading schema…
+                  </div>
+                ) : (
+                  <SchemaCanvas
+                    tables={schema.tables}
+                    relations={schema.relations}
+                    storageKey={`sqlforge_global_schema_pos_${drawerDataset.key}`}
+                  />
+                )}
+              </div>
+            )}
+
+            {drawerTab === "data" && (
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="flex flex-wrap gap-1.5 border-b border-line p-3">
+                  {(schema.tables.length ? schema.tables : drawerDataset.tables).map(
+                    (t: any) => (
+                      <button
+                        key={t.name}
+                        onClick={() => loadTable(t.name)}
+                        className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-colors ${
+                          dataTable === t.name
+                            ? "border-accent bg-accent text-white"
+                            : "border-line bg-white text-ink hover:bg-canvas"
+                        }`}
+                        title={`${t.row_count} rows`}
+                      >
+                        {t.name}
+                        <span
+                          className={`ml-1.5 ${
+                            dataTable === t.name ? "text-white/70" : "text-sub"
+                          }`}
+                        >
+                          {t.row_count}
+                        </span>
+                      </button>
+                    )
+                  )}
+                </div>
+                <div className="min-h-0 flex-1 overflow-auto">
+                  {!dataTable ? (
+                    <div className="flex h-full items-center justify-center px-4 text-center text-sm text-sub">
+                      Pick a table to browse its rows (first 200).
+                    </div>
+                  ) : dataBusy ? (
+                    <div className="p-4 text-sm text-sub">
+                      Loading {dataTable}…
+                    </div>
+                  ) : (
+                    <>
+                      {dataResult?.ok && (
+                        <div className="border-b border-line px-3 py-1.5 text-xs text-sub">
+                          {dataResult.row_count} rows shown
+                        </div>
+                      )}
+                      <ResultsTable result={dataResult} />
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
     </Shell>
   );
 }
