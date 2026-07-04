@@ -533,9 +533,9 @@ async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
     elif ntype == "gate":
         return await _run_gate(conn, schema, nid, node, edges, all_rows, by_handle)
     elif ntype == "llm":
-        subtasks, out_rows = _run_llm_stub(data, all_rows)
+        subtasks, out_rows = await _run_llm(data, all_rows)
     elif ntype == "output":
-        subtasks, out_rows = _run_output_stub(data, all_rows)
+        subtasks, out_rows = await _run_output(data, all_rows)
     else:
         subtasks, out_rows = [], all_rows
     await _write_table(conn, schema, f"node_{nid}", out_rows)

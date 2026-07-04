@@ -37,7 +37,6 @@ function Builder({ pipelineId }: { pipelineId: string }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [panelNode, setPanelNode] = useState<any | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [nodeMenu, setNodeMenu] = useState<
     { x: number; y: number; nodeId: string } | null

@@ -114,12 +114,19 @@ export default function ConfigPanel({
   const [intent, setIntent] = useState("");
   const [catalog, setCatalog] = useState<any[]>([]);
   const [hdrs, setHdrs] = useState<{ k: string; v: string }[]>([]);
+  const [bodyFields, setBodyFields] = useState<{ k: string; v: string }[]>([]);
 
   useEffect(() => {
     setPreview(null);
     setMsg(null);
     const h = (node?.data?.headers || {}) as Record<string, string>;
     setHdrs(Object.entries(h).map(([k, v]) => ({ k, v: String(v) })));
+    setBodyFields(
+      (node?.data?.body_fields || []).map((f: any) => ({
+        k: f.key ?? "",
+        v: f.value ?? "",
+      }))
+    );
   }, [node?.id]);
 
   useEffect(() => {
@@ -189,6 +196,15 @@ export default function ConfigPanel({
       if (k.trim()) obj[k.trim()] = v;
     });
     set({ headers: obj });
+  }
+
+  function syncBodyFields(next: { k: string; v: string }[]) {
+    setBodyFields(next);
+    set({
+      body_fields: next
+        .filter((f) => f.k.trim())
+        .map((f) => ({ key: f.k, value: f.v })),
+    });
   }
 
   const outEdges = edges.filter((e) => e.source === node.id);
@@ -403,27 +419,88 @@ export default function ConfigPanel({
                   </div>
                 </div>
 
-                {data.method === "POST" && (
-                  <Field label="Body (JSON)">
-                    <textarea
-                      className={`${inputCls} h-20 font-mono`}
-                      placeholder='{"key": "value"}'
-                      value={
-                        typeof data.body === "string"
-                          ? data.body
-                          : data.body
-                          ? JSON.stringify(data.body, null, 2)
-                          : ""
-                      }
-                      onChange={(e) => {
-                        try {
-                          set({ body: JSON.parse(e.target.value) });
-                        } catch {
-                          set({ body: e.target.value });
-                        }
-                      }}
-                    />
-                  </Field>
+                {data.method && data.method !== "GET" && (
+                  <>
+                    <Field label="Body type">
+                      <select
+                        className={inputCls}
+                        value={data.body_type || "none"}
+                        onChange={(e) => set({ body_type: e.target.value })}
+                      >
+                        <option value="none">None</option>
+                        <option value="json">JSON</option>
+                        <option value="urlencoded">x-www-form-urlencoded</option>
+                        <option value="formdata">form-data</option>
+                        <option value="raw">Raw</option>
+                        <option value="xml">XML</option>
+                      </select>
+                    </Field>
+
+                    {data.body_type === "json" && (
+                      <Field label="JSON body">
+                        <textarea
+                          className={`${inputCls} h-24 font-mono`}
+                          placeholder='{"key": "value"}'
+                          value={
+                            typeof data.body === "string"
+                              ? data.body
+                              : data.body
+                              ? JSON.stringify(data.body, null, 2)
+                              : ""
+                          }
+                          onChange={(e) => {
+                            try {
+                              set({ body: JSON.parse(e.target.value) });
+                            } catch {
+                              set({ body: e.target.value });
+                            }
+                          }}
+                        />
+                      </Field>
+                    )}
+
+                    {(data.body_type === "urlencoded" ||
+                      data.body_type === "formdata") && (
+                      <div>
+                        <div className="mb-1 text-xs font-medium text-sub">
+                          {data.body_type === "formdata"
+                            ? "Form-data fields"
+                            : "URL-encoded fields"}
+                        </div>
+                        <KVList
+                          rows={bodyFields}
+                          onChange={syncBodyFields}
+                          addLabel="+ Add field"
+                        />
+                      </div>
+                    )}
+
+                    {(data.body_type === "raw" || data.body_type === "xml") && (
+                      <>
+                        <Field
+                          label={data.body_type === "xml" ? "XML body" : "Raw body"}
+                        >
+                          <textarea
+                            className={`${inputCls} h-24 font-mono`}
+                            value={data.raw_body || ""}
+                            onChange={(e) => set({ raw_body: e.target.value })}
+                          />
+                        </Field>
+                        {data.body_type === "raw" && (
+                          <Field label="Content-Type">
+                            <input
+                              className={inputCls}
+                              placeholder="text/plain"
+                              value={data.raw_content_type || ""}
+                              onChange={(e) =>
+                                set({ raw_content_type: e.target.value })
+                              }
+                            />
+                          </Field>
+                        )}
+                      </>
+                    )}
+                  </>
                 )}
               </>
             )}
