@@ -171,6 +171,17 @@ async def _run() -> None:
         check(prev["ok"] and prev["row_count"] == 3,
               "preview: node_preview returns branch rows", f"got {prev['row_count']}")
 
+        # 7b. live preview must NOT deliver to an output node's external target
+        # (the output points at an unreachable URL: a real POST would raise;
+        # with delivery skipped the preview succeeds and rows pass through)
+        wired = _graph()
+        for n in wired["nodes"]:
+            if n["id"] == "big":
+                n["data"]["target"] = "http://127.0.0.1:9/never-deliver"
+        prev = await pipelines.preview_node(pid, wired, "big")
+        check(prev["ok"] and prev["row_count"] == 3,
+              "preview: output delivery skipped in live preview", f"got {prev}")
+
         # 8. ERROR PATH — a broken function fails and skips downstream
         bad = _graph()
         bad["nodes"][1]["data"]["code"] = (

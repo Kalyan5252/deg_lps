@@ -15,7 +15,7 @@ import asyncio
 import csv
 import io
 import json
-from datetime import date, datetime
+import time
 from decimal import Decimal
 from typing import Any
 
@@ -325,77 +325,6 @@ async def _rows_from_api(data: dict) -> list[dict]:
     return _flatten(payload)[:MAX_ROWS]
 
 
-def _dig(obj: Any, path: str) -> Any:
-    """Resolve a dotted path (with numeric indices) into a nested structure."""
-    cur = obj
-    for part in path.split("."):
-        if part == "":
-            continue
-        if isinstance(cur, list):
-            try:
-                cur = cur[int(part)]
-            except (ValueError, IndexError):
-                return None
-        elif isinstance(cur, dict):
-            cur = cur.get(part)
-        else:
-            return None
-    return cur
-
-
-def _ws_rows(payload: Any, path: str | None) -> list[dict]:
-    target = _dig(payload, path) if path else payload
-    return _flatten(target)
-
-
-async def _rows_from_ws(data: dict) -> list[dict]:
-    """Connect to a WebSocket feed, subscribe, and collect a bounded window.
-
-    The engine is batch, so a live source is treated as a "connector": we open
-    the socket, send the subscribe payload(s), collect messages until we hit
-    ``max_messages`` or ``max_seconds``, then hand those rows to the pipeline.
-    """
-    import time
-
-    import websockets  # lazy: only needed for WS sources
-
-    url = (data.get("ws_url") or "").strip()
-    if not url:
-        raise ValueError("WebSocket source needs a ws_url.")
-    subs = data.get("subscribe") or []
-    if isinstance(subs, str):
-        subs = [ln for ln in subs.splitlines() if ln.strip()]
-    max_messages = int(data.get("max_messages") or 20)
-    max_seconds = float(data.get("max_seconds") or 10)
-    path = (data.get("json_path") or "").strip() or None
-
-    rows: list[dict] = []
-    try:
-        async with websockets.connect(url, open_timeout=10, max_size=2 ** 22) as ws:
-            for s in subs:
-                await ws.send(s if isinstance(s, str) else json.dumps(s))
-            deadline = time.monotonic() + max_seconds
-            while len(rows) < max_messages and time.monotonic() < deadline:
-                remaining = deadline - time.monotonic()
-                try:
-                    msg = await asyncio.wait_for(ws.recv(), timeout=max(0.1, remaining))
-                except asyncio.TimeoutError:
-                    break
-                try:
-                    payload = json.loads(msg)
-                except (json.JSONDecodeError, TypeError):
-                    payload = {"raw": str(msg)}
-                for r in _ws_rows(payload, path):
-                    rows.append(r)
-                    if len(rows) >= max_messages:
-                        break
-    except ValueError:
-        raise
-    except Exception as exc:  # noqa: BLE001
-        raise ValueError(f"WebSocket error: {exc}")
-    return rows[:max_messages]
-
-
 async def _rows_from_postgres(data: dict) -> list[dict]:
     import asyncpg
     dsn = (data.get("dsn") or "").strip()
@@ -521,9 +450,10 @@ async def _gather_inputs(schema: str, node_map: dict, edges: list[dict], nid: st
 async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
                         edges: list[dict], all_rows: list[dict],
                         by_handle: dict[str, list[dict]],
-                        user_id: int | None = None):
+                        user_id: int | None = None, preview: bool = False):
     """Run a single node into the sandbox schema. Returns (subtasks, out_rows).
-    Shared by the full run and by live previews."""
+    Shared by the full run and by live previews. With ``preview=True`` output
+    nodes pass rows through WITHOUT delivering to their external target."""
     nid = node["id"]
     ntype = node.get("type", "?")
     data = node.get("data") or {}
@@ -536,25 +466,16 @@ async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
     elif ntype == "llm":
         subtasks, out_rows = await _run_llm(data, all_rows, user_id=user_id)
     elif ntype == "output":
-        subtasks, out_rows = await _run_output(data, all_rows)
+        if preview:
+            subtasks, out_rows = (
+                [{"label": "preview — delivery skipped", "status": "skipped"}],
+                all_rows)
+        else:
+            subtasks, out_rows = await _run_output(data, all_rows)
     else:
         subtasks, out_rows = [], all_rows
     await _write_table(conn, schema, f"node_{nid}", out_rows)
     return subtasks, out_rows
-
-
-def _ancestors(node_id: str, edges: list[dict]) -> set[str]:
-    parents: dict[str, list[str]] = {}
-    for e in edges:
-        parents.setdefault(e["target"], []).append(e["source"])
-    seen: set[str] = set()
-    stack = [node_id]
-    while stack:
-        for p in parents.get(stack.pop(), []):
-            if p not in seen:
-                seen.add(p)
-                stack.append(p)
-    return seen
 
 
 async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
@@ -580,7 +501,7 @@ async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
         incoming = [e for e in edges if e["target"] == nid]
         upstream_failed = any(e["source"] in failed or e["source"] not in produced
                               for e in incoming) and incoming
-        t0 = datetime.utcnow()
+        t0 = time.perf_counter()
 
         async with db.pool().acquire() as conn:
             if upstream_failed:
@@ -599,14 +520,14 @@ async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
                     user_id=user_id)
                 produced.add(nid)
                 ok_count += 1
-                dur = (datetime.utcnow() - t0).total_seconds() * 1000
+                dur = (time.perf_counter() - t0) * 1000
                 await _log(conn, run_id, node, task=f"Run {label}",
                            subtasks=subtasks, status="success",
                            rows_in=len(all_rows), rows_out=len(out_rows),
                            duration_ms=round(dur, 1))
             except Exception as exc:  # noqa: BLE001
                 failed.add(nid)
-                dur = (datetime.utcnow() - t0).total_seconds() * 1000
+                dur = (time.perf_counter() - t0) * 1000
                 await _log(conn, run_id, node, task=f"Run {label}",
                            subtasks=subtasks + [{"label": "error", "status": "error"}],
                            status="error", rows_in=len(all_rows),
@@ -860,7 +781,7 @@ async def preview_node(pipeline_id: int, graph: dict, node_id: str,
             node = node_map[nid]
             all_rows, by_handle = await _gather_inputs(schema, node_map, sub_edges, nid)
             await _execute_node(pipeline_id, conn, schema, node, sub_edges,
-                                all_rows, by_handle)
+                                all_rows, by_handle, preview=True)
     return await node_preview(pipeline_id, node_id, limit)
 
 
