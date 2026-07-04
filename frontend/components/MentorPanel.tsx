@@ -16,11 +16,13 @@ export default function MentorPanel({
   currentSql,
   lastResult,
   onClose,
+  hideHeader = false,
 }: {
   scenarioKey: string;
   currentSql: string;
   lastResult: any;
   onClose?: () => void;
+  hideHeader?: boolean;
 }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -61,26 +63,28 @@ export default function MentorPanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
-          AI
-        </div>
-        <div>
-          <div className="text-sm font-semibold leading-none">Senior Mentor</div>
-          <div className="mt-0.5 text-xs text-sub">
-            Guides, never hands over the answer
+      {!hideHeader && (
+        <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
+            AI
           </div>
+          <div>
+            <div className="text-sm font-semibold leading-none">Senior Mentor</div>
+            <div className="mt-0.5 text-xs text-sub">
+              Guides, never hands over the answer
+            </div>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              title="Close mentor panel"
+              className="ml-auto flex h-6 w-6 items-center justify-center rounded text-sub hover:bg-canvas hover:text-ink"
+            >
+              ×
+            </button>
+          )}
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            title="Close mentor panel"
-            className="ml-auto flex h-6 w-6 items-center justify-center rounded text-sub hover:bg-canvas hover:text-ink"
-          >
-            ×
-          </button>
-        )}
-      </div>
+      )}
 
       <div className="flex-1 space-y-3 overflow-auto px-4 py-4">
         {messages.length === 0 && (

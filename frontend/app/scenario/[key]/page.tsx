@@ -17,6 +17,7 @@ import { registerSqlCompletion } from "@/lib/sqlCompletion";
 
 type Tab = "results" | "plan" | "evaluation" | "history";
 type LeftTab = "incident" | "schema" | "data";
+type RightTab = "chat" | "review";
 type QueryTab = { id: string; name: string; sql: string };
 
 function walkPlan(node: any, depth = 0, out: any[] = []) {
@@ -39,6 +40,7 @@ export default function ScenarioPage() {
   const [showBrief, setShowBrief] = useState(true);
   const [showMentor, setShowMentor] = useState(true);
   const [leftTab, setLeftTab] = useState<LeftTab>("incident");
+  const [rightTab, setRightTab] = useState<RightTab>("chat");
 
   // Resizable panel sizes (IDE-style draggable dividers), in px
   const [briefW, setBriefW] = useState(320);
@@ -61,6 +63,11 @@ export default function ScenarioPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const tabsKey = `sqlforge_tabs_${key}`;
+  const shortcutsRef = useRef<{
+    run: () => void;
+    submit: () => void;
+    togglePanel: (which: "brief" | "mentor") => void;
+  } | null>(null);
 
   useEffect(() => {
     schemaRef.current = schema;
@@ -88,6 +95,39 @@ export default function ScenarioPage() {
   useEffect(() => {
     localStorage.setItem("sqlforge_outputH", String(outputH));
   }, [outputH]);
+
+  useEffect(() => {
+    shortcutsRef.current = { run, submit, togglePanel };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const actions = shortcutsRef.current;
+      if (!actions) return;
+      switch (e.key) {
+        case "'":
+          e.preventDefault();
+          actions.run();
+          break;
+        case "Enter":
+          e.preventDefault();
+          actions.submit();
+          break;
+        case "[":
+          e.preventDefault();
+          e.stopPropagation();
+          actions.togglePanel("brief");
+          break;
+        case "]":
+          e.preventDefault();
+          e.stopPropagation();
+          actions.togglePanel("mentor");
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
 
   useEffect(() => {
     api
@@ -233,6 +273,9 @@ export default function ScenarioPage() {
       const ev = await api.submit(key, sql);
       setEvaluation(ev);
       setTab("evaluation");
+      setRightTab("review");
+      setShowMentor(true);
+      localStorage.setItem("sqlforge_panel_mentor", "1");
       if (ev.result) setResult(ev.result);
       const d = await api.scenario(key);
       setData(d);
@@ -632,14 +675,67 @@ export default function ScenarioPage() {
           {showMentor && (
             <aside
               style={{ width: mentorW }}
-              className="shrink-0 border-l border-line bg-white"
+              className="flex min-h-0 shrink-0 flex-col border-l border-line bg-white"
             >
-              <MentorPanel
-                scenarioKey={key}
-                currentSql={sql}
-                lastResult={result}
-                onClose={() => togglePanel("mentor")}
-              />
+              <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
+                  AI
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold leading-none">
+                    AI Mentor
+                  </div>
+                  <div className="mt-0.5 text-xs text-sub">
+                    Conversation &amp; incident review
+                  </div>
+                </div>
+                <button
+                  onClick={() => togglePanel("mentor")}
+                  title="Close AI panel"
+                  className="ml-auto flex h-6 w-6 items-center justify-center rounded text-sub hover:bg-canvas hover:text-ink"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex items-center gap-1 border-b border-line px-3">
+                {(["chat", "review"] as RightTab[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setRightTab(t)}
+                    className={`relative border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                      rightTab === t
+                        ? "border-accent text-ink"
+                        : "border-transparent text-sub hover:text-ink"
+                    }`}
+                  >
+                    {t}
+                    {t === "review" && evaluation && (
+                      <span
+                        className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full ${
+                          evaluation.passed ? "bg-ok" : "bg-warn"
+                        }`}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="min-h-0 flex-1">
+                <div className={rightTab === "chat" ? "h-full" : "hidden"}>
+                  <MentorPanel
+                    scenarioKey={key}
+                    currentSql={sql}
+                    lastResult={result}
+                    hideHeader
+                  />
+                </div>
+                <div
+                  className={
+                    rightTab === "review" ? "h-full overflow-auto" : "hidden"
+                  }
+                >
+                  <EvaluationView evaluation={evaluation} />
+                </div>
+              </div>
             </aside>
           )}
         </div>
