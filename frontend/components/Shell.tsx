@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { clearSession, getUser, getToken, User } from "@/lib/api";
+import { clearSession, getUser, getToken, api, User } from "@/lib/api";
+import OllamaSetupModal from "@/components/OllamaSetupModal";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: "▦" },
@@ -25,16 +26,36 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [showAiSetup, setShowAiSetup] = useState(false);
 
   useEffect(() => {
     if (!getToken()) {
       router.replace("/login");
       return;
     }
-    setUser(getUser());
+    const u = getUser();
+    setUser(u);
     setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
     setReady(true);
+
+    // First-run: prompt to connect Ollama AI if no key yet (per-user dismiss).
+    const dismissKey = `ollama_setup_dismissed_${u?.email || ""}`;
+    if (localStorage.getItem(dismissKey) !== "1") {
+      api
+        .aiSettings()
+        .then((s) => {
+          if (!s.has_api_key) setShowAiSetup(true);
+        })
+        .catch(() => {});
+    }
   }, [router]);
+
+  function closeAiSetup() {
+    if (user?.email) {
+      localStorage.setItem(`ollama_setup_dismissed_${user.email}`, "1");
+    }
+    setShowAiSetup(false);
+  }
 
   function toggle() {
     setCollapsed((c) => {
@@ -150,6 +171,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <main className="min-w-0 flex-1">{children}</main>
+
+      {showAiSetup && user && (
+        <OllamaSetupModal
+          userName={user.display_name}
+          onClose={closeAiSetup}
+        />
+      )}
     </div>
   );
 }
