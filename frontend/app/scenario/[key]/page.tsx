@@ -379,10 +379,15 @@ export default function ScenarioPage() {
 
         <div className="flex min-h-0 flex-1">
           {/* Briefing */}
-          {showBrief && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showBrief ? briefW : 0 }}
+          >
             <aside
               style={{ width: briefW }}
-              className="flex shrink-0 flex-col overflow-hidden border-r border-line bg-white"
+              className={`flex h-full flex-col overflow-hidden border-r border-line bg-white transition-transform duration-300 ease-in-out ${
+                showBrief ? "translate-x-0" : "-translate-x-full"
+              }`}
             >
               <div className="flex items-center gap-1 border-b border-line px-3">
                 {(["incident", "schema", "data"] as LeftTab[]).map((t) => (
@@ -504,7 +509,7 @@ export default function ScenarioPage() {
                 </div>
               )}
             </aside>
-          )}
+          </div>
           {showBrief && (
             <Splitter
               axis="x"
@@ -682,10 +687,15 @@ export default function ScenarioPage() {
               }
             />
           )}
-          {showMentor && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showMentor ? mentorW : 0 }}
+          >
             <aside
               style={{ width: mentorW }}
-              className="flex min-h-0 shrink-0 flex-col border-l border-line bg-white"
+              className={`flex h-full min-h-0 flex-col border-l border-line bg-white transition-transform duration-300 ease-in-out ${
+                showMentor ? "translate-x-0" : "translate-x-full"
+              }`}
             >
               <div className="flex items-center gap-2 border-b border-line px-4 py-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
@@ -742,7 +752,7 @@ export default function ScenarioPage() {
                 </div>
               </div>
             </aside>
-          )}
+          </div>
         </div>
       </div>
     </Shell>
