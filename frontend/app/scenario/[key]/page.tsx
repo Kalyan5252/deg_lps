@@ -8,7 +8,7 @@ import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
 import RunningState from "@/components/RunningState";
-import MentorPanel from "@/components/MentorPanel";
+import MentorChatWindow from "@/components/MentorChatWindow";
 import SchemaCanvas from "@/components/SchemaCanvas";
 import Splitter from "@/components/Splitter";
 import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
@@ -127,6 +127,16 @@ export default function ScenarioPage() {
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
+
+  useEffect(() => {
+    const onSend = () => {
+      setShowMentor(true);
+      setRightTab("chat");
+      localStorage.setItem("sqlforge_panel_mentor", "1");
+    };
+    window.addEventListener("mentor:send", onSend);
+    return () => window.removeEventListener("mentor:send", onSend);
   }, []);
 
   useEffect(() => {
@@ -721,12 +731,7 @@ export default function ScenarioPage() {
               </div>
               <div className="min-h-0 flex-1">
                 <div className={rightTab === "chat" ? "h-full" : "hidden"}>
-                  <MentorPanel
-                    scenarioKey={key}
-                    currentSql={sql}
-                    lastResult={result}
-                    hideHeader
-                  />
+                  <MentorChatWindow />
                 </div>
                 <div
                   className={

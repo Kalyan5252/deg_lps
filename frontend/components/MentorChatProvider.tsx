@@ -14,6 +14,8 @@ export type Msg = { role: string; content: string };
 
 type Ctx = {
   trackId: string | null;
+  scenarioKey: string | null;
+  active: boolean;
   messages: Msg[];
   busy: boolean;
   send: (text: string) => Promise<void>;
@@ -35,6 +37,8 @@ export function useMentorChat(): Ctx {
 export function MentorChatProvider({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const trackId = (path?.match(/^\/tracks\/(\d+)/) || [])[1] || null;
+  const scenarioKey = (path?.match(/^\/scenario\/([^/?#]+)/) || [])[1] || null;
+  const active = Boolean(trackId || scenarioKey);
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [busy, setBusy] = useState(false);
@@ -42,15 +46,17 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (trackId && getToken()) {
       api.trackChatThread(trackId).then(setMessages).catch(() => {});
+    } else if (scenarioKey && getToken()) {
+      api.mentorThread(scenarioKey).then(setMessages).catch(() => {});
     } else {
       setMessages([]);
     }
-  }, [trackId]);
+  }, [trackId, scenarioKey]);
 
   const send = useCallback(
     async (text: string) => {
       const msg = text.trim();
-      if (!msg || busy || !trackId) return;
+      if (!msg || busy || !active) return;
       // Let the workbench know a prompt was sent, so it can reveal the agent
       // panel (where the reply streams in) even if the user had it collapsed.
       if (typeof window !== "undefined") {
@@ -64,14 +70,23 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
       ]);
       setBusy(true);
       try {
-        await api.trackChatStream(trackId, msg, (delta) => {
+        if (trackId) {
+          await api.trackChatStream(trackId, msg, (delta) => {
+            setMessages((m) => {
+              const copy = [...m];
+              const last = copy[copy.length - 1];
+              copy[copy.length - 1] = { ...last, content: last.content + delta };
+              return copy;
+            });
+          });
+        } else if (scenarioKey) {
+          const { reply } = await api.mentor(scenarioKey, msg);
           setMessages((m) => {
             const copy = [...m];
-            const last = copy[copy.length - 1];
-            copy[copy.length - 1] = { ...last, content: last.content + delta };
+            copy[copy.length - 1] = { role: "assistant", content: reply };
             return copy;
           });
-        });
+        }
       } catch (e: any) {
         setMessages((m) => {
           const copy = [...m];
@@ -90,7 +105,7 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
         }
       }
     },
-    [busy, trackId]
+    [active, busy, scenarioKey, trackId]
   );
 
   const clear = useCallback(async () => {
@@ -99,7 +114,9 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
   }, [trackId]);
 
   return (
-    <MentorChatCtx.Provider value={{ trackId, messages, busy, send, clear }}>
+    <MentorChatCtx.Provider
+      value={{ trackId, scenarioKey, active, messages, busy, send, clear }}
+    >
       {children}
     </MentorChatCtx.Provider>
   );

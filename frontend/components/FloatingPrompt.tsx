@@ -17,7 +17,7 @@ const LS = {
 };
 
 export default function FloatingPrompt() {
-  const { send, busy, trackId } = useMentorChat();
+  const { send, busy, active: promptActive } = useMentorChat();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [vp, setVp] = useState({ w: 1280, h: 800 });
@@ -163,7 +163,7 @@ export default function FloatingPrompt() {
 
   async function submit() {
     const text = input.trim();
-    if (!text || busy || !trackId) return;
+    if (!text || busy || !promptActive) return;
     if (listening) stopVoice();
     setInput("");
     baseRef.current = "";
@@ -179,7 +179,7 @@ export default function FloatingPrompt() {
     setMenu(null);
   }
 
-  if (!mounted) return null;
+  if (!mounted || !promptActive) return null;
 
   const active = listening || busy;
   // geometry morphs between the orb (closed) and the bar (open)
@@ -321,15 +321,15 @@ export default function FloatingPrompt() {
                 submit();
               }
             }}
-            placeholder={trackId ? "Ask your mentor…" : "Open a track to chat"}
-            disabled={!trackId}
+            placeholder={promptActive ? "Ask your mentor…" : "Open a track or incident to chat"}
+            disabled={!promptActive}
             className="max-h-40 min-h-[36px] flex-1 resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/45 outline-none focus:border-white/40 disabled:opacity-50"
           />
 
           {/* submit */}
           <button
             onClick={submit}
-            disabled={busy || !input.trim() || !trackId}
+            disabled={busy || !input.trim() || !promptActive}
             className="h-9 shrink-0 rounded-lg bg-white/90 px-4 text-sm font-medium text-ink transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-white/30 disabled:text-white/60"
           >
             {busy ? "…" : "Send"}
