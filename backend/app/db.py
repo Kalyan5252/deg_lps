@@ -159,6 +159,16 @@ CREATE TABLE IF NOT EXISTS app.mentor_messages (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS app.ai_settings (
+    user_id      BIGINT PRIMARY KEY REFERENCES app.users(id) ON DELETE CASCADE,
+    provider     TEXT NOT NULL DEFAULT 'ollama_cloud',
+    base_url     TEXT NOT NULL DEFAULT 'https://ollama.com',
+    model        TEXT NOT NULL DEFAULT 'gemma4:31b-cloud',
+    api_key_enc  TEXT,
+    enabled      BOOLEAN NOT NULL DEFAULT false,
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ---- Custom Tracks (user-imported datasets + AI interactive learning) ----
 
 CREATE TABLE IF NOT EXISTS app.custom_tracks (

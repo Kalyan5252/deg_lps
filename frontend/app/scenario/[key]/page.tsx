@@ -3,15 +3,21 @@
 import Editor from "@monaco-editor/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
 import RunningState from "@/components/RunningState";
-import MentorPanel from "@/components/MentorPanel";
+import MentorChatWindow from "@/components/MentorChatWindow";
+import SchemaCanvas from "@/components/SchemaCanvas";
+import Splitter from "@/components/Splitter";
+import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
 import { api } from "@/lib/api";
+import { registerSqlCompletion } from "@/lib/sqlCompletion";
 
 type Tab = "results" | "plan" | "evaluation" | "history";
+type LeftTab = "incident" | "schema" | "data";
+type RightTab = "chat" | "review";
 type QueryTab = { id: string; name: string; sql: string };
 
 function walkPlan(node: any, depth = 0, out: any[] = []) {
@@ -33,11 +39,19 @@ export default function ScenarioPage() {
   // Adjustable panels (Cursor-style)
   const [showBrief, setShowBrief] = useState(true);
   const [showMentor, setShowMentor] = useState(true);
+  const [leftTab, setLeftTab] = useState<LeftTab>("incident");
+  const [rightTab, setRightTab] = useState<RightTab>("chat");
 
   // Resizable panel sizes (IDE-style draggable dividers), in px
   const [briefW, setBriefW] = useState(320);
   const [mentorW, setMentorW] = useState(384);
   const [outputH, setOutputH] = useState(300);
+  const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
+  const schemaRef = useRef<any>({ tables: [] });
+  const completionRef = useRef<{ dispose: () => void } | null>(null);
+  const [dataTable, setDataTable] = useState<string | null>(null);
+  const [dataResult, setDataResult] = useState<any>(null);
+  const [dataBusy, setDataBusy] = useState(false);
 
   const [result, setResult] = useState<any>(null);
   const [plan, setPlan] = useState<any>(null);
@@ -49,6 +63,16 @@ export default function ScenarioPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const tabsKey = `sqlforge_tabs_${key}`;
+  const shortcutsRef = useRef<{
+    run: () => void;
+    submit: () => void;
+    togglePanel: (which: "brief" | "mentor") => void;
+  } | null>(null);
+
+  useEffect(() => {
+    schemaRef.current = schema;
+  }, [schema]);
+  useEffect(() => () => completionRef.current?.dispose(), []);
 
   useEffect(() => {
     setShowBrief(localStorage.getItem("sqlforge_panel_brief") !== "0");
@@ -71,6 +95,49 @@ export default function ScenarioPage() {
   useEffect(() => {
     localStorage.setItem("sqlforge_outputH", String(outputH));
   }, [outputH]);
+
+  useEffect(() => {
+    shortcutsRef.current = { run, submit, togglePanel };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const actions = shortcutsRef.current;
+      if (!actions) return;
+      switch (e.key) {
+        case "'":
+          e.preventDefault();
+          actions.run();
+          break;
+        case "Enter":
+          e.preventDefault();
+          actions.submit();
+          break;
+        case "[":
+          e.preventDefault();
+          e.stopPropagation();
+          actions.togglePanel("brief");
+          break;
+        case "]":
+          e.preventDefault();
+          e.stopPropagation();
+          actions.togglePanel("mentor");
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
+
+  useEffect(() => {
+    const onSend = () => {
+      setShowMentor(true);
+      setRightTab("chat");
+      localStorage.setItem("sqlforge_panel_mentor", "1");
+    };
+    window.addEventListener("mentor:send", onSend);
+    return () => window.removeEventListener("mentor:send", onSend);
+  }, []);
 
   useEffect(() => {
     api
@@ -98,6 +165,10 @@ export default function ScenarioPage() {
           setActiveId(t.id);
         }
       })
+      .catch((e) => setErr(e.message));
+    api
+      .scenarioSchema(key)
+      .then(setSchema)
       .catch((e) => setErr(e.message));
   }, [key]);
 
@@ -146,6 +217,19 @@ export default function ScenarioPage() {
         localStorage.setItem("sqlforge_panel_mentor", s ? "0" : "1");
         return !s;
       });
+    }
+  }
+
+  async function loadTable(name: string) {
+    setDataTable(name);
+    setDataBusy(true);
+    setErr(null);
+    try {
+      setDataResult(await api.run(key, `SELECT * FROM ${name} LIMIT 200`));
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setDataBusy(false);
     }
   }
 
@@ -199,6 +283,9 @@ export default function ScenarioPage() {
       const ev = await api.submit(key, sql);
       setEvaluation(ev);
       setTab("evaluation");
+      setRightTab("review");
+      setShowMentor(true);
+      localStorage.setItem("sqlforge_panel_mentor", "1");
       if (ev.result) setResult(ev.result);
       const d = await api.scenario(key);
       setData(d);
@@ -264,7 +351,7 @@ export default function ScenarioPage() {
                 side="left"
                 active={showBrief}
                 onClick={() => togglePanel("brief")}
-                title="Toggle briefing panel"
+                title="Toggle incident / schema / data panel"
               />
               <PanelToggle
                 side="right"
@@ -292,50 +379,137 @@ export default function ScenarioPage() {
 
         <div className="flex min-h-0 flex-1">
           {/* Briefing */}
-          {showBrief && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showBrief ? briefW : 0 }}
+          >
             <aside
               style={{ width: briefW }}
-              className="shrink-0 overflow-auto border-r border-line bg-white px-5 py-5"
+              className={`flex h-full flex-col overflow-hidden border-r border-line bg-white transition-transform duration-300 ease-in-out ${
+                showBrief ? "translate-x-0" : "-translate-x-full"
+              }`}
             >
-              <Section title="Incident">
-                <p className="text-sm leading-relaxed text-ink">
-                  {scenario.story}
-                </p>
-              </Section>
-              <Section title="Objectives">
-                <ul className="space-y-1.5">
-                  {scenario.objectives.map((o: string, i: number) => (
-                    <li key={i} className="flex gap-2 text-sm">
-                      <span className="text-sub">{i + 1}.</span>
-                      {o}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-              <Section title="Constraints">
-                <ul className="space-y-1.5">
-                  {scenario.constraints.map((c: string, i: number) => (
-                    <li key={i} className="flex gap-2 text-sm text-sub">
-                      <span>•</span>
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-              <Section title="Tables">
-                <div className="flex flex-wrap gap-1.5">
-                  {scenario.tables.map((t: string) => (
-                    <span key={t} className="tag font-mono">
-                      {t}
-                    </span>
-                  ))}
+              <div className="flex items-center gap-1 border-b border-line px-3">
+                {(["incident", "schema", "data"] as LeftTab[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setLeftTab(t)}
+                    className={`border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                      leftTab === t
+                        ? "border-accent text-ink"
+                        : "border-transparent text-sub hover:text-ink"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {leftTab === "incident" && (
+                <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
+                  <Section title="Incident">
+                    <p className="text-sm leading-relaxed text-ink">
+                      {scenario.story}
+                    </p>
+                  </Section>
+                  <Section title="Objectives">
+                    <ul className="space-y-1.5">
+                      {scenario.objectives.map((o: string, i: number) => (
+                        <li key={i} className="flex gap-2 text-sm">
+                          <span className="text-sub">{i + 1}.</span>
+                          {o}
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                  <Section title="Constraints">
+                    <ul className="space-y-1.5">
+                      {scenario.constraints.map((c: string, i: number) => (
+                        <li key={i} className="flex gap-2 text-sm text-sub">
+                          <span>•</span>
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                  <Section title="Tables">
+                    <div className="flex flex-wrap gap-1.5">
+                      {scenario.tables.map((t: string) => (
+                        <button
+                          key={t}
+                          className="tag font-mono hover:bg-canvas"
+                          onClick={() => {
+                            setLeftTab("data");
+                            loadTable(t);
+                          }}
+                          title={`Browse ${t}`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </Section>
+                  <Section title="Success criteria">
+                    <p className="text-sm text-sub">{scenario.success_criteria}</p>
+                  </Section>
                 </div>
-              </Section>
-              <Section title="Success criteria">
-                <p className="text-sm text-sub">{scenario.success_criteria}</p>
-              </Section>
+              )}
+
+              {leftTab === "schema" && (
+                <div className="min-h-0 flex-1">
+                  <SchemaCanvas
+                    tables={schema.tables}
+                    relations={schema.relations}
+                    storageKey={`sqlforge_incident_schema_pos_${key}`}
+                  />
+                </div>
+              )}
+
+              {leftTab === "data" && (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <div className="flex flex-wrap gap-1.5 border-b border-line p-3">
+                    {(schema.tables.length ? schema.tables : scenario.tables.map((name: string) => ({ name, row_count: "" }))).map((t: any) => (
+                      <button
+                        key={t.name}
+                        onClick={() => loadTable(t.name)}
+                        className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-colors ${
+                          dataTable === t.name
+                            ? "border-accent bg-accent text-white"
+                            : "border-line bg-white text-ink hover:bg-canvas"
+                        }`}
+                        title={t.row_count !== "" ? `${t.row_count} rows` : `Browse ${t.name}`}
+                      >
+                        {t.name}
+                        {t.row_count !== "" && (
+                          <span className={`ml-1.5 ${dataTable === t.name ? "text-white/70" : "text-sub"}`}>
+                            {t.row_count}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-auto">
+                    {!dataTable ? (
+                      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-sub">
+                        Pick a table to browse its rows (first 200).
+                      </div>
+                    ) : dataBusy ? (
+                      <div className="p-4 text-sm text-sub">Loading {dataTable}…</div>
+                    ) : (
+                      <>
+                        {dataResult?.ok && (
+                          <div className="border-b border-line px-3 py-1.5 text-xs text-sub">
+                            {dataResult.row_count} rows shown
+                          </div>
+                        )}
+                        <ResultsTable result={dataResult} />
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </aside>
-          )}
+          </div>
           {showBrief && (
             <Splitter
               axis="x"
@@ -425,6 +599,13 @@ export default function ScenarioPage() {
                 theme="vs"
                 value={sql}
                 onChange={(v) => setSql(v ?? "")}
+                onMount={(_editor, monaco) => {
+                  completionRef.current?.dispose();
+                  completionRef.current = registerSqlCompletion(
+                    monaco,
+                    () => schemaRef.current
+                  );
+                }}
                 options={{
                   fontSize: 13,
                   minimap: { enabled: false },
@@ -433,6 +614,8 @@ export default function ScenarioPage() {
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                   renderLineHighlight: "none",
                   overviewRulerLanes: 0,
+                  quickSuggestions: { other: true, comments: false, strings: false },
+                  suggestOnTriggerCharacters: true,
                 }}
               />
             </div>
@@ -504,126 +687,75 @@ export default function ScenarioPage() {
               }
             />
           )}
-          {showMentor && (
+          <div
+            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: showMentor ? mentorW : 0 }}
+          >
             <aside
               style={{ width: mentorW }}
-              className="shrink-0 border-l border-line bg-white"
+              className={`flex h-full min-h-0 flex-col border-l border-line bg-white transition-transform duration-300 ease-in-out ${
+                showMentor ? "translate-x-0" : "translate-x-full"
+              }`}
             >
-              <MentorPanel
-                scenarioKey={key}
-                currentSql={sql}
-                lastResult={result}
-                onClose={() => togglePanel("mentor")}
-              />
+              <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">
+                  AI
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold leading-none">
+                    AI Mentor
+                  </div>
+                  <div className="mt-0.5 text-xs text-sub">
+                    Conversation &amp; incident review
+                  </div>
+                </div>
+                <button
+                  onClick={() => togglePanel("mentor")}
+                  title="Close AI panel"
+                  className="ml-auto flex h-6 w-6 items-center justify-center rounded text-sub hover:bg-canvas hover:text-ink"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex items-center gap-1 border-b border-line px-3">
+                {(["chat", "review"] as RightTab[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setRightTab(t)}
+                    className={`relative border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                      rightTab === t
+                        ? "border-accent text-ink"
+                        : "border-transparent text-sub hover:text-ink"
+                    }`}
+                  >
+                    {t}
+                    {t === "review" && evaluation && (
+                      <span
+                        className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full ${
+                          evaluation.passed ? "bg-ok" : "bg-warn"
+                        }`}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="min-h-0 flex-1">
+                <div className={rightTab === "chat" ? "h-full" : "hidden"}>
+                  <MentorChatWindow />
+                </div>
+                <div
+                  className={
+                    rightTab === "review" ? "h-full overflow-auto" : "hidden"
+                  }
+                >
+                  <EvaluationView evaluation={evaluation} />
+                </div>
+              </div>
             </aside>
-          )}
+          </div>
         </div>
       </div>
     </Shell>
-  );
-}
-
-function Splitter({
-  axis,
-  onDelta,
-}: {
-  axis: "x" | "y";
-  onDelta: (delta: number) => void;
-}) {
-  function onPointerDown(e: React.PointerEvent) {
-    e.preventDefault();
-    let last = axis === "x" ? e.clientX : e.clientY;
-    const move = (ev: PointerEvent) => {
-      const cur = axis === "x" ? ev.clientX : ev.clientY;
-      onDelta(cur - last);
-      last = cur;
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    document.body.style.cursor = axis === "x" ? "col-resize" : "row-resize";
-    document.body.style.userSelect = "none";
-  }
-  return (
-    <div
-      onPointerDown={onPointerDown}
-      className={
-        axis === "x"
-          ? "group relative w-px shrink-0 cursor-col-resize bg-line"
-          : "group relative h-px shrink-0 cursor-row-resize bg-line"
-      }
-    >
-      <div
-        className={
-          axis === "x"
-            ? "absolute inset-y-0 -left-1 -right-1 z-10 transition-colors group-hover:bg-accent/20"
-            : "absolute inset-x-0 -top-1 -bottom-1 z-10 transition-colors group-hover:bg-accent/20"
-        }
-      />
-    </div>
-  );
-}
-
-function PanelToggle({
-  side,
-  active,
-  onClick,
-  title,
-}: {
-  side: "left" | "right";
-  active: boolean;
-  onClick: () => void;
-  title: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className={`flex h-6 w-6 items-center justify-center rounded transition-colors ${
-        active ? "bg-canvas text-ink" : "text-sub hover:text-ink"
-      }`}
-    >
-      <PanelGlyph side={side} active={active} />
-    </button>
-  );
-}
-
-function PanelGlyph({ side, active }: { side: "left" | "right"; active: boolean }) {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-      <rect
-        x="1.5"
-        y="2.5"
-        width="13"
-        height="11"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <line
-        x1={side === "left" ? 6 : 10}
-        y1="2.5"
-        x2={side === "left" ? 6 : 10}
-        y2="13.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      {active && (
-        <rect
-          x={side === "left" ? 2.5 : 11}
-          y="3.5"
-          width="2.5"
-          height="9"
-          rx="1"
-          fill="currentColor"
-        />
-      )}
-    </svg>
   );
 }
 

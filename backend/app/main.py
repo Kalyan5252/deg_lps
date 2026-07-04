@@ -113,6 +113,14 @@ class MentorIn(BaseModel):
     last_result: dict[str, Any] | None = None
 
 
+class AISettingsIn(BaseModel):
+    provider: str = "ollama_cloud"
+    base_url: str = "https://ollama.com"
+    model: str = ai.OLLAMA_CLOUD_DEFAULT_MODEL
+    api_key: str | None = None
+    enabled: bool = True
+
+
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
@@ -177,6 +185,31 @@ async def me(user: dict = auth.CurrentUser):
     return user
 
 
+@app.get("/api/settings/ai")
+async def get_ai_settings(user: dict = auth.CurrentUser):
+    return await ai.user_ai_settings(user["id"])
+
+
+@app.put("/api/settings/ai")
+async def put_ai_settings(body: AISettingsIn, user: dict = auth.CurrentUser):
+    try:
+        return await ai.save_user_ai_settings(
+            user["id"],
+            provider=body.provider,
+            base_url=body.base_url,
+            model=body.model,
+            api_key=body.api_key,
+            enabled=body.enabled,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.delete("/api/settings/ai")
+async def delete_ai_settings(user: dict = auth.CurrentUser):
+    return await ai.disable_user_ai_settings(user["id"])
+
+
 # --------------------------------------------------------------------------
 # Paths & scenarios
 # --------------------------------------------------------------------------
@@ -213,6 +246,12 @@ async def scenario_detail(key: str, user: dict = auth.CurrentUser):
         "SELECT role, content, created_at FROM app.mentor_messages "
         "WHERE user_id = $1 AND scenario_key = $2 ORDER BY id", user["id"], key)]
     return {"scenario": scenario.public(), "progress": prog, "mentor_messages": messages}
+
+
+@app.get("/api/scenarios/{key}/schema")
+async def scenario_schema(key: str, user: dict = auth.CurrentUser):
+    schema = await _user_scenario_schema(user["id"], key)
+    return await sandbox.schema_graph(schema)
 
 
 @app.post("/api/scenarios/{key}/reset")
@@ -274,7 +313,9 @@ async def workbench_submit(body: RunIn, user: dict = auth.CurrentUser):
     total_weight = sum(c["weight"] for c in checks) or 1
     score = round(sum(c["weight"] for c in checks if c["passed"]) / total_weight * 100)
     passed = score >= PASS_THRESHOLD
-    feedback = await ai.evaluation_feedback(scenario, body.sql, score, checks, passed)
+    feedback = await ai.evaluation_feedback(
+        scenario, body.sql, score, checks, passed, user_id=user["id"]
+    )
 
     # persist attempt (feedback column is JSONB; codec handles serialization)
     await db.pool().execute(
@@ -335,7 +376,9 @@ async def mentor(body: MentorIn, user: dict = auth.CurrentUser):
         "SELECT role, content FROM app.mentor_messages "
         "WHERE user_id=$1 AND scenario_key=$2 ORDER BY id", user["id"], body.scenario_key)]
 
-    reply = await ai.mentor_reply(scenario, history, body.current_sql, body.last_result)
+    reply = await ai.mentor_reply(
+        scenario, history, body.current_sql, body.last_result, user_id=user["id"]
+    )
 
     await db.pool().execute(
         "INSERT INTO app.mentor_messages (user_id, scenario_key, role, content) "
@@ -628,7 +671,9 @@ async def track_question(track_id: int, user: dict = auth.CurrentUser):
 
     graph = await custom.schema_graph(track_id)
     q = None
-    ai_q = await ai.custom_question_ai(_schema_text(graph), level, recent)
+    ai_q = await ai.custom_question_ai(
+        _schema_text(graph), level, recent, user_id=user["id"]
+    )
     if ai_q:
         check = await sandbox.run_in_schema(schema, ai_q["reference_sql"])
         if check["ok"]:
@@ -668,7 +713,7 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
 
     feedback = await ai.custom_feedback(
         q["prompt"], body.sql, result["passed"],
-        result["expected_rows"], result["got_rows"])
+        result["expected_rows"], result["got_rows"], user_id=user["id"])
 
     await db.pool().execute(
         "INSERT INTO app.custom_attempts (question_id, user_id, sql, score, passed, feedback) "
@@ -742,7 +787,7 @@ async def track_chat(track_id: int, body: TrackChatIn, user: dict = auth.Current
 
     graph = await custom.schema_graph(track_id)
     reply = await ai.track_chat_reply(
-        _schema_text(graph), history, msg, body.current_sql)
+        _schema_text(graph), history, msg, body.current_sql, user_id=user["id"])
 
     await db.pool().execute(
         "INSERT INTO app.custom_chat_messages (track_id, user_id, role, content) "
@@ -785,7 +830,7 @@ async def track_chat_stream_ep(
         current_index = 0
         async for kind, payload in ai.agent_chat_stream(
             schema_text, history, msg, body.current_sql, _run_sql,
-            level=track["level"]):
+            level=track["level"], user_id=user["id"]):
             if kind == "delta":
                 parts.append(payload)
                 yield payload
@@ -1004,7 +1049,7 @@ async def hunt_next(
         "ORDER BY seq DESC LIMIT 8", session_id)]
     q = await ai.hunt_question(
         _schema_text(graph), sess["creativity"], difficulty, recent,
-        _hunt_runner(sess["track_id"]), streak=streak)
+        _hunt_runner(sess["track_id"]), streak=streak, user_id=user["id"])
     if not q:
         raise HTTPException(422, "Could not generate a challenge — try again.")
 
@@ -1101,7 +1146,9 @@ async def hunt_optimized_query(
     if not cp:
         raise HTTPException(404, "Checkpoint not found")
     graph = await custom.schema_graph(sess["track_id"])
-    optimized = await ai.hunt_optimized_sql(_schema_text(graph), cp["prompt"], body.sql)
+    optimized = await ai.hunt_optimized_sql(
+        _schema_text(graph), cp["prompt"], body.sql, user_id=user["id"]
+    )
     await db.pool().execute(
         "UPDATE app.hunt_checkpoints SET optimized=true WHERE id=$1", body.checkpoint_id)
     return {"sql": optimized}
@@ -1116,7 +1163,9 @@ async def hunt_hint_ep(session_id: int, body: HuntHintIn, user: dict = auth.Curr
     if not cp:
         raise HTTPException(404, "Checkpoint not found")
     graph = await custom.schema_graph(sess["track_id"])
-    hint = await ai.hunt_hint(_schema_text(graph), cp["prompt"], body.sql)
+    hint = await ai.hunt_hint(
+        _schema_text(graph), cp["prompt"], body.sql, user_id=user["id"]
+    )
     await db.pool().execute(
         "UPDATE app.hunt_checkpoints SET hint_used=true WHERE id=$1", body.checkpoint_id)
     return {"hint": hint}
@@ -1128,7 +1177,9 @@ async def hunt_optimize_ep(session_id: int, body: HuntSqlIn, user: dict = auth.C
     await _ensure_provisioned(sess["track_id"])
     run = _cap(await sandbox.run_in_schema(custom.schema_for(sess["track_id"]), body.sql))
     graph = await custom.schema_graph(sess["track_id"])
-    advice = await ai.hunt_optimize(_schema_text(graph), body.sql, run)
+    advice = await ai.hunt_optimize(
+        _schema_text(graph), body.sql, run, user_id=user["id"]
+    )
     await db.pool().execute(
         "UPDATE app.hunt_checkpoints SET optimized=true "
         "WHERE session_id=$1 AND seq=(SELECT max(seq) FROM app.hunt_checkpoints WHERE session_id=$1)",
@@ -1152,7 +1203,9 @@ async def hunt_reason(session_id: int, body: HuntReasonIn, user: dict = auth.Cur
     await db.pool().execute(
         "UPDATE app.hunt_checkpoints SET reasoning=$2 WHERE id=$1",
         body.checkpoint_id, body.reasoning.strip())
-    fb = await ai.hunt_reason_feedback(cp["prompt"], cp["user_sql"], body.reasoning.strip())
+    fb = await ai.hunt_reason_feedback(
+        cp["prompt"], cp["user_sql"], body.reasoning.strip(), user_id=user["id"]
+    )
     return {"skipped": False, "feedback": fb}
 
 
@@ -1475,7 +1528,11 @@ async def pipeline_run_logs(run_id: int, user: dict = auth.CurrentUser):
 async def pipeline_gen_prompt(pipeline_id: int, body: GenPromptIn,
                               user: dict = auth.CurrentUser):
     await _own_pipeline(pipeline_id, user["id"])
-    return {"prompt": await pipelines.gen_system_prompt(body.intent, body.columns)}
+    return {
+        "prompt": await pipelines.gen_system_prompt(
+            body.intent, body.columns, user_id=user["id"]
+        )
+    }
 
 
 @app.get("/api/health")
