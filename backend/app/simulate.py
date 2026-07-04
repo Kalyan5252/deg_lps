@@ -202,12 +202,18 @@ def generate(data: dict) -> list[dict]:
     n_rows = max(1, min(MAX_ROWS, n_rows))
 
     seed = data.get("seed")
-    rng = random.Random(int(seed)) if seed not in (None, "") else random.Random()
+    if seed not in (None, ""):
+        rng = random.Random(int(seed))
+        # a seeded run must be FULLY reproducible, so timestamps anchor to a
+        # fixed instant instead of wall-clock now
+        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    else:
+        rng = random.Random()
+        now = datetime.now(timezone.utc)
 
     null_rate = _rate(data, "null_rate")
     dup_rate = _rate(data, "dup_rate")
     error_rate = _rate(data, "error_rate")
-    now = datetime.now(timezone.utc)
 
     # never null/corrupt the first field — it's the row's key, and losing it
     # would make duplicates undetectable (the main thing dup_rate tests)
