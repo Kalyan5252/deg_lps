@@ -10,6 +10,7 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   MarkerType,
 } from "@xyflow/react";
 import { useRouter, useParams } from "next/navigation";
@@ -17,6 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getToken } from "@/lib/api";
 import { api } from "@/lib/api";
 import { nodeTypes, NODE_META } from "@/components/pipeline/nodes";
+import { edgeTypes } from "@/components/pipeline/edges";
 import ConfigPanel from "@/components/pipeline/ConfigPanel";
 import ActivityPanel from "@/components/pipeline/ActivityPanel";
 
@@ -30,11 +32,16 @@ const MENU_ITEMS: { type: string; label: string }[] = [
 
 function Builder({ pipelineId }: { pipelineId: string }) {
   const router = useRouter();
+  const rf = useReactFlow();
   const [name, setName] = useState("");
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelNode, setPanelNode] = useState<any | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const [nodeMenu, setNodeMenu] = useState<
+    { x: number; y: number; nodeId: string } | null
+  >(null);
   const [showActivity, setShowActivity] = useState(false);
   const [activeRunId, setActiveRunId] = useState<number | null>(null);
   const [status, setStatus] = useState<string>("");
@@ -51,7 +58,13 @@ function Builder({ pipelineId }: { pipelineId: string }) {
       .then((p) => {
         setName(p.name);
         setNodes(p.graph?.nodes || []);
-        setEdges(p.graph?.edges || []);
+        setEdges(
+          (p.graph?.edges || []).map((e: any) => ({
+            ...e,
+            type: "deletable",
+            markerEnd: { type: MarkerType.ArrowClosed },
+          }))
+        );
       })
       .catch((e) => setStatus(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,7 +74,11 @@ function Builder({ pipelineId }: { pipelineId: string }) {
     (params: any) =>
       setEdges((eds) =>
         addEdge(
-          { ...params, markerEnd: { type: MarkerType.ArrowClosed } },
+          {
+            ...params,
+            type: "deletable",
+            markerEnd: { type: MarkerType.ArrowClosed },
+          },
           eds
         )
       ),
@@ -86,27 +103,39 @@ function Builder({ pipelineId }: { pipelineId: string }) {
     };
   }
 
-  function addNode(type: string) {
+  // place the new node where the user right-clicked (fall back to canvas center)
+  function addNode(type: string, screenX?: number, screenY?: number) {
     const id = `${type}_${Date.now().toString(36)}`;
     const data: any = { label: NODE_META[type].label };
-    if (type === "gate") data.conditions = [];
-    // Vertical-by-default: stack each new node in a column beneath the
-    // lowest existing node (aligned to it), rather than at the cursor.
-    const V_GAP = 150; // node height (~90) + breathing room
-    setNodes((nds) => {
-      let pos: { x: number; y: number };
-      if (nds.length === 0) {
-        pos = { x: 250, y: 80 };
-      } else {
-        const bottom = nds.reduce((a, b) =>
-          b.position.y > a.position.y ? b : a
-        );
-        pos = { x: bottom.position.x, y: bottom.position.y + V_GAP };
-      }
-      return [...nds, { id, type, position: pos, data }];
-    });
+    if (type === "gate") {
+      data.conditions = [];
+      data.inputs = 1;
+    }
+    const pos =
+      screenX != null && screenY != null
+        ? rf.screenToFlowPosition({ x: screenX, y: screenY })
+        : { x: 250, y: 120 };
+    setNodes((nds) => [...nds, { id, type, position: pos, data }]);
     setMenu(null);
     setSelectedId(id);
+  }
+
+  // remove every edge touching a node
+  function dropConnections(nodeId: string) {
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+    );
+    setNodeMenu(null);
+  }
+
+  // remove a node and all of its connections
+  function dropNode(nodeId: string) {
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+    );
+    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    setSelectedId((cur) => (cur === nodeId ? null : cur));
+    setNodeMenu(null);
   }
 
   function patchNode(nodeId: string, patch: any) {
@@ -200,13 +229,25 @@ function Builder({ pipelineId }: { pipelineId: string }) {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            defaultEdgeOptions={{
+              type: "deletable",
+              markerEnd: { type: MarkerType.ArrowClosed },
+            }}
             onNodeClick={(_, n) => setSelectedId(n.id)}
+            onNodeContextMenu={(e, n) => {
+              e.preventDefault();
+              setMenu(null);
+              setNodeMenu({ x: e.clientX, y: e.clientY, nodeId: n.id });
+            }}
             onPaneClick={() => {
               setMenu(null);
+              setNodeMenu(null);
               setSelectedId(null);
             }}
             onPaneContextMenu={(e) => {
               e.preventDefault();
+              setNodeMenu(null);
               setMenu({ x: e.clientX, y: e.clientY });
             }}
             fitView
@@ -244,7 +285,7 @@ function Builder({ pipelineId }: { pipelineId: string }) {
                   <button
                     key={item.type}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
-                    onClick={() => addNode(item.type)}
+                    onClick={() => addNode(item.type, menu.x, menu.y)}
                   >
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded text-xs text-white"
@@ -256,6 +297,44 @@ function Builder({ pipelineId }: { pipelineId: string }) {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {nodeMenu && (
+            <div
+              className="fixed z-50 w-52 overflow-hidden rounded-lg border border-line bg-white py-1 shadow-lg"
+              style={{ left: nodeMenu.x, top: nodeMenu.y }}
+              onMouseLeave={() => setNodeMenu(null)}
+            >
+              <div className="truncate px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-sub">
+                {NODE_META[nodes.find((n) => n.id === nodeMenu.nodeId)?.type]
+                  ?.label || "Component"}
+              </div>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
+                onClick={() => {
+                  setSelectedId(nodeMenu.nodeId);
+                  setShowActivity(false);
+                  setNodeMenu(null);
+                }}
+              >
+                <span className="w-4 text-center text-xs">◎</span>
+                Select component
+              </button>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
+                onClick={() => dropConnections(nodeMenu.nodeId)}
+              >
+                <span className="w-4 text-center text-xs">⤫</span>
+                Drop all connections
+              </button>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-bad hover:bg-bad/5"
+                onClick={() => dropNode(nodeMenu.nodeId)}
+              >
+                <span className="w-4 text-center text-xs">🗑</span>
+                Drop component
+              </button>
             </div>
           )}
         </div>

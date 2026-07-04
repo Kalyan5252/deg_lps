@@ -38,6 +38,59 @@ function Field({ label, children }: { label: string; children: any }) {
 const inputCls =
   "w-full rounded-md border border-line px-2.5 py-1.5 text-sm outline-none focus:border-accent";
 
+// A reusable key/value list editor (used for headers and form body fields).
+function KVList({
+  rows,
+  onChange,
+  addLabel,
+}: {
+  rows: { k: string; v: string }[];
+  onChange: (next: { k: string; v: string }[]) => void;
+  addLabel: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      {rows.map((h, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <input
+            className={`${inputCls} flex-1`}
+            placeholder="Key"
+            value={h.k}
+            onChange={(e) => {
+              const next = [...rows];
+              next[i] = { ...h, k: e.target.value };
+              onChange(next);
+            }}
+          />
+          <input
+            className={`${inputCls} flex-1`}
+            placeholder="Value"
+            value={h.v}
+            onChange={(e) => {
+              const next = [...rows];
+              next[i] = { ...h, v: e.target.value };
+              onChange(next);
+            }}
+          />
+          <button
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sub hover:bg-canvas hover:text-bad"
+            onClick={() => onChange(rows.filter((_, j) => j !== i))}
+            title="Remove"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button
+        className="text-xs text-accent hover:underline"
+        onClick={() => onChange([...rows, { k: "", v: "" }])}
+      >
+        {addLabel}
+      </button>
+    </div>
+  );
+}
+
 export default function ConfigPanel({
   pipelineId,
   node,
@@ -220,9 +273,7 @@ export default function ConfigPanel({
                   <select
                     className={inputCls}
                     value={data.dataset_key || ""}
-                    onChange={(e) =>
-                      set({ dataset_key: e.target.value, table: "" })
-                    }
+                    onChange={(e) => set({ dataset_key: e.target.value, table: "" })}
                   >
                     <option value="">
                       {catalog.length ? "Select a dataset…" : "Loading…"}
@@ -242,14 +293,13 @@ export default function ConfigPanel({
                     onChange={(e) => set({ table: e.target.value })}
                   >
                     <option value="">First table</option>
-                    {(
-                      catalog.find((d) => d.key === data.dataset_key)?.tables ||
-                      []
-                    ).map((t: any) => (
-                      <option key={t.name} value={t.name}>
-                        {t.name} ({t.row_count} rows)
-                      </option>
-                    ))}
+                    {(catalog.find((d) => d.key === data.dataset_key)?.tables || []).map(
+                      (t: any) => (
+                        <option key={t.name} value={t.name}>
+                          {t.name} ({t.row_count} rows)
+                        </option>
+                      )
+                    )}
                   </select>
                 </Field>
               </>
@@ -294,6 +344,9 @@ export default function ConfigPanel({
                   >
                     <option>GET</option>
                     <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
                   </select>
                 </Field>
 
@@ -578,15 +631,23 @@ export default function ConfigPanel({
         {/* ---------------- LLM ---------------- */}
         {type === "llm" && (
           <>
-            <Field label="AI model">
+            <Field label="Model">
               <input
                 className={inputCls}
-                placeholder="e.g. gpt-4o-mini, lightning-ai/gemma-4-31B-it"
+                placeholder="e.g. gpt-4o-mini, llama3 (blank = platform default)"
                 value={data.model || ""}
                 onChange={(e) => set({ model: e.target.value })}
               />
             </Field>
-            <Field label="API key (stored on this node)">
+            <Field label="Base URL (OpenAI-compatible)">
+              <input
+                className={inputCls}
+                placeholder="https://api.openai.com/v1"
+                value={data.base_url || ""}
+                onChange={(e) => set({ base_url: e.target.value })}
+              />
+            </Field>
+            <Field label="API key">
               <input
                 className={inputCls}
                 type="password"
@@ -594,6 +655,36 @@ export default function ConfigPanel({
                 onChange={(e) => set({ api_key: e.target.value })}
               />
             </Field>
+            <div className="flex gap-2">
+              <Field label="Mode">
+                <select
+                  className={inputCls}
+                  value={data.mode || "per_row"}
+                  onChange={(e) => set({ mode: e.target.value })}
+                >
+                  <option value="per_row">Per row (add a column)</option>
+                  <option value="aggregate">Aggregate (one answer)</option>
+                </select>
+              </Field>
+              <Field label="Max rows">
+                <input
+                  type="number"
+                  className={inputCls}
+                  value={data.max_rows ?? 20}
+                  onChange={(e) => set({ max_rows: Number(e.target.value) })}
+                />
+              </Field>
+            </div>
+            {data.mode !== "aggregate" && (
+              <Field label="Output column name">
+                <input
+                  className={inputCls}
+                  placeholder="llm_output"
+                  value={data.output_field || ""}
+                  onChange={(e) => set({ output_field: e.target.value })}
+                />
+              </Field>
+            )}
             <Field label="System prompt">
               <textarea
                 className={`${inputCls} h-24`}
@@ -615,10 +706,6 @@ export default function ConfigPanel({
                 Generate prompt
               </button>
             </div>
-            <div className="text-[11px] text-sub">
-              Row-by-row reasoning execution {COMING_SOON} (rows pass through for
-              now).
-            </div>
           </>
         )}
 
@@ -631,24 +718,58 @@ export default function ConfigPanel({
                 value={data.kind || "api"}
                 onChange={(e) => set({ kind: e.target.value })}
               >
-                <option value="sse">Server-Sent Events (SSE)</option>
-                <option value="api">REST API endpoint</option>
-                <option value="ws">WebSocket</option>
-                <option value="sheets">Google Sheets</option>
-                <option value="alert">Alert on trigger</option>
+                <option value="api">REST API (POST rows)</option>
+                <option value="webhook">Webhook (POST rows)</option>
+                <option value="sheets">Google Sheets (Apps Script webhook)</option>
+                <option value="alert">Alert (POST message + rows)</option>
+                <option value="ws">WebSocket (push rows)</option>
+                <option value="sse">Server-Sent Events</option>
               </select>
             </Field>
-            <Field label="Target (URL / sheet id / channel)">
+            <Field
+              label={
+                data.kind === "ws"
+                  ? "Target ws:// URL"
+                  : data.kind === "sse"
+                  ? "SSE endpoint"
+                  : "Target URL"
+              }
+            >
               <input
                 className={inputCls}
+                placeholder={
+                  data.kind === "ws"
+                    ? "wss://example.com/ingest"
+                    : "https://example.com/webhook"
+                }
                 value={data.target || ""}
                 onChange={(e) => set({ target: e.target.value })}
               />
             </Field>
-            <div className="text-[11px] text-sub">
-              Delivery execution {COMING_SOON} — config is saved and rows pass
-              through so you can chain further.
-            </div>
+            {data.kind === "alert" && (
+              <Field label="Alert message">
+                <input
+                  className={inputCls}
+                  placeholder="High-value orders detected"
+                  value={data.message || ""}
+                  onChange={(e) => set({ message: e.target.value })}
+                />
+              </Field>
+            )}
+            {(data.kind === "api" ||
+              data.kind === "webhook" ||
+              data.kind === "sheets" ||
+              data.kind === "alert") && (
+              <div>
+                <div className="mb-1 text-xs font-medium text-sub">Headers</div>
+                <KVList rows={hdrs} onChange={syncHeaders} addLabel="+ Add header" />
+              </div>
+            )}
+            <p className="text-[11px] text-sub">
+              {data.kind === "sse"
+                ? "SSE needs the live streaming server; rows pass through for now."
+                : "Rows are delivered on Run and also passed through so you can chain further."}
+            </p>
           </>
         )}
 
