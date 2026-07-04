@@ -109,7 +109,7 @@ async def provision_user_snapshot(
                     f'INSERT INTO "{user_schema}"."{name}" '
                     f'SELECT * FROM "{admin_schema}"."{name}"'
                 )
-            await conn.execute(f'ANALYZE "{user_schema}"')
+                await conn.execute(f'ANALYZE "{user_schema}"."{name}"')
     return user_schema
 
 
