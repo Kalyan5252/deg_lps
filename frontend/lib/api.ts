@@ -70,6 +70,7 @@ export const api = {
   paths: () => request<any[]>("/paths"),
   scenarios: () => request<any[]>("/scenarios"),
   scenario: (key: string) => request<any>(`/scenarios/${key}`),
+  scenarioSchema: (key: string) => request<any>(`/scenarios/${key}/schema`),
   reset: (key: string) =>
     request<any>(`/scenarios/${key}/reset`, { method: "POST" }),
   run: (scenario_key: string, sql: string) =>

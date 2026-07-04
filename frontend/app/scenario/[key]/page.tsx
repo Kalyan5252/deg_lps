@@ -3,15 +3,20 @@
 import Editor from "@monaco-editor/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { Difficulty } from "@/components/ui";
 import ResultsTable from "@/components/ResultsTable";
 import RunningState from "@/components/RunningState";
 import MentorPanel from "@/components/MentorPanel";
+import SchemaCanvas from "@/components/SchemaCanvas";
+import Splitter from "@/components/Splitter";
+import { PanelToggle, PanelGlyph } from "@/components/PanelToggle";
 import { api } from "@/lib/api";
+import { registerSqlCompletion } from "@/lib/sqlCompletion";
 
 type Tab = "results" | "plan" | "evaluation" | "history";
+type LeftTab = "incident" | "schema" | "data";
 type QueryTab = { id: string; name: string; sql: string };
 
 function walkPlan(node: any, depth = 0, out: any[] = []) {
@@ -33,11 +38,18 @@ export default function ScenarioPage() {
   // Adjustable panels (Cursor-style)
   const [showBrief, setShowBrief] = useState(true);
   const [showMentor, setShowMentor] = useState(true);
+  const [leftTab, setLeftTab] = useState<LeftTab>("incident");
 
   // Resizable panel sizes (IDE-style draggable dividers), in px
   const [briefW, setBriefW] = useState(320);
   const [mentorW, setMentorW] = useState(384);
   const [outputH, setOutputH] = useState(300);
+  const [schema, setSchema] = useState<any>({ tables: [], relations: [] });
+  const schemaRef = useRef<any>({ tables: [] });
+  const completionRef = useRef<{ dispose: () => void } | null>(null);
+  const [dataTable, setDataTable] = useState<string | null>(null);
+  const [dataResult, setDataResult] = useState<any>(null);
+  const [dataBusy, setDataBusy] = useState(false);
 
   const [result, setResult] = useState<any>(null);
   const [plan, setPlan] = useState<any>(null);
@@ -49,6 +61,11 @@ export default function ScenarioPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const tabsKey = `sqlforge_tabs_${key}`;
+
+  useEffect(() => {
+    schemaRef.current = schema;
+  }, [schema]);
+  useEffect(() => () => completionRef.current?.dispose(), []);
 
   useEffect(() => {
     setShowBrief(localStorage.getItem("sqlforge_panel_brief") !== "0");
@@ -99,6 +116,10 @@ export default function ScenarioPage() {
         }
       })
       .catch((e) => setErr(e.message));
+    api
+      .scenarioSchema(key)
+      .then(setSchema)
+      .catch((e) => setErr(e.message));
   }, [key]);
 
   // persist tabs
@@ -146,6 +167,19 @@ export default function ScenarioPage() {
         localStorage.setItem("sqlforge_panel_mentor", s ? "0" : "1");
         return !s;
       });
+    }
+  }
+
+  async function loadTable(name: string) {
+    setDataTable(name);
+    setDataBusy(true);
+    setErr(null);
+    try {
+      setDataResult(await api.run(key, `SELECT * FROM ${name} LIMIT 200`));
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setDataBusy(false);
     }
   }
 
@@ -264,7 +298,7 @@ export default function ScenarioPage() {
                 side="left"
                 active={showBrief}
                 onClick={() => togglePanel("brief")}
-                title="Toggle briefing panel"
+                title="Toggle incident / schema / data panel"
               />
               <PanelToggle
                 side="right"
@@ -295,45 +329,127 @@ export default function ScenarioPage() {
           {showBrief && (
             <aside
               style={{ width: briefW }}
-              className="shrink-0 overflow-auto border-r border-line bg-white px-5 py-5"
+              className="flex shrink-0 flex-col overflow-hidden border-r border-line bg-white"
             >
-              <Section title="Incident">
-                <p className="text-sm leading-relaxed text-ink">
-                  {scenario.story}
-                </p>
-              </Section>
-              <Section title="Objectives">
-                <ul className="space-y-1.5">
-                  {scenario.objectives.map((o: string, i: number) => (
-                    <li key={i} className="flex gap-2 text-sm">
-                      <span className="text-sub">{i + 1}.</span>
-                      {o}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-              <Section title="Constraints">
-                <ul className="space-y-1.5">
-                  {scenario.constraints.map((c: string, i: number) => (
-                    <li key={i} className="flex gap-2 text-sm text-sub">
-                      <span>•</span>
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-              <Section title="Tables">
-                <div className="flex flex-wrap gap-1.5">
-                  {scenario.tables.map((t: string) => (
-                    <span key={t} className="tag font-mono">
-                      {t}
-                    </span>
-                  ))}
+              <div className="flex items-center gap-1 border-b border-line px-3">
+                {(["incident", "schema", "data"] as LeftTab[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setLeftTab(t)}
+                    className={`border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors ${
+                      leftTab === t
+                        ? "border-accent text-ink"
+                        : "border-transparent text-sub hover:text-ink"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {leftTab === "incident" && (
+                <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
+                  <Section title="Incident">
+                    <p className="text-sm leading-relaxed text-ink">
+                      {scenario.story}
+                    </p>
+                  </Section>
+                  <Section title="Objectives">
+                    <ul className="space-y-1.5">
+                      {scenario.objectives.map((o: string, i: number) => (
+                        <li key={i} className="flex gap-2 text-sm">
+                          <span className="text-sub">{i + 1}.</span>
+                          {o}
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                  <Section title="Constraints">
+                    <ul className="space-y-1.5">
+                      {scenario.constraints.map((c: string, i: number) => (
+                        <li key={i} className="flex gap-2 text-sm text-sub">
+                          <span>•</span>
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                  <Section title="Tables">
+                    <div className="flex flex-wrap gap-1.5">
+                      {scenario.tables.map((t: string) => (
+                        <button
+                          key={t}
+                          className="tag font-mono hover:bg-canvas"
+                          onClick={() => {
+                            setLeftTab("data");
+                            loadTable(t);
+                          }}
+                          title={`Browse ${t}`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </Section>
+                  <Section title="Success criteria">
+                    <p className="text-sm text-sub">{scenario.success_criteria}</p>
+                  </Section>
                 </div>
-              </Section>
-              <Section title="Success criteria">
-                <p className="text-sm text-sub">{scenario.success_criteria}</p>
-              </Section>
+              )}
+
+              {leftTab === "schema" && (
+                <div className="min-h-0 flex-1">
+                  <SchemaCanvas
+                    tables={schema.tables}
+                    relations={schema.relations}
+                    storageKey={`sqlforge_incident_schema_pos_${key}`}
+                  />
+                </div>
+              )}
+
+              {leftTab === "data" && (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <div className="flex flex-wrap gap-1.5 border-b border-line p-3">
+                    {(schema.tables.length ? schema.tables : scenario.tables.map((name: string) => ({ name, row_count: "" }))).map((t: any) => (
+                      <button
+                        key={t.name}
+                        onClick={() => loadTable(t.name)}
+                        className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-colors ${
+                          dataTable === t.name
+                            ? "border-accent bg-accent text-white"
+                            : "border-line bg-white text-ink hover:bg-canvas"
+                        }`}
+                        title={t.row_count !== "" ? `${t.row_count} rows` : `Browse ${t.name}`}
+                      >
+                        {t.name}
+                        {t.row_count !== "" && (
+                          <span className={`ml-1.5 ${dataTable === t.name ? "text-white/70" : "text-sub"}`}>
+                            {t.row_count}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-auto">
+                    {!dataTable ? (
+                      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-sub">
+                        Pick a table to browse its rows (first 200).
+                      </div>
+                    ) : dataBusy ? (
+                      <div className="p-4 text-sm text-sub">Loading {dataTable}…</div>
+                    ) : (
+                      <>
+                        {dataResult?.ok && (
+                          <div className="border-b border-line px-3 py-1.5 text-xs text-sub">
+                            {dataResult.row_count} rows shown
+                          </div>
+                        )}
+                        <ResultsTable result={dataResult} />
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </aside>
           )}
           {showBrief && (
@@ -425,6 +541,13 @@ export default function ScenarioPage() {
                 theme="vs"
                 value={sql}
                 onChange={(v) => setSql(v ?? "")}
+                onMount={(_editor, monaco) => {
+                  completionRef.current?.dispose();
+                  completionRef.current = registerSqlCompletion(
+                    monaco,
+                    () => schemaRef.current
+                  );
+                }}
                 options={{
                   fontSize: 13,
                   minimap: { enabled: false },
@@ -433,6 +556,8 @@ export default function ScenarioPage() {
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                   renderLineHighlight: "none",
                   overviewRulerLanes: 0,
+                  quickSuggestions: { other: true, comments: false, strings: false },
+                  suggestOnTriggerCharacters: true,
                 }}
               />
             </div>
@@ -520,110 +645,6 @@ export default function ScenarioPage() {
         </div>
       </div>
     </Shell>
-  );
-}
-
-function Splitter({
-  axis,
-  onDelta,
-}: {
-  axis: "x" | "y";
-  onDelta: (delta: number) => void;
-}) {
-  function onPointerDown(e: React.PointerEvent) {
-    e.preventDefault();
-    let last = axis === "x" ? e.clientX : e.clientY;
-    const move = (ev: PointerEvent) => {
-      const cur = axis === "x" ? ev.clientX : ev.clientY;
-      onDelta(cur - last);
-      last = cur;
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    document.body.style.cursor = axis === "x" ? "col-resize" : "row-resize";
-    document.body.style.userSelect = "none";
-  }
-  return (
-    <div
-      onPointerDown={onPointerDown}
-      className={
-        axis === "x"
-          ? "group relative w-px shrink-0 cursor-col-resize bg-line"
-          : "group relative h-px shrink-0 cursor-row-resize bg-line"
-      }
-    >
-      <div
-        className={
-          axis === "x"
-            ? "absolute inset-y-0 -left-1 -right-1 z-10 transition-colors group-hover:bg-accent/20"
-            : "absolute inset-x-0 -top-1 -bottom-1 z-10 transition-colors group-hover:bg-accent/20"
-        }
-      />
-    </div>
-  );
-}
-
-function PanelToggle({
-  side,
-  active,
-  onClick,
-  title,
-}: {
-  side: "left" | "right";
-  active: boolean;
-  onClick: () => void;
-  title: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className={`flex h-6 w-6 items-center justify-center rounded transition-colors ${
-        active ? "bg-canvas text-ink" : "text-sub hover:text-ink"
-      }`}
-    >
-      <PanelGlyph side={side} active={active} />
-    </button>
-  );
-}
-
-function PanelGlyph({ side, active }: { side: "left" | "right"; active: boolean }) {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-      <rect
-        x="1.5"
-        y="2.5"
-        width="13"
-        height="11"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      <line
-        x1={side === "left" ? 6 : 10}
-        y1="2.5"
-        x2={side === "left" ? 6 : 10}
-        y2="13.5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
-      {active && (
-        <rect
-          x={side === "left" ? 2.5 : 11}
-          y="3.5"
-          width="2.5"
-          height="9"
-          rx="1"
-          fill="currentColor"
-        />
-      )}
-    </svg>
   );
 }
 
