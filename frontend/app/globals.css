@@ -11,6 +11,8 @@ body {
   background: #f7f8fa;
   color: #16181d;
   -webkit-font-smoothing: antialiased;
+  scrollbar-color: #c5c9d1 transparent;
+  scrollbar-width: thin;
 }
 
 body {
@@ -20,12 +22,12 @@ body {
 
 /* Minimal flat scrollbars */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d7d9df;
-  border-radius: 6px;
+  background: #c5c9d1;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
