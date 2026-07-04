@@ -320,6 +320,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ graph }),
     }),
+  simPresets: () => request<any[]>("/pipelines/sim/presets"),
   pipelineGenPrompt: (id: number | string, intent: string, columns: string[]) =>
     request<{ prompt: string }>(`/pipelines/${id}/llm/gen-prompt`, {
       method: "POST",

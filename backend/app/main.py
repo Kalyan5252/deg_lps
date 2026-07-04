@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from . import ai, auth, custom, db, global_datasets, pipelines, sandbox
+from . import ai, auth, custom, db, global_datasets, pipelines, sandbox, simulate
 from .config import get_settings
 from .scenarios import PATHS, all_scenarios, get_scenario
 
@@ -1533,6 +1533,12 @@ async def pipeline_run_logs(run_id: int, user: dict = auth.CurrentUser):
                     "message": r["message"],
                     "created_at": r["created_at"].isoformat()})
     return out
+
+
+@app.get("/api/pipelines/sim/presets")
+async def sim_presets(user: dict = auth.CurrentUser):
+    """Traffic-simulation presets for the sim datasource picker."""
+    return simulate.preset_listing()
 
 
 @app.post("/api/pipelines/{pipeline_id}/llm/gen-prompt")
