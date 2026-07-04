@@ -1,80 +1,94 @@
-# SQLForge
+## D.E.G
 
-**Learn SQL by resolving realistic production incidents — with a senior engineer mentoring you.**
+D.E.G is a data engineering practice app built around real query execution in PostgreSQL.
+It has three main learning surfaces:
 
-SQLForge is not a course, a quiz, or a chatbot. It drops you into the on-call
-seat: a dashboard is timing out, a CSV import double-fired, an audit lookup
-crawls. You investigate against a **real Postgres sandbox**, write SQL, and an
-AI senior engineer reviews your work, tracks your skills, and escalates the
-difficulty as you improve.
+Global datasets are bundled CSVs under [backend/app/global_data](backend/app/global_data).
+Catalog metadata is defined in [backend/app/global_datasets.py](backend/app/global_datasets.py).
 
----
+```text
+GET /api/global-datasets
+  -> parse catalog CSV headers/row counts
+  -> return dataset cards with table/column metadata
 
-## What's inside
+GET /api/global-datasets/{key}/tables/{table}/preview
+  -> read bundled CSV
+  -> return first 200 rows for the dataset drawer
 
-| Capability | How it works |
-|---|---|
-| **Scenario engine** | Each incident has a story, a seeded dataset with *real* problems (duplicates, missing indexes, seq scans), objectives, constraints, hidden problems, and success criteria. |
-| **SQL Workbench** | Monaco editor, query execution against a per-scenario sandbox schema, execution time, result tables, error display, EXPLAIN ANALYZE, and query history. |
-| **AI Mentor** | A Socratic senior engineer. Asks questions, challenges assumptions, points at the execution plan — **never pastes the answer**. |
-| **AI Evaluation** | Deterministic, weighted checks (correctness, plan shape, index presence, timing) produce a score; the AI adds a verdict, strengths, and recommendations. |
-| **Skill tracking** | Confidence per skill (SELECT, JOINS, GROUP BY, WINDOW FUNCTIONS, INDEXES, CTEs, QUERY OPTIMIZATION), updated every submission. |
-| **Adaptive difficulty** | Solve an incident → difficulty climbs and the next incident is recommended. |
+| Capability              | How it works                                                                                                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scenario engine**     | Each incident has a story, a seeded dataset with _real_ problems (duplicates, missing indexes, seq scans), objectives, constraints, hidden problems, and success criteria. |
+| **SQL Workbench**       | Monaco editor, query execution against a per-scenario sandbox schema, execution time, result tables, error display, EXPLAIN ANALYZE, and query history.                    |
+| **AI Mentor**           | A Socratic senior engineer. Asks questions, challenges assumptions, points at the execution plan — **never pastes the answer**.                                            |
+| **AI Evaluation**       | Deterministic, weighted checks (correctness, plan shape, index presence, timing) produce a score; the AI adds a verdict, strengths, and recommendations.                   |
+| **Skill tracking**      | Confidence per skill (SELECT, JOINS, GROUP BY, WINDOW FUNCTIONS, INDEXES, CTEs, QUERY OPTIMIZATION), updated every submission.                                             |
+| **Adaptive difficulty** | Solve an incident → difficulty climbs and the next incident is recommended.                                                                                                |
 
 ### Pages
+
 Dashboard · Learning Paths · Custom Tracks · Scenario View (with SQL Editor + Mentor Panel) · Progress · Scenario History
 
 ### Custom Tracks (learn on your own data)
+
 Import your own dataset and the platform builds an adaptive SQL course around it:
 
-- **Import:** upload one or more CSVs (one table per file). Column types,
-  primary keys, and inter-table relations are inferred automatically and the
-  raw data is kept in your personal storage (`app.custom_tables`).
-- **On-demand database:** the dataset's Postgres schema (`custom_<id>`) is only
-  provisioned when you open the track and is dropped on **Stop dataset** — it
-  isn't kept running.
-- **AI interactive learning:** questions are generated from your real schema
-  (AI when credits are available, with a deterministic template generator as the
-  always-on backbone that also guarantees a runnable reference solution).
-  Difficulty starts where you choose and adapts — solve a question and it gets
-  harder, miss it and it eases off.
-- **Evaluation:** your query runs against the dataset and is compared to the
-  reference (result-set match); the AI reviewer comments on correctness,
-  readability, and optimization.
-- **Schema whiteboard:** a FigJam-style pannable/zoomable canvas (a tab next to
-  the question) showing draggable table cards and their relations.
+They use local slide data and do not write to the backend. The fundamentals
+course includes a small in-memory dataset and Monaco editor checks. The other
+courses use a shared full-screen slide component.
 
 ### Scenarios shipped
+
 Fully playable: **Slow Dashboard** (missing FK index → seq scan), **Duplicate Customers** (dedup investigation), **Missing Indexes** (point-lookup seq scan). Five more (Failed ETL, Revenue Reporting, Data Quality, Inventory Mismatch, Customer Segmentation) are registered as "coming soon" stubs and easy to author — see `backend/app/scenarios.py`.
 
----
+Main route groups in [backend/app/main.py](backend/app/main.py):
 
-## Tech stack
+- `POST /api/auth/login`
+- `GET /api/health`
+- `GET /api/paths`
+- `GET /api/scenarios`
+- `GET /api/scenarios/{key}`
+- `POST /api/workbench/run`
+- `POST /api/workbench/explain`
+- `POST /api/workbench/submit`
+- `GET /api/progress`
+- `GET /api/history`
+- `GET /api/global-datasets`
+- `POST /api/global-datasets/{key}/use`
+- `GET /api/tracks`
+- `POST /api/tracks`
+- `GET /api/tracks/{id}`
+- `POST /api/tracks/{id}/activate`
+- `POST /api/tracks/{id}/run`
+- `POST /api/tracks/{id}/question`
+- `POST /api/tracks/{id}/submit`
+- `POST /api/mentor/*`
+- `POST /api/hunt/*`
 
-- **Frontend:** Next.js 15 (App Router), Tailwind, Monaco Editor — minimal-flat UI
-- **Backend:** FastAPI + asyncpg
-- **Database:** PostgreSQL (app tables in the `app` schema; each scenario gets its own `sandbox_<key>` schema)
-- **AI:** any OpenAI-compatible endpoint. Defaults to **Lightning.ai** (`lightning-ai/gemma-4-31B-it`). With no API key it falls back to a built-in rule-based mentor/evaluator, so the app runs fully offline.
+The frontend API wrapper is [frontend/lib/api.ts](frontend/lib/api.ts).
 
----
+## Running Locally
 
-## Quick start
+### 1. PostgreSQL
 
-### 1. Database
+Local PostgreSQL:
 
 **Option A — local Postgres (what this repo is configured for):**
+
 ```bash
-# macOS / Homebrew
 brew services start postgresql@18
-createuser -s sqlforge 2>/dev/null; psql -d postgres -c "ALTER ROLE sqlforge PASSWORD 'sqlforge'"
+createuser -s sqlforge 2>/dev/null
+psql -d postgres -c "ALTER ROLE sqlforge PASSWORD 'sqlforge'"
 createdb -O sqlforge sqlforge
 ```
+
 `backend/.env` points at `postgresql://sqlforge:sqlforge@localhost:5432/sqlforge`.
 
 **Option B — Docker:**
+
 ```bash
 docker compose up -d   # Postgres on host port 5433
 ```
+
 Then set `DATABASE_URL=postgresql://sqlforge:sqlforge@localhost:5433/sqlforge` in `backend/.env`.
 
 **Option C — Postgres in a Lightning Studio (offload SQL to the cloud).**
@@ -95,10 +109,12 @@ because it all goes through `DATABASE_URL`.
    STUDIO_SSH="s_xxxxx@ssh.lightning.ai" bash infra/lightning-studio/tunnel.sh
    ```
 3. Point the backend at the tunnel and restart it:
+
    ```env
    DATABASE_URL=postgresql://sqlforge:sqlforge@localhost:5432/sqlforge
    DB_SSLMODE=disable
    ```
+
    `GET /api/health` reports the DB `host`, round-trip `latency_ms`, and
    `sslmode` so you can confirm you're hitting the Studio. The backend retries
    the connection on startup (`DB_CONNECT_RETRIES`) in case the tunnel/DB is
@@ -112,64 +128,137 @@ because it all goes through `DATABASE_URL`.
    > network). Importing a Custom Track sends its CSV to the cloud once.
 
 ### 2. Backend
+
 ```bash
 cd backend
-python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt
-cp .env.example .env          # edit if needed; paste LIGHTNING_API_KEY to enable the live AI
+python3 -m venv .venv
+./.venv/bin/pip install -r requirements.txt
+cp .env.example .env
 ./.venv/bin/uvicorn app.main:app --reload --port 8000
 ```
+
 On first boot the backend creates the `app` tables and seeds every scenario's
 sandbox schema (the 500k-row events table takes a couple of seconds).
 
 ### 3. Frontend
+
 ```bash
 cd frontend
 npm install
-npm run dev                   # http://localhost:3000
+npm run dev
 ```
+
 Sign in with any email (an account is created on first sign-in), pick an
 incident, and start investigating.
 
 ---
 
-## Enabling the live AI
+The frontend listens on:
 
 Paste your key into `backend/.env`:
+
 ```
 LIGHTNING_API_KEY=sk-...
 AI_BASE_URL=https://lightning.ai/api/v1
 AI_MODEL=lightning-ai/gemma-4-31B-it
 ```
+
 The same abstraction (`backend/app/ai.py`) works against any OpenAI-compatible
 endpoint — point `AI_BASE_URL`/`AI_MODEL` at OpenAI, a local Ollama server, etc.
 
----
+If port 3000 is already used:
 
-## How evaluation works (and why it's honest)
+```bash
+npx next dev -p 3001
+```
 
-Submitting a solution **executes** your SQL in the sandbox (so an optimization
-fix like `CREATE INDEX` actually persists), then runs declarative checks:
+## AI Integration
 
-- `matches` — your result set must equal a reference query's result (order-independent)
-- `explain_no_seqscan` / `uses_index_scan` — the plan is inspected via `EXPLAIN (FORMAT JSON)`
-- `runs_under_ms` — the target query is timed
-- `index_exists` — `pg_indexes` is checked for the right index
-
-Scores are weighted; ≥80 passes. Because checks read the *actual plan and data*,
+Scores are weighted; ≥80 passes. Because checks read the _actual plan and data_,
 you can't bluff them — you have to genuinely fix the system. Use **Reset
 sandbox** on any scenario to restore the original broken state.
 
----
+Environment variables:
 
 ## Project layout
+
 ```
-backend/app/
-  main.py        FastAPI routes (auth, scenarios, workbench, mentor, progress, history)
-  scenarios.py   Scenario registry: stories, seed SQL, declarative checks
-  sandbox.py     Schema provisioning, query execution, EXPLAIN, check runner
-  ai.py          Mentor + evaluator (Lightning.ai / OpenAI-compatible + offline fallback)
-  db.py          asyncpg pool, app-table bootstrap
-  auth.py        JWT sign-in
-frontend/app/    Dashboard, login, paths, scenario/[key], progress, history
-frontend/components/  Shell, MentorPanel, ResultsTable, UI primitives
+
+The API client is OpenAI-compatible. If no key is configured, the app falls back
+to deterministic/offline mentor and evaluation behavior where possible.
+
+AI is used for:
+
+- mentor chat replies
+- scenario evaluation wording
+- custom dataset question generation
+- RegHunt hints and optimization advice
+
+The deterministic checks still run in PostgreSQL and are not replaced by AI.
+
+## Evaluation Checks
+
+Scenario checks are declared in [backend/app/scenarios.py](backend/app/scenarios.py)
+and executed by [backend/app/sandbox.py](backend/app/sandbox.py).
+
+Supported check types include:
+
+- `matches`: compare submitted query result with expected SQL
+- `row_count`: require a specific number of rows
+- `explain_no_seqscan`: inspect `EXPLAIN` output for sequential scans
+- `uses_index_scan`: require an index scan in the plan
+- `runs_under_ms`: time a query
+- `index_exists`: verify an index exists on specific columns
+
+Submissions are stored in `app.attempts`; progress is stored in `app.progress`.
+
+## Project Layout
+
+```text
+backend/
+  app/
+    main.py              FastAPI route definitions
+    db.py                app schema bootstrap and asyncpg pool
+    auth.py              JWT login helpers
+    scenarios.py         scenario registry and seed SQL
+    sandbox.py           schema creation, SQL execution, EXPLAIN, checks
+    custom.py            CSV parsing, custom tracks, schema graph
+    global_datasets.py   public dataset catalog and preview helpers
+    ai.py                OpenAI-compatible AI integration and fallbacks
+    global_data/         bundled CSV datasets
+  scripts/
+    build_global_data.py dataset staging helper
+  tests/
+    test_track_integration.py
+    test_studio_db.py
+
+frontend/
+  app/
+    page.tsx                         dashboard
+    paths/page.tsx                   course cards and scenario paths
+    paths/fundamentals-sql/page.tsx  interactive SQL fundamentals course
+    paths/indexing/page.tsx          indexing course
+    paths/query-optimization/page.tsx
+    paths/plsql/page.tsx
+    scenario/[key]/page.tsx          scenario workbench
+    tracks/page.tsx                  custom/global track entry
+    tracks/[id]/page.tsx             dataset workbench
+    datasets/page.tsx                global dataset catalog
+  components/
+    ResultsTable.tsx
+    SchemaCanvas.tsx
+    Shell.tsx
+    MentorChatProvider.tsx
+  lib/
+    api.ts
+    sqlCompletion.ts
 ```
+
+## Common Development Notes
+
+- Restart the backend after changing FastAPI routes or backend helpers.
+- Restart the frontend dev server if a new route folder is not picked up.
+- `npm run build` verifies the frontend route tree and TypeScript.
+- `python -m py_compile backend/app/*.py` is a quick syntax check for backend edits.
+- If `http://localhost:3000` returns a 404 from an API-looking server, the
+  backend is probably being opened instead of the Next.js app.

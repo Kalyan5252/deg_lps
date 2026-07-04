@@ -120,8 +120,10 @@ export function GateNode(p: NodeProps) {
           id={`input_${i + 1}`}
           type="target"
           position={Position.Top}
-          isConnectable
-          style={{ background: "#d97706", left: `${((i + 1) / (n + 1)) * 100}%` }}
+          style={{
+            background: "#94a3b8",
+            left: `${((i + 1) / (n + 1)) * 100}%`,
+          }}
         />
       ))}
       <Card {...p} type="gate" />

@@ -31,16 +31,16 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-ink text-sm font-bold text-white">
-            S
+            D
           </div>
-          <span className="text-lg font-semibold tracking-tight">SQLForge</span>
+          <span className="text-lg font-semibold tracking-tight">D.E.G</span>
         </div>
         <h1 className="text-xl font-semibold tracking-tight">
-          Step into the on-call seat
+          Build data engineering instincts
         </h1>
         <p className="mt-1 text-sm text-sub">
-          Learn SQL by resolving realistic production incidents with a senior
-          engineer mentoring you.
+          Practice SQL, data modeling, data quality, indexing, optimization,
+          and incident-style workflows on real PostgreSQL sandboxes.
         </p>
 
         <form onSubmit={submit} className="card mt-6 space-y-4 p-5">
@@ -72,7 +72,7 @@ export default function LoginPage() {
             disabled={loading}
             className="btn btn-primary w-full"
           >
-            {loading ? "Signing in…" : "Enter the workbench"}
+            {loading ? "Signing in…" : "Enter D.E.G"}
           </button>
           <p className="text-center text-xs text-sub">
             No password — we create your account on first sign-in.

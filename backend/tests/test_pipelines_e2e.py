@@ -139,48 +139,36 @@ def main() -> int:
         check(all(s for s in by["ds"]["subtasks"]),
               "logs: subtasks present on nodes")
 
-        # 8. LIVE node preview (POST current graph)
+        # 8. LIVE node preview (POST current graph, runs node + ancestors)
         r = client.post(f"/pipelines/{pid}/nodes/gate/preview",
                         json={"graph": _graph(GOOD_FN)})
         check(r.status_code == 200 and r.json()["row_count"] == 5,
               "preview: live gate output = 5 rows", r.text[:200])
+        r = client.post(f"/pipelines/{pid}/nodes/fn/preview",
+                        json={"graph": _graph(GOOD_FN)})
+        check(r.status_code == 200 and r.json()["row_count"] == 5,
+              "preview: live function output = 5 rows", r.text[:200])
 
-        # 8b. API source with dynamic headers + JSON body, and Output delivery —
-        #     all exercised against httpbin; skips cleanly if the network is down.
+        # 8b. API source with dynamic custom headers (echo via httpbin; skips
+        #     cleanly if the network/httpbin is unavailable)
         api_graph = {
-            "nodes": [
-                {"id": "apisrc", "type": "datasource", "position": {"x": 0, "y": 0},
-                 "data": {"kind": "api", "method": "POST",
-                          "url": "https://httpbin.org/post",
-                          "headers": {"X-Pipe-Test": "hello-dei"},
-                          "body_type": "json", "body": {"hello": "world"}}},
-                {"id": "sink", "type": "output", "position": {"x": 0, "y": 1},
-                 "data": {"kind": "webhook", "target": "https://httpbin.org/post"}},
-            ],
-            "edges": [{"id": "ae", "source": "apisrc", "target": "sink"}],
+            "nodes": [{"id": "apisrc", "type": "datasource",
+                       "position": {"x": 0, "y": 0},
+                       "data": {"kind": "api", "method": "GET",
+                                "url": "https://httpbin.org/headers",
+                                "headers": {"X-Pipe-Test": "hello-dei"}}}],
+            "edges": [],
         }
         try:
             r = client.post(f"/pipelines/{pid}/nodes/apisrc/preview",
-                            json={"graph": api_graph}, timeout=30)
+                            json={"graph": api_graph}, timeout=25)
             if r.status_code == 200:
-                blob = json.dumps(r.json().get("rows", []))
-                check("hello-dei" in blob, "api: custom header echoed", blob[:300])
-                check("hello" in blob and "world" in blob,
-                      "api: JSON body echoed", blob[:300])
-                # run the graph so the Output node actually delivers
-                client.put(f"/pipelines/{pid}", json={"graph": api_graph})
-                rr = client.post(f"/pipelines/{pid}/run", json={"graph": api_graph})
-                sid = rr.json()["run_id"]
-                logs = {l["node_id"]: l for l in
-                        client.get(f"/pipelines/runs/{sid}/logs").json()}
-                delivered = any("POST 200" in s.get("label", "")
-                                for s in logs.get("sink", {}).get("subtasks", []))
-                check(delivered, "output: webhook delivery POST 200",
-                      json.dumps(logs.get("sink", {}).get("subtasks", [])))
+                check("hello-dei" in json.dumps(r.json().get("rows", [])),
+                      "api headers: custom header sent & echoed", r.text[:200])
             else:
-                print(f"  [SKIP] api/output httpbin (status {r.status_code})")
+                print(f"  [SKIP] api headers (status {r.status_code})")
         except Exception as exc:  # noqa: BLE001
-            print(f"  [SKIP] api/output (network unavailable: {exc})")
+            print(f"  [SKIP] api headers (network unavailable: {exc})")
 
         # 9. LLM system-prompt generation (AI or graceful fallback)
         r = client.post(f"/pipelines/{pid}/llm/gen-prompt",

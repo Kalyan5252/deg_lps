@@ -82,8 +82,8 @@ const slides: CourseSlide[] = [
   {
     kind: 'story',
     eyebrow: 'Screen 2',
-    title: 'DDL, DML, and queries',
-    body: 'DDL creates or changes structure: CREATE, ALTER, DROP. DML changes rows: INSERT, UPDATE, DELETE. Queries read and shape data: SELECT, WHERE, JOIN, GROUP BY, ORDER BY.',
+    title: 'Data Definition, Data Manipulation, and queries',
+    body: 'Data Definition Language (DDL) creates or changes structure: CREATE, ALTER, DROP. Data Manipulation Language (DML) changes rows: INSERT, UPDATE, DELETE. Queries read and shape data: SELECT, WHERE, JOIN, GROUP BY, ORDER BY.',
     accent: 'First design the table, then change the rows, then ask questions.',
   },
   {
@@ -97,7 +97,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Create Table',
-    clause: 'DDL: CREATE TABLE',
+    clause: 'Data Definition Language (DDL): CREATE TABLE',
     story:
       'Before the team can store products, the database needs a table shape: column names and data types.',
     why: 'CREATE TABLE defines structure. It says what a row looks like before any data exists.',
@@ -116,7 +116,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Alter Table',
-    clause: 'DDL: ALTER TABLE',
+    clause: 'Data Definition Language (DDL): ALTER TABLE',
     story:
       'The table exists, but product asks to track whether an item is active. The structure needs one more column.',
     why: 'ALTER TABLE changes an existing table without recreating it from scratch.',
@@ -132,7 +132,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Insert Rows',
-    clause: 'DML: INSERT',
+    clause: 'Data Manipulation Language (DML): INSERT',
     story:
       'A table with no rows is only a promise. INSERT turns structure into data.',
     why: 'INSERT adds new rows to a table. It is how applications and ETL jobs load data.',
@@ -152,7 +152,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Update Rows',
-    clause: 'DML: UPDATE',
+    clause: 'Data Manipulation Language (DML): UPDATE',
     story:
       'Data changes. A product can move categories, a customer can change plans, and mistakes get corrected.',
     why: 'UPDATE modifies existing rows. WHERE is important because it controls which rows change.',
@@ -318,7 +318,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Delete Rows',
-    clause: 'DML: DELETE',
+    clause: 'Data Manipulation Language (DML): DELETE',
     story:
       'Sometimes bad rows must be removed, but only after a careful WHERE clause.',
     why: 'DELETE removes rows. Without WHERE, it removes every row in the table.',
@@ -334,7 +334,7 @@ const slides: CourseSlide[] = [
   {
     kind: 'practice',
     title: 'Drop Table',
-    clause: 'DDL: DROP TABLE',
+    clause: 'Data Definition Language (DDL): DROP TABLE',
     story:
       'When a temporary table is no longer useful, remove the table object itself.',
     why: 'DROP deletes the database object. DELETE removes rows; DROP removes the table structure too.',
@@ -403,7 +403,7 @@ export default function FundamentalsSqlPage() {
       <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
 
       <div className="relative flex min-h-screen flex-col">
-        <div className="course-rise flex items-start justify-between px-8 py-5">
+        <div className="course-rise relative z-[100] flex items-start justify-between px-8 py-5">
           <Link
             href="/paths"
             className="text-sm text-white/60 hover:text-white"
@@ -478,7 +478,7 @@ function SlideNavigator({
           {slideTitle(slides[current])}
         </div>
       </button>
-      <div className="invisible absolute right-0 top-full z-20 mt-2 max-h-[70vh] w-80 translate-y-2 overflow-auto rounded-lg border border-white/10 bg-[#111722]/95 p-2 opacity-0 shadow-2xl backdrop-blur transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+      <div className="invisible absolute right-0 top-full z-50 mt-3 max-h-[52vh] w-72 translate-y-2 overflow-auto rounded-lg border border-white/25 bg-[#050912] p-2 opacity-0 shadow-[0_28px_90px_rgba(0,0,0,0.82)] ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
         {slides.map((s, i) => (
           <button
             key={`${s.kind}-${s.title}-${i}`}

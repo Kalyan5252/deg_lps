@@ -20,6 +20,12 @@ const COINBASE_SUBSCRIBE = [
   '{"type":"subscribe","channel":"heartbeats"}',
 ].join("\n");
 
+const COMING_SOON = (
+  <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+    coming soon
+  </span>
+);
+
 function Field({ label, children }: { label: string; children: any }) {
   return (
     <label className="block">
@@ -108,19 +114,12 @@ export default function ConfigPanel({
   const [intent, setIntent] = useState("");
   const [catalog, setCatalog] = useState<any[]>([]);
   const [hdrs, setHdrs] = useState<{ k: string; v: string }[]>([]);
-  const [bodyFields, setBodyFields] = useState<{ k: string; v: string }[]>([]);
 
   useEffect(() => {
     setPreview(null);
     setMsg(null);
     const h = (node?.data?.headers || {}) as Record<string, string>;
     setHdrs(Object.entries(h).map(([k, v]) => ({ k, v: String(v) })));
-    setBodyFields(
-      (node?.data?.body_fields || []).map((f: any) => ({
-        k: f.key ?? "",
-        v: f.value ?? "",
-      }))
-    );
   }, [node?.id]);
 
   useEffect(() => {
@@ -182,6 +181,7 @@ export default function ConfigPanel({
     }
   }
 
+  // --- dynamic API headers -------------------------------------------------
   function syncHeaders(next: { k: string; v: string }[]) {
     setHdrs(next);
     const obj: Record<string, string> = {};
@@ -191,21 +191,16 @@ export default function ConfigPanel({
     set({ headers: obj });
   }
 
-  function syncBodyFields(next: { k: string; v: string }[]) {
-    setBodyFields(next);
-    set({ body_fields: next.filter((f) => f.k.trim()).map((f) => ({ key: f.k, value: f.v })) });
-  }
-
   const outEdges = edges.filter((e) => e.source === node.id);
   const nodeLabel = (id: string) =>
     nodes.find((n) => n.id === id)?.data?.label ||
     nodes.find((n) => n.id === id)?.type ||
     id;
 
+  // gate signature (locked) from the declared input count
   const gateInputs = Math.max(1, Number(data.inputs) || 1);
   const gateArgs = Array.from({ length: gateInputs }, (_, i) => `input_${i + 1}`);
   const gateSignature = `def conditional_function(${gateArgs.join(", ")}):`;
-  const bodyType = data.body_type || "none";
 
   return (
     <aside className="flex h-full w-[520px] shrink-0 flex-col border-l border-line bg-white">
@@ -355,86 +350,80 @@ export default function ConfigPanel({
                   </select>
                 </Field>
 
+                {/* dynamic headers */}
                 <div>
-                  <div className="mb-1 text-xs font-medium text-sub">Headers</div>
-                  <KVList rows={hdrs} onChange={syncHeaders} addLabel="+ Add header" />
-                </div>
-
-                {data.method && data.method !== "GET" && (
-                  <>
-                    <Field label="Body type">
-                      <select
-                        className={inputCls}
-                        value={bodyType}
-                        onChange={(e) => set({ body_type: e.target.value })}
-                      >
-                        <option value="none">None</option>
-                        <option value="json">JSON</option>
-                        <option value="urlencoded">x-www-form-urlencoded</option>
-                        <option value="formdata">form-data</option>
-                        <option value="raw">Raw</option>
-                        <option value="xml">XML</option>
-                      </select>
-                    </Field>
-
-                    {bodyType === "json" && (
-                      <Field label="JSON body">
-                        <textarea
-                          className={`${inputCls} h-24 font-mono`}
-                          placeholder='{"key": "value"}'
-                          value={
-                            typeof data.body === "string"
-                              ? data.body
-                              : data.body
-                              ? JSON.stringify(data.body, null, 2)
-                              : ""
-                          }
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-medium text-sub">Headers</span>
+                    <button
+                      className="text-xs text-accent hover:underline"
+                      onClick={() => syncHeaders([...hdrs, { k: "", v: "" }])}
+                    >
+                      + Add header
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {hdrs.length === 0 && (
+                      <p className="text-[11px] text-sub">
+                        No headers. Add e.g. <code>Authorization: Bearer …</code>
+                      </p>
+                    )}
+                    {hdrs.map((h, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <input
+                          className={`${inputCls} flex-1`}
+                          placeholder="Header"
+                          value={h.k}
                           onChange={(e) => {
-                            try {
-                              set({ body: JSON.parse(e.target.value) });
-                            } catch {
-                              set({ body: e.target.value });
-                            }
+                            const next = [...hdrs];
+                            next[i] = { ...h, k: e.target.value };
+                            syncHeaders(next);
                           }}
                         />
-                      </Field>
-                    )}
-
-                    {(bodyType === "urlencoded" || bodyType === "formdata") && (
-                      <div>
-                        <div className="mb-1 text-xs font-medium text-sub">
-                          {bodyType === "formdata" ? "Form-data fields" : "URL-encoded fields"}
-                        </div>
-                        <KVList
-                          rows={bodyFields}
-                          onChange={syncBodyFields}
-                          addLabel="+ Add field"
+                        <input
+                          className={`${inputCls} flex-1`}
+                          placeholder="Value"
+                          value={h.v}
+                          onChange={(e) => {
+                            const next = [...hdrs];
+                            next[i] = { ...h, v: e.target.value };
+                            syncHeaders(next);
+                          }}
                         />
+                        <button
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sub hover:bg-canvas hover:text-bad"
+                          onClick={() =>
+                            syncHeaders(hdrs.filter((_, j) => j !== i))
+                          }
+                          title="Remove"
+                        >
+                          ×
+                        </button>
                       </div>
-                    )}
+                    ))}
+                  </div>
+                </div>
 
-                    {(bodyType === "raw" || bodyType === "xml") && (
-                      <>
-                        <Field label={bodyType === "xml" ? "XML body" : "Raw body"}>
-                          <textarea
-                            className={`${inputCls} h-24 font-mono`}
-                            value={data.raw_body || ""}
-                            onChange={(e) => set({ raw_body: e.target.value })}
-                          />
-                        </Field>
-                        {bodyType === "raw" && (
-                          <Field label="Content-Type">
-                            <input
-                              className={inputCls}
-                              placeholder="text/plain"
-                              value={data.raw_content_type || ""}
-                              onChange={(e) => set({ raw_content_type: e.target.value })}
-                            />
-                          </Field>
-                        )}
-                      </>
-                    )}
-                  </>
+                {data.method === "POST" && (
+                  <Field label="Body (JSON)">
+                    <textarea
+                      className={`${inputCls} h-20 font-mono`}
+                      placeholder='{"key": "value"}'
+                      value={
+                        typeof data.body === "string"
+                          ? data.body
+                          : data.body
+                          ? JSON.stringify(data.body, null, 2)
+                          : ""
+                      }
+                      onChange={(e) => {
+                        try {
+                          set({ body: JSON.parse(e.target.value) });
+                        } catch {
+                          set({ body: e.target.value });
+                        }
+                      }}
+                    />
+                  </Field>
                 )}
               </>
             )}
@@ -481,7 +470,9 @@ export default function ConfigPanel({
                       type="number"
                       className={inputCls}
                       value={data.max_messages ?? 20}
-                      onChange={(e) => set({ max_messages: Number(e.target.value) })}
+                      onChange={(e) =>
+                        set({ max_messages: Number(e.target.value) })
+                      }
                     />
                   </Field>
                   <Field label="Max seconds">
@@ -489,17 +480,16 @@ export default function ConfigPanel({
                       type="number"
                       className={inputCls}
                       value={data.max_seconds ?? 10}
-                      onChange={(e) => set({ max_seconds: Number(e.target.value) })}
+                      onChange={(e) =>
+                        set({ max_seconds: Number(e.target.value) })
+                      }
                     />
                   </Field>
                 </div>
-                <Field label="JSON path (optional, e.g. events.0.trades)">
-                  <input
-                    className={inputCls}
-                    value={data.json_path || ""}
-                    onChange={(e) => set({ json_path: e.target.value })}
-                  />
-                </Field>
+                <p className="text-[11px] text-sub">
+                  Collects a bounded window (until max messages or seconds) then
+                  feeds those rows into the pipeline.
+                </p>
               </div>
             )}
           </>
@@ -531,6 +521,7 @@ export default function ConfigPanel({
         {/* ---------------- Gate ---------------- */}
         {type === "gate" && (
           <div className="space-y-4">
+            {/* dynamic inputs */}
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs font-medium text-sub">Inputs</span>
@@ -554,11 +545,12 @@ export default function ConfigPanel({
                 </div>
               </div>
               <p className="text-[11px] text-sub">
-                Each input is an orange handle on top of the node (
-                {gateArgs.join(", ")}). Drag a connection onto each.
+                Each input is a handle on top of the node (
+                {gateArgs.join(", ")}). Connect a node to each.
               </p>
             </div>
 
+            {/* conditional_function (locked signature) */}
             <div>
               <div className="mb-1 text-xs font-medium text-sub">
                 conditional_function{" "}
@@ -597,6 +589,7 @@ export default function ConfigPanel({
               </p>
             </div>
 
+            {/* routing branches */}
             <div className="space-y-2">
               <div className="text-xs font-medium text-sub">
                 Branch conditions (route the result per outgoing edge)
@@ -784,7 +777,11 @@ export default function ConfigPanel({
 
         {/* ---- Live preview (runs this node + its ancestors) ---- */}
         <div className="border-t border-line pt-3">
-          <button className="btn w-full" onClick={loadPreview} disabled={previewBusy}>
+          <button
+            className="btn w-full"
+            onClick={loadPreview}
+            disabled={previewBusy}
+          >
             {previewBusy ? "Running preview…" : "Preview output"}
           </button>
           {preview &&
@@ -794,7 +791,9 @@ export default function ConfigPanel({
               </div>
             ) : (
               <div className="mt-2">
-                <div className="mb-1 text-[11px] text-sub">{preview.row_count} rows</div>
+                <div className="mb-1 text-[11px] text-sub">
+                  {preview.row_count} rows
+                </div>
                 <div className="max-h-72 overflow-auto rounded-md border border-line">
                   <ResultsTable result={preview} />
                 </div>

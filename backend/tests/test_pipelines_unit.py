@@ -188,102 +188,76 @@ def test_func_runner() -> None:
     asyncio.run(run())
 
 
+# --------------------------------------------------------------------------
+# run_conditional — gate multi-input combine (locked signature)
+# --------------------------------------------------------------------------
+
 def test_run_conditional() -> None:
     async def run():
         a = [{"x": 1}]
         b = [{"x": 2}, {"x": 3}]
+
+        # concat: inputs are lists so `+` joins rows
         r = await func_runner.run_conditional("return input_1 + input_2",
                                               {"input_1": a, "input_2": b})
         check(r["ok"] and r["rows"] == [{"x": 1}, {"x": 2}, {"x": 3}],
               "conditional: input_1 + input_2 concatenates rows", f"got {r}")
+
+        # format/tag then combine
         r = await func_runner.run_conditional(
             "out = [{**x, 's': 'a'} for x in input_1] + "
             "[{**x, 's': 'b'} for x in input_2]\nreturn out",
             {"input_1": [{"v": 1}], "input_2": [{"v": 2}]})
         check(r["ok"] and r["rows"] == [{"v": 1, "s": "a"}, {"v": 2, "s": "b"}],
               "conditional: format + combine", f"got {r}")
+
+        # empty body defaults to returning input_1
         r = await func_runner.run_conditional("", {"input_1": a, "input_2": b})
-        check(r["ok"] and r["rows"] == a, "conditional: empty body → input_1")
-        r = await func_runner.run_conditional("raise ValueError('nope')", {"input_1": a})
+        check(r["ok"] and r["rows"] == a, "conditional: empty body → input_1",
+              f"got {r}")
+
+        # runtime error surfaces
+        r = await func_runner.run_conditional("raise ValueError('nope')",
+                                              {"input_1": a})
         check(r["ok"] is False and "nope" in (r["error"] or ""),
               "conditional: runtime error captured", f"got {r}")
 
     asyncio.run(run())
 
 
+# --------------------------------------------------------------------------
+# _ancestors / _dig / WS flatten
+# --------------------------------------------------------------------------
+
 def test_ancestors() -> None:
     edges = [{"source": "a", "target": "b"}, {"source": "b", "target": "c"},
              {"source": "x", "target": "c"}]
     check(pipelines._ancestors("c", edges) == {"a", "b", "x"},
           "ancestors: full upstream set")
-    check(pipelines._ancestors("a", edges) == set(), "ancestors: a source has none")
+    check(pipelines._ancestors("a", edges) == set(),
+          "ancestors: a source has none")
 
 
-def test_ws_and_api_helpers() -> None:
+def test_ws_parsing() -> None:
+    # Coinbase-ish payload → _flatten unwraps `events`
     payload = {"channel": "market_trades",
                "events": [{"type": "update", "price": "60000"}]}
-    check(pipelines._ws_rows(payload, None) == [{"type": "update", "price": "60000"}],
-          "ws: events unwrapped by _flatten")
+    rows = pipelines._ws_rows(payload, None)
+    check(rows == [{"type": "update", "price": "60000"}],
+          "ws: events unwrapped by _flatten", f"got {rows}")
+    # dotted json_path digs into nested lists
     nested = {"events": [{"trades": [{"p": 1}, {"p": 2}]}]}
     check(pipelines._dig(nested, "events.0.trades") == [{"p": 1}, {"p": 2}],
           "ws: _dig resolves list index + key")
-    check(pipelines._fields_dict(
-        {"body_fields": [{"key": "a", "value": "1"}, {"key": "", "value": "x"}]})
-        == {"a": "1"}, "api: _fields_dict drops blank keys")
-
-
-def test_run_llm(monkeypatch=None) -> None:
-    async def run():
-        calls = {"n": 0}
-
-        async def fake_complete(messages, **kw):
-            calls["n"] += 1
-            return "ANSWER"
-
-        orig = pipelines._llm_complete
-        pipelines._llm_complete = fake_complete
-        try:
-            rows = [{"id": 1}, {"id": 2}]
-            subs, out = await pipelines._run_llm(
-                {"mode": "per_row", "output_field": "ai"}, rows)
-            check(out == [{"id": 1, "ai": "ANSWER"}, {"id": 2, "ai": "ANSWER"}],
-                  "llm: per-row adds output column", f"got {out}")
-            subs, out = await pipelines._run_llm({"mode": "aggregate"}, rows)
-            check(out == [{"llm_output": "ANSWER"}], "llm: aggregate → one row",
-                  f"got {out}")
-
-            async def boom(messages, **kw):
-                raise RuntimeError("no key")
-            pipelines._llm_complete = boom
-            try:
-                await pipelines._run_llm({"mode": "per_row"}, rows)
-                check(False, "llm: all-errors raises")
-            except ValueError:
-                check(True, "llm: all-errors raises")
-        finally:
-            pipelines._llm_complete = orig
-
-    asyncio.run(run())
-
-
-def test_run_output_validation() -> None:
-    async def run():
-        subs, out = await pipelines._run_output({"kind": "api", "target": ""}, [{"a": 1}])
-        check(out == [{"a": 1}] and any(s["status"] == "skipped" for s in subs),
-              "output: no target → pass-through (skipped)", f"got {subs}")
-        subs, out = await pipelines._run_output({"kind": "sse"}, [{"a": 1}])
-        check(out == [{"a": 1}] and any(s["status"] == "skipped" for s in subs),
-              "output: sse passes through + skipped subtask", f"got {subs}")
-
-    asyncio.run(run())
+    check(pipelines._ws_rows(nested, "events.0.trades") == [{"p": 1}, {"p": 2}],
+          "ws: json_path extracts the trade rows")
 
 
 def main() -> int:
     print("== pipeline unit tests ==")
     for fn in (test_topo_order, test_eval_predicate, test_pg_type, test_coerce,
                test_flatten, test_csv_rows, test_out_table, test_func_runner,
-               test_run_conditional, test_ancestors, test_ws_and_api_helpers,
-               test_run_llm, test_run_output_validation):
+               test_run_conditional, test_ancestors, test_ws_parsing):
         fn()
     print(f"\n== {_passes} passed, {len(_failures)} failed ==")
     for f in _failures:

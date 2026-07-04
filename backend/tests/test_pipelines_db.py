@@ -85,7 +85,7 @@ _MERGE_CODE = (
 
 
 def _merge_graph() -> dict:
-    """ds1(3) + ds2(2) → gate(2 inputs, conditional_function) → output."""
+    """ds1(3 rows) + ds2(2 rows) → gate(2 inputs, conditional_function) → output."""
     return {
         "nodes": [
             {"id": "ds1", "type": "datasource", "position": {"x": 0, "y": 0},
@@ -189,23 +189,26 @@ async def _run() -> None:
               "error: downstream nodes skipped", f"got {elogs}")
         check(estats.get("failed", 0) >= 3, "error: stats count failures")
 
-        # 9. LIVE PREVIEW — mid-DAG node without a full run
+        # 9. LIVE PREVIEW — preview a mid-DAG node without a full run
         prev = await pipelines.preview_node(pid, _graph(), "fn")
         check(prev["ok"] and prev["row_count"] == 5,
-              "preview_node: function output live", f"got {prev.get('row_count')}")
+              "preview_node: function output live (no full run)",
+              f"got {prev.get('row_count')}")
+        prev_ds = await pipelines.preview_node(pid, _graph(), "ds")
+        check(prev_ds["row_count"] == 5, "preview_node: datasource live")
 
         # 10. TWO-INPUT GATE + conditional_function
         await pipelines.ingest_csv(pid, "ds1", "a.csv", "id\n1\n2\n3\n")
         await pipelines.ingest_csv(pid, "ds2", "b.csv", "id\n4\n5\n")
         run2 = await pipelines.run(pid, user_id, _merge_graph())
-        r2 = await db.pool().fetchval(
+        r2 = await db.pool().fetchrow(
             "SELECT status FROM app.pipeline_runs WHERE id=$1", run2)
-        check(r2 == "success", "merge: run succeeds", f"got {r2}")
+        check(r2["status"] == "success", "merge: run succeeds", f"got {r2['status']}")
         gate_rows = await pipelines._read_table(schema, "node_gate")
         check(len(gate_rows) == 5, "merge: conditional_function combined 3+2 → 5",
               f"got {len(gate_rows)}")
-        check({r.get("src") for r in gate_rows} == {"a", "b"},
-              "merge: both inputs tagged")
+        srcs = {r.get("src") for r in gate_rows}
+        check(srcs == {"a", "b"}, "merge: both inputs tagged in output", f"got {srcs}")
 
         # 11. multi-input gate WITHOUT a function fails cleanly
         nofn = _merge_graph()

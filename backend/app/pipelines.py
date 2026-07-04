@@ -188,6 +188,7 @@ def _flatten(obj: Any) -> list[dict]:
     if isinstance(obj, list):
         rows = obj
     elif isinstance(obj, dict):
+        # common shapes: {data: [...]}, {results: [...]}, {events: [...]} (Coinbase)
         for key in ("data", "results", "items", "records", "rows", "events"):
             if isinstance(obj.get(key), list):
                 rows = obj[key]
@@ -322,6 +323,77 @@ async def _rows_from_api(data: dict) -> list[dict]:
         except Exception:  # noqa: BLE001
             payload = {"raw": resp.text}
     return _flatten(payload)[:MAX_ROWS]
+
+
+def _dig(obj: Any, path: str) -> Any:
+    """Resolve a dotted path (with numeric indices) into a nested structure."""
+    cur = obj
+    for part in path.split("."):
+        if part == "":
+            continue
+        if isinstance(cur, list):
+            try:
+                cur = cur[int(part)]
+            except (ValueError, IndexError):
+                return None
+        elif isinstance(cur, dict):
+            cur = cur.get(part)
+        else:
+            return None
+    return cur
+
+
+def _ws_rows(payload: Any, path: str | None) -> list[dict]:
+    target = _dig(payload, path) if path else payload
+    return _flatten(target)
+
+
+async def _rows_from_ws(data: dict) -> list[dict]:
+    """Connect to a WebSocket feed, subscribe, and collect a bounded window.
+
+    The engine is batch, so a live source is treated as a "connector": we open
+    the socket, send the subscribe payload(s), collect messages until we hit
+    ``max_messages`` or ``max_seconds``, then hand those rows to the pipeline.
+    """
+    import time
+
+    import websockets  # lazy: only needed for WS sources
+
+    url = (data.get("ws_url") or "").strip()
+    if not url:
+        raise ValueError("WebSocket source needs a ws_url.")
+    subs = data.get("subscribe") or []
+    if isinstance(subs, str):
+        subs = [ln for ln in subs.splitlines() if ln.strip()]
+    max_messages = int(data.get("max_messages") or 20)
+    max_seconds = float(data.get("max_seconds") or 10)
+    path = (data.get("json_path") or "").strip() or None
+
+    rows: list[dict] = []
+    try:
+        async with websockets.connect(url, open_timeout=10, max_size=2 ** 22) as ws:
+            for s in subs:
+                await ws.send(s if isinstance(s, str) else json.dumps(s))
+            deadline = time.monotonic() + max_seconds
+            while len(rows) < max_messages and time.monotonic() < deadline:
+                remaining = deadline - time.monotonic()
+                try:
+                    msg = await asyncio.wait_for(ws.recv(), timeout=max(0.1, remaining))
+                except asyncio.TimeoutError:
+                    break
+                try:
+                    payload = json.loads(msg)
+                except (json.JSONDecodeError, TypeError):
+                    payload = {"raw": str(msg)}
+                for r in _ws_rows(payload, path):
+                    rows.append(r)
+                    if len(rows) >= max_messages:
+                        break
+    except ValueError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError(f"WebSocket error: {exc}")
+    return rows[:max_messages]
 
 
 async def _rows_from_postgres(data: dict) -> list[dict]:
@@ -461,13 +533,27 @@ async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
     elif ntype == "gate":
         return await _run_gate(conn, schema, nid, node, edges, all_rows, by_handle)
     elif ntype == "llm":
-        subtasks, out_rows = await _run_llm(data, all_rows)
+        subtasks, out_rows = _run_llm_stub(data, all_rows)
     elif ntype == "output":
-        subtasks, out_rows = await _run_output(data, all_rows)
+        subtasks, out_rows = _run_output_stub(data, all_rows)
     else:
         subtasks, out_rows = [], all_rows
     await _write_table(conn, schema, f"node_{nid}", out_rows)
     return subtasks, out_rows
+
+
+def _ancestors(node_id: str, edges: list[dict]) -> set[str]:
+    parents: dict[str, list[str]] = {}
+    for e in edges:
+        parents.setdefault(e["target"], []).append(e["source"])
+    seen: set[str] = set()
+    stack = [node_id]
+    while stack:
+        for p in parents.get(stack.pop(), []):
+            if p not in seen:
+                seen.add(p)
+                stack.append(p)
+    return seen
 
 
 async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
@@ -566,13 +652,15 @@ async def _run_function(data: dict, in_rows: list[dict]):
 async def _run_gate(conn, schema: str, nid: str, node: dict, edges: list[dict],
                     all_rows: list[dict], by_handle: dict[str, list[dict]]):
     """Combine the gate's inputs (via an optional/required conditional_function),
-    write the combined result to ``node_<gate>`` (for preview), then route rows
-    to each outgoing branch by its predicate. Returns (subtasks, rows)."""
+    write the combined result to ``node_<gate>`` (for preview), then route rows to
+    each outgoing branch's table by its predicate. Returns (subtasks, rows)."""
     data = node.get("data") or {}
     n_inputs = int(data.get("inputs") or 1)
     code = (data.get("code") or "").strip()
     subtasks: list[dict] = []
 
+    # gather named inputs; fall back to concatenated rows on input_1 if the edges
+    # carry no handle ids (older graphs)
     inputs = {f"input_{i}": list(by_handle.get(f"input_{i}", []))
               for i in range(1, n_inputs + 1)}
     if not any(inputs.values()) and all_rows:
@@ -581,7 +669,8 @@ async def _run_gate(conn, schema: str, nid: str, node: dict, edges: list[dict],
     if n_inputs >= 2:
         if not code:
             raise ValueError(
-                "A gate with multiple inputs requires a conditional_function.")
+                "A gate with multiple inputs requires a conditional_function "
+                "to combine them.")
         res = await func_runner.run_conditional(code, inputs)
         if not res["ok"]:
             raise ValueError(res.get("error") or "conditional_function failed.")
@@ -600,6 +689,7 @@ async def _run_gate(conn, schema: str, nid: str, node: dict, edges: list[dict],
         else:
             combined = base
 
+    # combined result (feeds preview + is the source for routing)
     await _write_table(conn, schema, f"node_{nid}", combined)
 
     conds = {c["target"]: c.get("expr", "") for c in data.get("conditions") or []}
@@ -746,7 +836,8 @@ async def node_preview(pipeline_id: int, node_id: str, limit: int = 100) -> dict
 async def preview_node(pipeline_id: int, graph: dict, node_id: str,
                        limit: int = 100) -> dict:
     """Live preview: execute the target node and all its ancestors on the CURRENT
-    graph, then return the node's output rows."""
+    (possibly unsaved) graph, then return the node's output rows. This makes
+    previews accurate for every node type instead of reading a stale last run."""
     nodes = graph.get("nodes") or []
     edges = graph.get("edges") or []
     node_map = {n["id"]: n for n in nodes}

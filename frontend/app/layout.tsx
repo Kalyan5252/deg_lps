@@ -2,9 +2,9 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SQLForge — Learn SQL by fixing production",
+  title: "D.E.G — Data Engineering Gym",
   description:
-    "An AI-mentored platform that teaches SQL through realistic data engineering incidents.",
+    "A data engineering practice platform for SQL, modeling, quality, indexing, optimization, and production-style incidents.",
 };
 
 export default function RootLayout({

@@ -60,10 +60,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {!collapsed && (
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded bg-ink text-sm font-bold text-white">
-                S
+                D
               </div>
               <div className="text-[15px] font-semibold tracking-tight">
-                SQLForge
+                D.E.G
               </div>
             </div>
           )}

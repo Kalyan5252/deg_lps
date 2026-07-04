@@ -26,6 +26,8 @@ from typing import Any
 TIMEOUT_S = 15
 MAX_ROWS = 50_000
 
+# One worker program handles both modes. Reads a JSON job on stdin, writes a
+# JSON result (after a NUL marker) on stdout. Runs in a pristine interpreter.
 _WORKER = r'''
 import io, json, sys, contextlib, traceback
 
@@ -72,6 +74,8 @@ try:
             exec(src, ns)
             fn = ns["conditional_function"]
             inputs = job.get("inputs") or {}
+            # each input is a list[dict] so `input_1 + input_2` concatenates rows
+            # as users expect; wrap in pd.DataFrame(...) explicitly for frame ops.
             out = fn(*[list(inputs.get(a) or []) for a in argnames])
         else:
             exec(job.get("code") or "", ns)
@@ -145,7 +149,8 @@ async def run_conditional(
 ) -> dict[str, Any]:
     """Execute a locked-signature `conditional_function(input_1, …)` body.
 
-    `inputs` maps each arg name to its rows; arg order follows sorted input keys.
+    `inputs` maps each arg name to its rows; arg order follows sorted input keys
+    (input_1, input_2, …).
     """
     argnames = sorted(inputs.keys(), key=lambda k: (len(k), k))
     capped = {a: (inputs.get(a) or [])[:MAX_ROWS] for a in argnames}
