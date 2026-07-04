@@ -350,6 +350,91 @@ ANALYZE;
 ))
 
 
+_register(Scenario(
+    key="failed_etl",
+    title="Failed ETL Import",
+    summary="The nightly loader crashed mid-batch. Source and target disagree and finance is reporting off the target table. Find the gap.",
+    path="data_quality",
+    difficulty=3,
+    tables=["staging_orders", "orders"],
+    story=(
+        "The 02:00 ETL job that copies staging_orders into orders died with an "
+        "out-of-memory error partway through last night's run. It was restarted "
+        "by the on-call, but nobody verified the load. This morning finance says "
+        "revenue 'looks light' — the target table seems to be missing part of the "
+        "newest batch (batch_id 5). Before re-running the loader you must quantify "
+        "the damage: exactly which source rows never made it into orders. "
+        "Reconcile the two tables and report every missing order id."
+    ),
+    objectives=[
+        "Compare staging_orders (source of truth) against orders (target).",
+        "Return the id of every source row that is missing from the target.",
+        "Order the ids ascending so the report is stable.",
+    ],
+    constraints=[
+        "Read-only triage: do NOT insert the missing rows yet.",
+        "Rows must be matched by id, the business key shared by both tables.",
+        "Expected output: a single `id` column, ascending.",
+    ],
+    hidden_problems=[
+        "The loader crashed 38% of the way through batch 5.",
+        "orders is missing every staging_orders row with id > 21900.",
+    ],
+    skills=["JOINS", "CTEs", "SELECT"],
+    success_criteria="Return exactly the source order ids absent from the target table, ordered ascending.",
+    kind="query",
+    starter_sql=(
+        "-- Which staging_orders rows never made it into orders?\n"
+        "-- Expected column: id (ascending)\n"
+        "-- Hint: an anti-join (LEFT JOIN ... IS NULL, or NOT EXISTS) finds\n"
+        "-- rows present on one side only.\n"
+        "SELECT count(*) AS source_rows FROM staging_orders;\n"
+    ),
+    seed_sql="""
+CREATE TABLE staging_orders (
+    id           BIGINT PRIMARY KEY,
+    customer_id  BIGINT NOT NULL,
+    amount       NUMERIC(10,2) NOT NULL,
+    batch_id     INT NOT NULL,
+    loaded_at    TIMESTAMPTZ NOT NULL
+);
+CREATE TABLE orders (
+    id           BIGINT PRIMARY KEY,
+    customer_id  BIGINT NOT NULL,
+    amount       NUMERIC(10,2) NOT NULL,
+    batch_id     INT NOT NULL,
+    loaded_at    TIMESTAMPTZ NOT NULL
+);
+
+-- 25k source rows across 5 nightly batches (5k each)
+INSERT INTO staging_orders (id, customer_id, amount, batch_id, loaded_at)
+SELECT g,
+       1 + (g % 3000),
+       round((20 + (g % 480))::numeric, 2),
+       1 + (g - 1) / 5000,
+       now() - (5 - (1 + (g - 1) / 5000)) * interval '1 day'
+FROM generate_series(1, 25000) g;
+
+-- the loader crashed partway through batch 5: only ids <= 21900 were copied
+INSERT INTO orders
+SELECT * FROM staging_orders WHERE id <= 21900;
+
+ANALYZE;
+""",
+    expected_sql=(
+        "SELECT s.id FROM staging_orders s "
+        "LEFT JOIN orders o ON o.id = s.id "
+        "WHERE o.id IS NULL ORDER BY s.id"
+    ),
+    checks=[
+        {"type": "matches", "weight": 80,
+         "label": "Returns exactly the source rows missing from the target"},
+        {"type": "row_count", "count": 3100, "weight": 20,
+         "label": "Finds all 3,100 unloaded rows"},
+    ],
+))
+
+
 # ----- Stubbed scenarios (visible, authored later) ------------------------
 
 def _stub(key: str, title: str, summary: str, path: str, difficulty: int,
@@ -363,9 +448,6 @@ def _stub(key: str, title: str, summary: str, path: str, difficulty: int,
     ))
 
 
-_stub("failed_etl", "Failed ETL Import",
-      "A nightly ETL job half-loaded a batch. Reconcile source vs. target and find the gap.",
-      "data_quality", 3, ["JOINS", "CTEs", "SELECT"])
 _stub("revenue_reporting", "Revenue Reporting Issue",
       "Monthly revenue doesn't tie out. Refunds and timezones are double-counting.",
       "analytics", 3, ["GROUP BY", "WINDOW FUNCTIONS", "CTEs"])
