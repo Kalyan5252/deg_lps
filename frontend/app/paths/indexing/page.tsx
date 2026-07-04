@@ -35,6 +35,13 @@ const slides = [
     title: "Single-column indexes",
     body: "A single-column index helps when filters, joins, or sorts commonly use one column.",
     example: "CREATE INDEX idx_customers_city ON customers (city);",
+    practice: {
+      prompt: "Create an index named idx_customers_city on customers(city).",
+      starter: "-- create the index here\n",
+      expected: "create index idx_customers_city on customers (city)",
+      hint: "Use CREATE INDEX idx_customers_city ON customers (city).",
+      result: "Index definition accepted.",
+    },
   },
   {
     eyebrow: "Screen 7",
@@ -59,6 +66,13 @@ const slides = [
     title: "Unique indexes",
     body: "A unique index improves lookup speed and enforces a rule: no two rows can have the same value for those indexed columns.",
     example: "CREATE UNIQUE INDEX idx_users_email ON users (email);",
+    practice: {
+      prompt: "Create a unique index named idx_users_email on users(email).",
+      starter: "-- enforce unique emails\n",
+      expected: "create unique index idx_users_email on users (email)",
+      hint: "Use CREATE UNIQUE INDEX idx_users_email ON users (email).",
+      result: "Unique index definition accepted.",
+    },
   },
   {
     eyebrow: "Screen 11",

@@ -17,6 +17,13 @@ const slides = [
     title: "Anonymous blocks",
     body: "An anonymous block is a one-off PL/SQL program. It has declaration, execution, and optional exception sections.",
     example: "DECLARE\n  v_count NUMBER;\nBEGIN\n  SELECT COUNT(*) INTO v_count FROM customers;\nEND;",
+    practice: {
+      prompt: "Write the anonymous block shown here.",
+      starter: "-- anonymous block\n",
+      expected: "declare v_count number; begin select count(*) into v_count from customers; end",
+      hint: "Use DECLARE, BEGIN, SELECT COUNT(*) INTO v_count, and END.",
+      result: "Anonymous block accepted.",
+    },
   },
   {
     eyebrow: "Screen 4",
@@ -35,6 +42,13 @@ const slides = [
     title: "Conditions",
     body: "IF statements let PL/SQL choose different actions based on data or input.",
     example: "IF v_total > 1000 THEN\n  v_tier := 'VIP';\nEND IF;",
+    practice: {
+      prompt: "Write an IF statement that sets v_tier to 'VIP' when v_total is over 1000.",
+      starter: "-- condition\n",
+      expected: "if v_total > 1000 then v_tier := 'vip'; end if",
+      hint: "Use IF v_total > 1000 THEN v_tier := 'VIP'; END IF.",
+      result: "Condition accepted.",
+    },
   },
   {
     eyebrow: "Screen 7",

@@ -35,6 +35,13 @@ const slides = [
     title: "SAVEPOINT",
     body: "A savepoint marks a checkpoint inside a transaction. You can roll back part of the work without throwing away everything.",
     example: "SAVEPOINT before_discount;\nUPDATE orders SET discount = 15 WHERE id = 101;\nROLLBACK TO before_discount;",
+    practice: {
+      prompt: "Create a savepoint named before_discount.",
+      starter: "-- savepoint\n",
+      expected: "savepoint before_discount",
+      hint: "Use SAVEPOINT before_discount.",
+      result: "Savepoint accepted.",
+    },
   },
   {
     eyebrow: "Screen 7",
@@ -67,6 +74,13 @@ const slides = [
     title: "Explicit transactions",
     body: "Explicit transactions are safer when multiple writes belong together. You start the transaction, run the checks, and commit only after the final state is correct.",
     example: "BEGIN;\nUPDATE accounts SET balance = balance - 500 WHERE id = 1;\nUPDATE accounts SET balance = balance + 500 WHERE id = 2;\nCOMMIT;",
+    practice: {
+      prompt: "Start a transaction, move 500 from account 1 to account 2, then commit.",
+      starter: "-- transfer transaction\n",
+      expected: "begin; update accounts set balance = balance - 500 where id = 1; update accounts set balance = balance + 500 where id = 2; commit",
+      hint: "Use BEGIN, two UPDATE statements, then COMMIT.",
+      result: "Transaction pattern accepted.",
+    },
   },
   {
     eyebrow: "Screen 13",
