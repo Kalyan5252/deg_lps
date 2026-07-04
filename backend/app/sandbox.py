@@ -113,6 +113,126 @@ async def provision_user_snapshot(
     return user_schema
 
 
+async def schema_graph(schema: str) -> dict[str, Any]:
+    """Return table/column metadata and inferred relations for a sandbox schema."""
+    async with db.pool().acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT
+                c.table_name,
+                c.column_name,
+                c.data_type,
+                c.ordinal_position,
+                COALESCE(pk.is_pk, false) AS is_pk
+            FROM information_schema.columns c
+            LEFT JOIN (
+                SELECT
+                    ku.table_schema,
+                    ku.table_name,
+                    ku.column_name,
+                    true AS is_pk
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage ku
+                  ON ku.constraint_name = tc.constraint_name
+                 AND ku.constraint_schema = tc.constraint_schema
+                 AND ku.table_schema = tc.table_schema
+                 AND ku.table_name = tc.table_name
+                WHERE tc.constraint_type = 'PRIMARY KEY'
+            ) pk
+              ON pk.table_schema = c.table_schema
+             AND pk.table_name = c.table_name
+             AND pk.column_name = c.column_name
+            WHERE c.table_schema = $1
+            ORDER BY c.table_name, c.ordinal_position
+            """,
+            schema,
+        )
+        counts = {
+            r["tablename"]: int(r["n"])
+            for r in await conn.fetch(
+                """
+                SELECT c.relname AS tablename, c.reltuples::bigint AS n
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = $1 AND c.relkind = 'r'
+                """,
+                schema,
+            )
+        }
+
+    tables_by_name: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        table = tables_by_name.setdefault(
+            row["table_name"],
+            {"name": row["table_name"], "columns": [], "row_count": counts.get(row["table_name"], 0)},
+        )
+        table["columns"].append(
+            {
+                "name": row["column_name"],
+                "type": _display_type(row["data_type"]),
+                "pk": bool(row["is_pk"]),
+            }
+        )
+
+    tables = list(tables_by_name.values())
+    return {"tables": tables, "relations": _infer_relations(tables)}
+
+
+def _display_type(data_type: str) -> str:
+    t = (data_type or "").lower()
+    if "timestamp" in t:
+        return "TIMESTAMP"
+    if t in ("bigint", "integer", "smallint"):
+        return "BIGINT" if t == "bigint" else "INT"
+    if t in ("numeric", "double precision", "real", "decimal"):
+        return "NUMERIC"
+    if t in ("character varying", "character", "text"):
+        return "TEXT"
+    return t.upper()
+
+
+def _singular(name: str) -> str:
+    return name[:-1] if name.endswith("s") else name
+
+
+def _infer_relations(tables: list[dict[str, Any]]) -> list[dict[str, str]]:
+    tmap = {t["name"]: t for t in tables}
+    aliases: dict[str, str] = {}
+    for name in tmap:
+        aliases[name] = name
+        aliases[_singular(name)] = name
+        aliases[f"{_singular(name)}s"] = name
+
+    relations: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str, str]] = set()
+
+    def has_col(table: str, col: str) -> bool:
+        return any(c["name"] == col for c in tmap[table]["columns"])
+
+    def add(from_table: str, from_col: str, to_table: str, to_col: str) -> None:
+        key = (from_table, from_col, to_table, to_col)
+        if from_table != to_table and to_table in tmap and key not in seen:
+            seen.add(key)
+            relations.append(
+                {
+                    "from_table": from_table,
+                    "from_col": from_col,
+                    "to_table": to_table,
+                    "to_col": to_col,
+                }
+            )
+
+    for table in tables:
+        for col in table["columns"]:
+            name = col["name"]
+            if name.endswith("_id") and name != "id":
+                base = name[:-3]
+                target = aliases.get(base) or aliases.get(f"{base}s")
+                if target and has_col(target, "id"):
+                    add(table["name"], name, target, "id")
+    return relations
+
+
 # --------------------------------------------------------------------------
 # Execution
 # --------------------------------------------------------------------------

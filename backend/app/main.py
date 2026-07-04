@@ -215,6 +215,12 @@ async def scenario_detail(key: str, user: dict = auth.CurrentUser):
     return {"scenario": scenario.public(), "progress": prog, "mentor_messages": messages}
 
 
+@app.get("/api/scenarios/{key}/schema")
+async def scenario_schema(key: str, user: dict = auth.CurrentUser):
+    schema = await _user_scenario_schema(user["id"], key)
+    return await sandbox.schema_graph(schema)
+
+
 @app.post("/api/scenarios/{key}/reset")
 async def reset_scenario(key: str, user: dict = auth.CurrentUser):
     scenario = get_scenario(key)
