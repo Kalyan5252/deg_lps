@@ -7,14 +7,14 @@
 # Replace REPLACE_ME_OWNER/REPLACE_ME_REPO and the region to match your DO
 # managed Postgres cluster's region. Secrets are set in the dashboard, not here.
 name: deg-api
-region: nyc
+region: blr        # BLR1 — same region as the managed Postgres cluster
 services:
   - name: api
     # Build the backend/ directory with its Dockerfile.
     source_dir: backend
     dockerfile_path: backend/Dockerfile
     github:
-      repo: REPLACE_ME_OWNER/REPLACE_ME_REPO
+      repo: Kalyan5252/deg_lps
       branch: master
       deploy_on_push: true
     http_port: 8080
