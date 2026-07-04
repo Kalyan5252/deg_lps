@@ -38,7 +38,7 @@ courses use a shared full-screen slide component.
 
 ### Scenarios shipped
 
-Fully playable: **Slow Dashboard** (missing FK index → seq scan), **Duplicate Customers** (dedup investigation), **Missing Indexes** (point-lookup seq scan), **Failed ETL Import** (source vs. target reconciliation of a half-loaded batch). Four more (Revenue Reporting, Data Quality, Inventory Mismatch, Customer Segmentation) are registered as "coming soon" stubs and easy to author — see `backend/app/scenarios.py`.
+Fully playable: **Slow Dashboard** (missing FK index → seq scan), **Duplicate Customers** (dedup investigation), **Missing Indexes** (point-lookup seq scan), **Failed ETL Import** (source vs. target reconciliation of a half-loaded batch), **Consumer Lag Pileup** (Kafka poison-message diagnosis on the Streaming & Kafka path). Six more (Revenue Reporting, Data Quality, Inventory Mismatch, Customer Segmentation, Rebalance Storm, Exactly-Once Gone Wrong) are registered as "coming soon" stubs and easy to author — see `backend/app/scenarios.py`.
 
 Main route groups in [backend/app/main.py](backend/app/main.py):
 
