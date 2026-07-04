@@ -113,6 +113,7 @@ export default function ConfigPanel({
   const [msg, setMsg] = useState<string | null>(null);
   const [intent, setIntent] = useState("");
   const [catalog, setCatalog] = useState<any[]>([]);
+  const [simPresets, setSimPresets] = useState<any[]>([]);
   const [hdrs, setHdrs] = useState<{ k: string; v: string }[]>([]);
   const [bodyFields, setBodyFields] = useState<{ k: string; v: string }[]>([]);
 
@@ -134,6 +135,12 @@ export default function ConfigPanel({
       api.globalDatasets().then(setCatalog).catch(() => {});
     }
   }, [node?.type, catalog.length]);
+
+  useEffect(() => {
+    if (node?.type === "datasource" && simPresets.length === 0) {
+      api.simPresets().then(setSimPresets).catch(() => {});
+    }
+  }, [node?.type, simPresets.length]);
 
   if (!node) return null;
   const type = node.type;
@@ -262,6 +269,8 @@ export default function ConfigPanel({
                 <option value="postgres">Postgres database</option>
                 <option value="api">HTTP API</option>
                 <option value="ws">WebSocket (live stream)</option>
+                <option value="kafka">Kafka topic (consume)</option>
+                <option value="sim">Simulated traffic (test bench)</option>
               </select>
             </Field>
 
@@ -569,6 +578,184 @@ export default function ConfigPanel({
                 </p>
               </div>
             )}
+
+            {data.kind === "kafka" && (
+              <div className="space-y-3 rounded-md border border-line bg-canvas p-3">
+                <span className="text-xs font-semibold text-ink">
+                  Kafka consumer — collects a bounded window from a topic
+                </span>
+                <Field label="Bootstrap servers">
+                  <input
+                    className={inputCls}
+                    placeholder="broker1:9092,broker2:9092"
+                    value={data.bootstrap_servers || ""}
+                    onChange={(e) => set({ bootstrap_servers: e.target.value })}
+                  />
+                </Field>
+                <Field label="Topic">
+                  <input
+                    className={inputCls}
+                    placeholder="orders.events"
+                    value={data.topic || ""}
+                    onChange={(e) => set({ topic: e.target.value })}
+                  />
+                </Field>
+                <div className="flex gap-2">
+                  <Field label="Group id (blank = no commits)">
+                    <input
+                      className={inputCls}
+                      value={data.group_id || ""}
+                      onChange={(e) => set({ group_id: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Start from">
+                    <select
+                      className={inputCls}
+                      value={data.offset_reset || "earliest"}
+                      onChange={(e) => set({ offset_reset: e.target.value })}
+                    >
+                      <option value="earliest">earliest</option>
+                      <option value="latest">latest</option>
+                    </select>
+                  </Field>
+                </div>
+                <div className="flex gap-2">
+                  <Field label="Max messages">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.max_messages ?? 100}
+                      onChange={(e) =>
+                        set({ max_messages: Number(e.target.value) })
+                      }
+                    />
+                  </Field>
+                  <Field label="Max seconds">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.max_seconds ?? 10}
+                      onChange={(e) =>
+                        set({ max_seconds: Number(e.target.value) })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="flex gap-2">
+                  <Field label="SASL username (optional)">
+                    <input
+                      className={inputCls}
+                      value={data.sasl_username || ""}
+                      onChange={(e) => set({ sasl_username: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="SASL password">
+                    <input
+                      type="password"
+                      className={inputCls}
+                      value={data.sasl_password || ""}
+                      onChange={(e) => set({ sasl_password: e.target.value })}
+                    />
+                  </Field>
+                </div>
+                <p className="text-[11px] text-sub">
+                  JSON messages become columns (plus _topic/_partition/_offset);
+                  non-JSON payloads land in a <code>raw</code> column. With a
+                  group id, offsets are committed so the next run resumes where
+                  this one stopped.
+                </p>
+              </div>
+            )}
+
+            {data.kind === "sim" && (
+              <div className="space-y-3 rounded-md border border-line bg-canvas p-3">
+                <span className="text-xs font-semibold text-ink">
+                  Traffic simulator — generate fake traffic to test this pipeline
+                </span>
+                <Field label="Traffic profile">
+                  <select
+                    className={inputCls}
+                    value={data.preset || "orders"}
+                    onChange={(e) => set({ preset: e.target.value })}
+                  >
+                    {(simPresets.length
+                      ? simPresets
+                      : [{ key: "orders", label: "E-commerce orders" }]
+                    ).map((p) => (
+                      <option key={p.key} value={p.key}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                  {(() => {
+                    const p = simPresets.find(
+                      (x) => x.key === (data.preset || "orders")
+                    );
+                    return p ? (
+                      <div className="mt-1 text-[11px] text-sub">
+                        Fields: {p.fields.map((f: any) => f.name).join(", ")}
+                      </div>
+                    ) : null;
+                  })()}
+                </Field>
+                <div className="flex gap-2">
+                  <Field label="Rows">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      value={data.rows ?? 200}
+                      onChange={(e) => set({ rows: Number(e.target.value) })}
+                    />
+                  </Field>
+                  <Field label="Seed (reproducible)">
+                    <input
+                      type="number"
+                      className={inputCls}
+                      placeholder="random"
+                      value={data.seed ?? ""}
+                      onChange={(e) =>
+                        set({
+                          seed:
+                            e.target.value === "" ? null : Number(e.target.value),
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="flex gap-2">
+                  {(
+                    [
+                      ["null_rate", "Null %"],
+                      ["dup_rate", "Duplicate %"],
+                      ["error_rate", "Corrupt %"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <Field key={key} label={label}>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        className={inputCls}
+                        value={Math.round(((data[key] ?? 0) as number) * 100)}
+                        onChange={(e) =>
+                          set({
+                            [key]:
+                              Math.max(0, Math.min(100, Number(e.target.value))) /
+                              100,
+                          })
+                        }
+                      />
+                    </Field>
+                  ))}
+                </div>
+                <p className="text-[11px] text-sub">
+                  Deterministic with a seed. Fault injection (nulls, duplicate
+                  rows, corrupted values) lets you verify your gates and
+                  transforms catch bad traffic. The first field is never
+                  faulted so duplicates stay detectable.
+                </p>
+              </div>
+            )}
           </>
         )}
 
@@ -800,6 +987,7 @@ export default function ConfigPanel({
                 <option value="sheets">Google Sheets (Apps Script webhook)</option>
                 <option value="alert">Alert (POST message + rows)</option>
                 <option value="ws">WebSocket (push rows)</option>
+                <option value="kafka">Kafka topic (produce)</option>
                 <option value="sse">Server-Sent Events</option>
               </select>
             </Field>
@@ -809,6 +997,8 @@ export default function ConfigPanel({
                   ? "Target ws:// URL"
                   : data.kind === "sse"
                   ? "SSE endpoint"
+                  : data.kind === "kafka"
+                  ? "Topic"
                   : "Target URL"
               }
             >
@@ -817,12 +1007,53 @@ export default function ConfigPanel({
                 placeholder={
                   data.kind === "ws"
                     ? "wss://example.com/ingest"
+                    : data.kind === "kafka"
+                    ? "orders.enriched"
                     : "https://example.com/webhook"
                 }
                 value={data.target || ""}
                 onChange={(e) => set({ target: e.target.value })}
               />
             </Field>
+            {data.kind === "kafka" && (
+              <>
+                <Field label="Bootstrap servers">
+                  <input
+                    className={inputCls}
+                    placeholder="broker1:9092,broker2:9092"
+                    value={data.bootstrap_servers || ""}
+                    onChange={(e) => set({ bootstrap_servers: e.target.value })}
+                  />
+                </Field>
+                <div className="flex gap-2">
+                  <Field label="Message key field (optional)">
+                    <input
+                      className={inputCls}
+                      placeholder="e.g. order_id"
+                      value={data.key_field || ""}
+                      onChange={(e) => set({ key_field: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="SASL username (optional)">
+                    <input
+                      className={inputCls}
+                      value={data.sasl_username || ""}
+                      onChange={(e) => set({ sasl_username: e.target.value })}
+                    />
+                  </Field>
+                </div>
+                {data.sasl_username && (
+                  <Field label="SASL password">
+                    <input
+                      type="password"
+                      className={inputCls}
+                      value={data.sasl_password || ""}
+                      onChange={(e) => set({ sasl_password: e.target.value })}
+                    />
+                  </Field>
+                )}
+              </>
+            )}
             {data.kind === "alert" && (
               <Field label="Alert message">
                 <input

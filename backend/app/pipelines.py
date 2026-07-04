@@ -21,7 +21,7 @@ from typing import Any
 
 import httpx
 
-from . import ai, custom, db, func_runner, global_datasets, sandbox
+from . import ai, custom, db, func_runner, global_datasets, sandbox, simulate
 
 MAX_ROWS = 50_000
 
@@ -325,6 +325,116 @@ async def _rows_from_api(data: dict) -> list[dict]:
     return _flatten(payload)[:MAX_ROWS]
 
 
+def _kafka_common(data: dict) -> tuple[str, dict]:
+    """Shared connection kwargs for Kafka source/sink nodes."""
+    servers = (data.get("bootstrap_servers") or "").strip()
+    if not servers:
+        raise ValueError("Kafka node needs bootstrap_servers (host:port[,host:port]).")
+    kwargs: dict[str, Any] = {"bootstrap_servers": servers,
+                              "request_timeout_ms": 15000}
+    protocol = (data.get("security_protocol") or "").strip().upper()
+    if protocol:
+        kwargs["security_protocol"] = protocol
+    username = (data.get("sasl_username") or "").strip()
+    if username:
+        kwargs.setdefault("security_protocol", "SASL_SSL")
+        kwargs["sasl_mechanism"] = (data.get("sasl_mechanism")
+                                    or "PLAIN").strip().upper()
+        kwargs["sasl_plain_username"] = username
+        kwargs["sasl_plain_password"] = data.get("sasl_password") or ""
+    return servers, kwargs
+
+
+async def _rows_from_kafka(data: dict) -> list[dict]:
+    """Consume a bounded window from a Kafka topic (batch 'connector', like WS).
+
+    Reads until ``max_messages`` or ``max_seconds``, then hands the rows to the
+    pipeline. JSON payloads become columns (plus _topic/_partition/_offset
+    metadata); non-JSON payloads land in a ``raw`` column.
+    """
+    import time as _time
+
+    from aiokafka import AIOKafkaConsumer  # lazy: only for Kafka sources
+
+    _, kwargs = _kafka_common(data)
+    topic = (data.get("topic") or "").strip()
+    if not topic:
+        raise ValueError("Kafka source needs a topic.")
+    max_messages = int(data.get("max_messages") or 100)
+    max_seconds = float(data.get("max_seconds") or 10)
+    group = (data.get("group_id") or "").strip() or None
+
+    consumer = AIOKafkaConsumer(
+        topic,
+        group_id=group,
+        auto_offset_reset=(data.get("offset_reset") or "earliest"),
+        enable_auto_commit=bool(group),
+        **kwargs,
+    )
+    rows: list[dict] = []
+    try:
+        await asyncio.wait_for(consumer.start(), timeout=15)
+        deadline = _time.monotonic() + max_seconds
+        while len(rows) < max_messages and _time.monotonic() < deadline:
+            remaining = max(0.05, deadline - _time.monotonic())
+            batches = await consumer.getmany(
+                timeout_ms=int(remaining * 1000), max_records=max_messages - len(rows))
+            for msgs in batches.values():
+                for m in msgs:
+                    try:
+                        payload = json.loads(m.value)
+                    except (json.JSONDecodeError, TypeError, UnicodeDecodeError):
+                        payload = {"raw": m.value.decode("utf-8", "replace")
+                                   if m.value else None}
+                    for r in _flatten(payload):
+                        rows.append({**r, "_topic": m.topic,
+                                     "_partition": m.partition,
+                                     "_offset": m.offset})
+                        if len(rows) >= max_messages:
+                            break
+    except ValueError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError(f"Kafka error: {exc}")
+    finally:
+        try:
+            await consumer.stop()
+        except Exception:  # noqa: BLE001
+            pass
+    return rows[:max_messages]
+
+
+async def _deliver_to_kafka(data: dict, rows: list[dict]) -> int:
+    """Produce rows as JSON messages to a Kafka topic. Returns messages sent."""
+    from aiokafka import AIOKafkaProducer  # lazy: only for Kafka outputs
+
+    _, kwargs = _kafka_common(data)
+    topic = (data.get("target") or data.get("topic") or "").strip()
+    if not topic:
+        raise ValueError("Kafka output needs a topic.")
+    key_field = (data.get("key_field") or "").strip() or None
+    capped = rows[:10_000]
+
+    producer = AIOKafkaProducer(**kwargs)
+    try:
+        await asyncio.wait_for(producer.start(), timeout=15)
+        for r in capped:
+            key = (str(r.get(key_field)).encode()
+                   if key_field and r.get(key_field) is not None else None)
+            await producer.send(topic, json.dumps(r, default=str).encode(), key=key)
+        await producer.flush()
+    except ValueError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError(f"Kafka error: {exc}")
+    finally:
+        try:
+            await producer.stop()
+        except Exception:  # noqa: BLE001
+            pass
+    return len(capped)
+
+
 async def _rows_from_postgres(data: dict) -> list[dict]:
     import asyncpg
     dsn = (data.get("dsn") or "").strip()
@@ -556,6 +666,17 @@ async def _run_datasource(pipeline_id: int, node: dict):
         rows = await _rows_from_postgres(data)
     elif kind == "ws":
         rows = await _rows_from_ws(data)
+    elif kind == "kafka":
+        rows = await _rows_from_kafka(data)
+    elif kind == "sim":
+        rows = simulate.generate(data)
+        faults = ", ".join(
+            f"{k.split('_')[0]}s {float(data.get(k)) * 100:.0f}%"
+            for k in ("null_rate", "dup_rate", "error_rate") if data.get(k))
+        subtasks.append({
+            "label": f"simulated traffic ({data.get('preset') or 'custom'}"
+                     + (f" · {faults}" if faults else "") + ")",
+            "status": "success"})
     else:
         raise ValueError(f"Unknown datasource kind: {kind!r}")
     subtasks.append({"label": f"fetched {len(rows)} rows", "status": "success"})
@@ -710,16 +831,22 @@ async def _run_output(data: dict, in_rows: list[dict]):
     """
     kind = (data.get("kind") or "api").lower()
     target = (data.get("target") or "").strip()
+    if kind == "kafka" and not target:
+        target = (data.get("topic") or "").strip()
     headers = dict(data.get("headers") or {})
     rows = in_rows[:MAX_ROWS]
     subtasks = [{"label": f"target: {kind}", "status": "success"}]
 
-    if not target and kind in ("api", "webhook", "sheets", "alert", "ws"):
+    if not target and kind in ("api", "webhook", "sheets", "alert", "ws", "kafka"):
         # unconfigured output shouldn't crash a run — pass rows through
         subtasks.append({"label": "no target set — pass-through", "status": "skipped"})
         return subtasks, in_rows
 
-    if kind in ("api", "webhook", "sheets", "alert"):
+    if kind == "kafka":
+        sent = await _deliver_to_kafka(data, rows)
+        subtasks.append({"label": f"produced {sent} messages to Kafka",
+                         "status": "success"})
+    elif kind in ("api", "webhook", "sheets", "alert"):
         if kind == "alert":
             body: Any = {"message": data.get("message")
                          or f"Pipeline alert: {len(rows)} rows", "rows": rows[:50]}

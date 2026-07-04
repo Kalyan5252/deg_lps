@@ -12,3 +12,4 @@ websockets==13.1
 
 # dev / tests
 pytest==8.3.4
+aiokafka==0.12.0

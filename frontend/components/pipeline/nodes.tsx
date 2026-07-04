@@ -10,7 +10,7 @@ export const NODE_META: Record<
     label: "Data source",
     glyph: "⛁",
     color: "#2563eb",
-    hint: "CSV · public · Postgres · API · WebSocket",
+    hint: "CSV · public · Postgres · API · WebSocket · Simulated",
   },
   function: {
     label: "Function",
@@ -34,7 +34,7 @@ export const NODE_META: Record<
     label: "Output / Stream",
     glyph: "⇥",
     color: "#059669",
-    hint: "SSE · API · WS · Sheets · Alerts",
+    hint: "API · WS · Kafka · Sheets · Alerts · SSE",
   },
 };
 
