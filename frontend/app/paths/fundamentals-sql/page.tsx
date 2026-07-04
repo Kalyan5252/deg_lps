@@ -26,6 +26,7 @@ type Lesson = {
   summary: string;
   bullets: string[];
   example: string;
+  accent?: string;
   prompt?: string;
   starter?: string;
   check?: (sql: string) => boolean;
@@ -119,11 +120,48 @@ const lineItemTable: SchemaTable = {
 const lessons: Lesson[] = [
   {
     section: 'Orientation',
-    subsection: 'SQL map',
+    subsection: 'Welcome',
     title: 'Fundamentals of SQL',
-    summary: 'A complete beginner path organized by the same core ideas you see across W3Schools SQL: querying, filtering, joining, aggregating, changing data, and defining database objects.',
-    bullets: ['Use the left rail to jump by section.', 'Interactive lessons include a SQL editor.', 'DDL lessons update the schema whiteboard when your statement passes.'],
+    summary: 'You are stepping into a tiny product company. Customers are signing up, orders are coming in, and the team keeps asking questions the dashboard cannot answer yet.',
+    bullets: [],
     example: 'SELECT columns FROM table WHERE condition ORDER BY column;',
+    accent: 'Start by learning how to ask the database clear questions.',
+  },
+  {
+    section: 'What is SQL',
+    subsection: 'Purpose',
+    title: 'What is SQL?',
+    summary: 'SQL is the language used to work with structured data. You use it to define tables, change rows, query information, summarize results, and protect relationships between tables.',
+    bullets: [],
+    example: 'SQL is both a question language and a database construction kit.',
+    accent: 'The purpose is simple: turn stored data into reliable answers.',
+  },
+  {
+    section: 'What is SQL',
+    subsection: 'Families',
+    title: 'Data Definition, Data Manipulation, and queries',
+    summary: 'SQL work usually falls into families. DDL creates and changes structure. DML changes rows. Queries read and shape data with SELECT, WHERE, JOIN, GROUP BY, ORDER BY, and related clauses.',
+    bullets: [],
+    example: 'DDL: CREATE, ALTER, DROP\nDML: INSERT, UPDATE, DELETE\nQuery: SELECT, WHERE, JOIN, GROUP BY',
+    accent: 'First design the table, then change the rows, then ask questions.',
+  },
+  {
+    section: 'What is SQL',
+    subsection: 'Clauses',
+    title: 'Clauses are the building blocks',
+    summary: 'A SQL statement is built from clauses. Each clause has a job: choose columns, choose tables, filter rows, combine tables, summarize groups, sort results, and limit output.',
+    bullets: [],
+    example: 'SELECT name\nFROM customers\nWHERE city = \'Chennai\'\nORDER BY name;',
+    accent: 'We will learn the clauses in the order a real analyst reaches for them.',
+  },
+  {
+    section: 'SELECT',
+    subsection: 'Story',
+    title: 'SELECT: choosing what to read',
+    summary: 'The team first needs to see what is inside the customer table. SELECT is the reading command: it chooses columns, FROM chooses the table, and the result becomes a tabular answer.',
+    bullets: [],
+    example: 'SELECT * FROM customers;\nSELECT name, city FROM customers;\nSELECT DISTINCT city FROM customers;',
+    accent: 'SELECT is where almost every data question begins.',
   },
   {
     section: 'SELECT',
@@ -166,6 +204,15 @@ const lessons: Lesson[] = [
     hint: 'Use SELECT DISTINCT city FROM customers.',
     result: result(['city'], Array.from(new Set(customers.map((c) => c.city))).map((city) => ({ city }))),
     tables: ['customers'],
+  },
+  {
+    section: 'Clauses',
+    subsection: 'Story',
+    title: 'Clauses: shaping the answer',
+    summary: 'After selecting columns, SQL clauses help narrow, sort, and control the result. WHERE filters rows, ORDER BY sorts them, and LIMIT keeps the output manageable while exploring.',
+    bullets: [],
+    example: "SELECT name, city\nFROM customers\nWHERE city = 'Chennai'\nORDER BY name\nLIMIT 10;",
+    accent: 'Clauses turn raw table access into intentional answers.',
   },
   {
     section: 'Clauses',
@@ -239,6 +286,15 @@ const lessons: Lesson[] = [
   },
   {
     section: 'Aggregation Functions',
+    subsection: 'Story',
+    title: 'Aggregation: turning rows into metrics',
+    summary: 'Managers rarely ask for every row. They ask for totals, counts, averages, highs, lows, and summaries by group. Aggregate functions are how SQL moves from records to metrics.',
+    bullets: [],
+    example: 'COUNT(*)\nSUM(amount)\nAVG(amount)\nMIN(amount)\nMAX(amount)',
+    accent: 'Aggregation is where SQL starts sounding like business language.',
+  },
+  {
+    section: 'Aggregation Functions',
     subsection: 'COUNT SUM AVG',
     title: 'Summarize rows',
     summary: 'Aggregate functions return one value from many rows. The essentials are COUNT, SUM, AVG, MIN, and MAX.',
@@ -264,6 +320,15 @@ const lessons: Lesson[] = [
     hint: 'Use GROUP BY city HAVING COUNT(*) > 1.',
     result: result(['city', 'count'], Object.entries(customers.reduce<Record<string, number>>((a, c) => ((a[c.city] = (a[c.city] || 0) + 1), a), {})).filter(([, count]) => count > 1).map(([city, count]) => ({ city, count }))),
     tables: ['customers'],
+  },
+  {
+    section: 'Joins',
+    subsection: 'Story',
+    title: 'Joins: connecting related tables',
+    summary: 'Real systems split data across tables. Customers live in one table, orders in another, and products in another. JOIN brings those related facts together.',
+    bullets: [],
+    example: 'customers.id = orders.customer_id\norders.product_id = products.id',
+    accent: 'A join is a relationship made visible.',
   },
   {
     section: 'Joins',
@@ -322,6 +387,15 @@ const lessons: Lesson[] = [
   },
   {
     section: 'DML',
+    subsection: 'Story',
+    title: 'DML: changing rows',
+    summary: 'Data Manipulation Language changes the contents of tables. INSERT adds rows, UPDATE changes existing rows, and DELETE removes rows. The structure stays; the records change.',
+    bullets: [],
+    example: 'INSERT INTO ... VALUES ...\nUPDATE ... SET ... WHERE ...\nDELETE FROM ... WHERE ...',
+    accent: 'DML is powerful because it changes the data people rely on.',
+  },
+  {
+    section: 'DML',
     subsection: 'INSERT',
     title: 'Add rows',
     summary: 'INSERT INTO adds new rows. INSERT INTO SELECT copies rows from a query into another table.',
@@ -347,6 +421,15 @@ const lessons: Lesson[] = [
     hint: "Use UPDATE customers SET plan = 'Team' WHERE name = 'Ben'.",
     result: result([], [], 'UPDATE 1'),
     tables: ['customers'],
+  },
+  {
+    section: 'DDL',
+    subsection: 'Story',
+    title: 'DDL: changing the shape of data',
+    summary: 'Data Definition Language creates, changes, and removes database objects. It answers structural questions: what tables exist, which columns they have, and how tables connect.',
+    bullets: [],
+    example: 'CREATE TABLE\nALTER TABLE\nDROP TABLE\nPRIMARY KEY\nFOREIGN KEY',
+    accent: 'DDL is the blueprint layer of SQL.',
   },
   {
     section: 'DDL',
@@ -496,135 +579,331 @@ export default function FundamentalsSqlPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0d11] text-white">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_88%_88%,rgba(57,169,246,0.28),transparent_44%),linear-gradient(135deg,#090a0d_0%,#101721_56%,#08111a_100%)]" />
-      <div className="fixed inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="relative flex min-h-screen">
-        <aside className="hidden w-80 shrink-0 border-r border-white/10 bg-black/25 p-5 backdrop-blur xl:block">
-          <Link href="/paths" className="text-sm text-white/60 hover:text-white">Exit course</Link>
-          <div className="mt-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Fundamentals map</div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full bg-white transition-all" style={{ width: `${progress}%` }} />
+    <div className="min-h-screen overflow-hidden bg-[#0b0d11] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_88%,rgba(57,169,246,0.28),transparent_44%),linear-gradient(135deg,#090a0d_0%,#101721_56%,#08111a_100%)]" />
+      <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:48px_48px]" />
+
+      <div className="relative flex min-h-screen flex-col">
+        <div className="course-rise relative z-[100] flex items-start justify-between px-8 py-5">
+          <Link href="/paths" className="text-sm text-white/60 hover:text-white">
+            Exit course
+          </Link>
+          <div className="flex items-start gap-4">
+            <SectionNavigator current={index} grouped={grouped} lessons={lessons} onJump={go} />
+            <div className="w-56">
+              <div className="mb-1 flex justify-between text-xs text-white/50">
+                <span>
+                  Slide {index + 1}/{lessons.length}
+                </span>
+                <span>{progress}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full bg-white transition-all" style={{ width: `${progress}%` }} />
+              </div>
             </div>
-            <div className="mt-2 text-xs text-white/55">Topic {index + 1}/{lessons.length}</div>
           </div>
-          <nav className="mt-6 max-h-[calc(100vh-150px)] space-y-4 overflow-auto pr-1">
-            {grouped.map(([section, items]) => (
-              <div key={section}>
-                <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200/80">{section}</div>
-                <div className="space-y-1">
-                  {items.map((item) => {
-                    const i = lessons.indexOf(item);
-                    return (
-                      <button
-                        key={`${item.section}-${item.subsection}-${item.title}`}
-                        onClick={() => go(i)}
-                        className={`block w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${i === index ? 'bg-white text-ink' : 'text-white/68 hover:bg-white/10 hover:text-white'}`}
-                      >
-                        <span className="block truncate font-medium">{item.subsection}</span>
-                        <span className="block truncate text-xs opacity-60">{item.title}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </nav>
-        </aside>
+        </div>
 
-        <main className="flex min-w-0 flex-1 flex-col p-5 lg:p-8">
-          <div className="mb-5 flex items-start justify-between gap-4 xl:hidden">
-            <Link href="/paths" className="text-sm text-white/60 hover:text-white">Exit course</Link>
-            <select
-              value={index}
-              onChange={(e) => go(Number(e.target.value))}
-              className="max-w-[68vw] rounded-md border border-white/15 bg-[#111827] px-3 py-2 text-sm text-white"
-            >
-              {lessons.map((l, i) => (
-                <option key={`${l.title}-${i}`} value={i}>
-                  {l.section} / {l.subsection}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <section className="grid min-h-0 flex-1 grid-cols-1 gap-5 2xl:grid-cols-[minmax(360px,0.74fr)_minmax(0,1.26fr)]">
-            <div className="flex min-h-0 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur">
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-200/80">{current.section} / {current.subsection}</div>
-              <h1 className="mt-4 text-4xl font-semibold tracking-normal">{current.title}</h1>
-              <p className="mt-4 text-base leading-7 text-white/72">{current.summary}</p>
-              <ul className="mt-5 space-y-2 text-sm leading-6 text-white/64">
-                {current.bullets.map((b) => <li key={b}>- {b}</li>)}
-              </ul>
-              <pre className="mt-5 overflow-auto rounded-md border border-white/10 bg-black/35 p-4 font-mono text-sm leading-7 text-emerald-100">{current.example}</pre>
-              {current.tables && (
-                <div className="mt-5 min-h-0 overflow-auto">
-                  <div className="mb-2 text-sm font-semibold text-white/85">Practice data</div>
-                  <div className="space-y-3">
-                    {current.tables.map((table) => (
-                      <div key={table} className="overflow-hidden rounded-md border border-white/10 bg-white">
-                        <div className="border-b border-line bg-canvas px-3 py-2 font-mono text-xs font-semibold text-ink">{table}</div>
-                        <div className="h-32 text-ink"><ResultsTable result={datasetResult(table)} /></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="mt-auto flex flex-wrap gap-2 pt-6">
-                <button className="btn" disabled={index === 0} onClick={() => go(index - 1)}>Back</button>
-                <button className="btn btn-primary" disabled={index === lessons.length - 1 || (practice && status !== 'pass')} onClick={() => go(index + 1)}>Next</button>
-                <button className="btn" onClick={() => setSchema({ tables: baseSchema, relations: baseRelations })}>Reset schema</button>
-              </div>
-            </div>
-
-            <div className="grid min-h-[720px] grid-rows-[minmax(330px,0.95fr)_minmax(300px,1.05fr)] gap-5">
-              <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-white shadow-2xl">
-                <div className="border-b border-line p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-sub">Interactive editor</div>
-                  <p className="mt-1 text-sm text-ink">{current.prompt || 'Read this topic, then continue. Practice appears on runnable lessons.'}</p>
-                </div>
-                <div className="min-h-0 flex-1">
-                  <Editor
-                    height="100%"
-                    defaultLanguage="sql"
-                    theme="vs"
-                    value={sql}
-                    onChange={(value) => setSql(value || '')}
-                    options={{ fontSize: 14, minimap: { enabled: false }, scrollBeyondLastLine: false, padding: { top: 16 }, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', renderLineHighlight: 'none' }}
-                  />
-                </div>
-                <div className="flex h-44 min-h-0 flex-col border-t border-line">
-                  <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
-                    <div className="text-xs font-medium uppercase tracking-wide text-sub">Result</div>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      {status === 'pass' && <span className="text-xs font-medium text-ok">Correct</span>}
-                      {status === 'fail' && <span className="max-w-80 truncate text-xs font-medium text-bad">{current.hint}</span>}
-                      <button className="btn !py-1" onClick={() => { setSql(current.starter || editorPrompt); setStatus('idle'); }}>Reset</button>
-                      <button className="btn btn-primary !py-1" disabled={!practice} onClick={run}>Run Check</button>
-                    </div>
-                  </div>
-                  <div className="min-h-0 flex-1 text-ink">
-                    {!practice ? (
-                      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-sub">Concept topic. Jump to the next editor lesson when ready.</div>
-                    ) : status === 'idle' ? (
-                      <div className="flex h-full items-center justify-center text-sm text-sub">Run the query when you are ready.</div>
-                    ) : status === 'fail' ? (
-                      <div className="m-4 rounded-md border border-bad/30 bg-bad/5 p-3 text-sm text-bad">The query is close. Use the statement pattern shown on this topic.</div>
-                    ) : (
-                      <ResultsTable result={shownResult} />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="min-h-0 overflow-hidden rounded-lg border border-white/10 bg-white shadow-2xl">
-                <SchemaCanvas tables={schema.tables} relations={schema.relations} storageKey="fundamentals-sql-live-schema" />
-              </div>
-            </div>
-          </section>
-        </main>
+        {practice ? (
+          <PracticeSlide
+            lesson={current}
+            slideNumber={index + 1}
+            sql={sql}
+            status={status}
+            result={shownResult}
+            schema={schema}
+            onSql={setSql}
+            onRun={run}
+            onReset={() => {
+              setSql(current.starter || editorPrompt);
+              setStatus('idle');
+            }}
+            onBack={() => go(index - 1)}
+            onNext={() => go(index + 1)}
+            isLast={index === lessons.length - 1}
+            canNext={status === 'pass'}
+            onResetSchema={() => setSchema({ tables: baseSchema, relations: baseRelations })}
+          />
+        ) : (
+          <StorySlide
+            lesson={current}
+            slideNumber={index + 1}
+            canBack={index > 0}
+            canNext={index < lessons.length - 1}
+            onBack={() => go(index - 1)}
+            onNext={() => go(index + 1)}
+          />
+        )}
       </div>
     </div>
+  );
+}
+
+function SectionNavigator({
+  current,
+  grouped,
+  lessons,
+  onJump,
+}: {
+  current: number;
+  grouped: Array<[string, Lesson[]]>;
+  lessons: Lesson[];
+  onJump: (index: number) => void;
+}) {
+  const currentLesson = lessons[current];
+  return (
+    <div className="group relative">
+      <button className="min-w-64 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-left backdrop-blur transition-colors hover:bg-white/15">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
+          Current screen
+        </div>
+        <div className="mt-0.5 truncate text-sm font-medium text-white">
+          {currentLesson.section} / {currentLesson.subsection}
+        </div>
+      </button>
+      <div className="invisible absolute right-0 top-full z-50 mt-3 max-h-[62vh] w-96 translate-y-2 overflow-auto rounded-lg border border-white/25 bg-[#050912] p-3 opacity-0 shadow-[0_28px_90px_rgba(0,0,0,0.82)] ring-1 ring-black transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+        {grouped.map(([section, items]) => (
+          <div key={section} className="mb-3 last:mb-0">
+            <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-200/80">
+              {section}
+            </div>
+            {items.map((item) => {
+              const i = lessons.indexOf(item);
+              return (
+                <button
+                  key={`${item.section}-${item.subsection}-${item.title}`}
+                  onClick={() => onJump(i)}
+                  className={`block w-full rounded-md px-3 py-2 text-left transition-colors ${
+                    i === current ? 'bg-white text-ink' : 'text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="text-[10px] uppercase tracking-[0.18em] opacity-60">
+                    Slide {i + 1}
+                  </div>
+                  <div className="truncate text-sm font-medium">{item.subsection}</div>
+                  <div className="truncate text-xs opacity-60">{item.title}</div>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StorySlide({
+  lesson,
+  slideNumber,
+  canBack,
+  canNext,
+  onBack,
+  onNext,
+}: {
+  lesson: Lesson;
+  slideNumber: number;
+  canBack: boolean;
+  canNext: boolean;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <main className="flex flex-1 items-center justify-center px-8 pb-16">
+      <section className="mx-auto max-w-6xl text-center">
+        <div className="course-rise text-sm font-semibold uppercase tracking-[0.32em] text-blue-200/80">
+          {lesson.section === 'Orientation' ? 'Welcome' : `Screen ${slideNumber}`}
+        </div>
+        <h1 className="course-rise course-rise-delay-1 mt-6 text-5xl font-semibold leading-tight tracking-normal md:text-7xl">
+          {lesson.title}
+        </h1>
+        <p className="course-rise course-rise-delay-2 mx-auto mt-8 max-w-5xl text-xl leading-9 text-white/72">
+          {lesson.summary}
+        </p>
+        {lesson.example && (
+          <div className="course-rise course-rise-delay-3 mx-auto mt-8 max-w-3xl whitespace-pre-wrap rounded-lg border border-white/10 bg-black/35 p-5 text-left font-mono text-sm leading-7 text-emerald-100">
+            {lesson.example}
+          </div>
+        )}
+        {lesson.accent && (
+          <p className="course-rise course-rise-delay-4 mt-6 font-serif text-2xl italic text-white">
+            {lesson.accent}
+          </p>
+        )}
+        <div className="course-rise course-rise-delay-5 mt-12 flex justify-center gap-3">
+          <button className="btn" disabled={!canBack} onClick={onBack}>
+            ← Back
+          </button>
+          <button className="btn btn-primary" disabled={!canNext} onClick={onNext}>
+            Next →
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function PracticeSlide({
+  lesson,
+  slideNumber,
+  sql,
+  status,
+  result,
+  schema,
+  onSql,
+  onRun,
+  onReset,
+  onBack,
+  onNext,
+  isLast,
+  canNext,
+  onResetSchema,
+}: {
+  lesson: Lesson;
+  slideNumber: number;
+  sql: string;
+  status: 'idle' | 'pass' | 'fail';
+  result: any;
+  schema: { tables: SchemaTable[]; relations: Relation[] };
+  onSql: (sql: string) => void;
+  onRun: () => void;
+  onReset: () => void;
+  onBack: () => void;
+  onNext: () => void;
+  isLast: boolean;
+  canNext: boolean;
+  onResetSchema: () => void;
+}) {
+  const shownTables = lesson.tables || [];
+  const showCanvas = Boolean(lesson.schemaPatch);
+
+  return (
+    <main className="flex min-h-0 flex-1 flex-col px-8 pb-8">
+      <section className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 grid-cols-1 gap-5 lg:grid-cols-[minmax(340px,0.78fr)_minmax(0,1.22fr)]">
+        <div className="course-rise flex min-h-0 flex-col rounded-lg border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur">
+          <div className="course-rise course-rise-delay-1 text-sm font-semibold uppercase tracking-[0.24em] text-blue-200/80">
+            {lesson.section} / {lesson.subsection} · Slide {slideNumber}
+          </div>
+          <h2 className="course-rise course-rise-delay-2 mt-5 text-4xl font-semibold tracking-normal">
+            {lesson.title}
+          </h2>
+          <p className="course-rise course-rise-delay-3 mt-5 text-base leading-7 text-white/72">
+            {lesson.summary}
+          </p>
+          {lesson.bullets.length > 0 && (
+            <ul className="course-rise course-rise-delay-4 mt-4 space-y-2 text-sm leading-6 text-white/58">
+              {lesson.bullets.map((bullet) => (
+                <li key={bullet}>- {bullet}</li>
+              ))}
+            </ul>
+          )}
+          <div className="course-rise course-rise-delay-5 mt-5 whitespace-pre-wrap rounded-md border border-white/10 bg-black/35 p-4 font-mono text-sm leading-7 text-emerald-100">
+            {lesson.example}
+          </div>
+
+          <div className="course-rise course-rise-delay-6 mt-6 min-h-0 flex-1 overflow-auto">
+            {shownTables.length > 0 && (
+              <>
+                <div className="mb-2 text-sm font-semibold text-white/85">Dataset</div>
+                <div className="space-y-3">
+                  {shownTables.map((table) => (
+                    <div key={table} className="overflow-hidden rounded-md border border-white/10 bg-white">
+                      <div className="border-b border-line bg-canvas px-3 py-2 font-mono text-xs font-semibold text-ink">
+                        {table}
+                      </div>
+                      <div className="h-32 text-ink">
+                        <ResultsTable result={datasetResult(table)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            {showCanvas && (
+              <div className="mt-4 overflow-hidden rounded-md border border-white/10 bg-white">
+                <div className="flex items-center justify-between border-b border-line bg-canvas px-3 py-2">
+                  <div className="font-mono text-xs font-semibold text-ink">Schema whiteboard</div>
+                  <button className="rounded px-2 py-1 text-xs text-sub hover:bg-white" onClick={onResetSchema}>
+                    Reset
+                  </button>
+                </div>
+                <div className="h-72 text-ink">
+                  <SchemaCanvas
+                    tables={schema.tables}
+                    relations={schema.relations}
+                    storageKey="fundamentals-sql-live-schema"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="course-rise course-rise-delay-2 flex min-h-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-white shadow-2xl">
+          <div className="course-rise course-rise-delay-3 border-b border-line p-5">
+            <div className="text-xs font-semibold uppercase tracking-wide text-sub">
+              Your turn
+            </div>
+            <p className="mt-1 text-sm text-ink">{lesson.prompt}</p>
+          </div>
+          <div className="course-rise course-rise-delay-4 min-h-0 flex-1">
+            <Editor
+              height="100%"
+              defaultLanguage="sql"
+              theme="vs"
+              value={sql}
+              onChange={(value) => onSql(value || '')}
+              options={{
+                fontSize: 14,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                padding: { top: 16 },
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                renderLineHighlight: 'none',
+              }}
+            />
+          </div>
+          <div className="course-rise course-rise-delay-5 flex h-56 min-h-0 flex-col border-t border-line">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
+              <div className="text-xs font-medium uppercase tracking-wide text-sub">
+                Result
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {status === 'pass' && <span className="text-xs font-medium text-ok">Correct</span>}
+                {status === 'fail' && (
+                  <span className="max-w-72 truncate text-xs font-medium text-bad">
+                    {lesson.hint}
+                  </span>
+                )}
+                <button className="btn !py-1" onClick={onReset}>
+                  Reset
+                </button>
+                <button className="btn btn-primary !py-1" onClick={onRun}>
+                  Run Check
+                </button>
+                <button className="btn !py-1" onClick={onBack}>
+                  ← Back
+                </button>
+                <button className="btn !py-1" disabled={!canNext || isLast} onClick={onNext}>
+                  Next →
+                </button>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1 text-ink">
+              {status === 'idle' ? (
+                <div className="flex h-full items-center justify-center text-sm text-sub">
+                  Run the query when you are ready.
+                </div>
+              ) : status === 'fail' ? (
+                <div className="m-4 rounded-md border border-bad/30 bg-bad/5 p-3 text-sm text-bad">
+                  The query is close. Use the statement pattern shown on this slide.
+                </div>
+              ) : (
+                <ResultsTable result={result} />
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
