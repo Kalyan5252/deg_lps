@@ -520,7 +520,8 @@ async def _gather_inputs(schema: str, node_map: dict, edges: list[dict], nid: st
 
 async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
                         edges: list[dict], all_rows: list[dict],
-                        by_handle: dict[str, list[dict]]):
+                        by_handle: dict[str, list[dict]],
+                        user_id: int | None = None):
     """Run a single node into the sandbox schema. Returns (subtasks, out_rows).
     Shared by the full run and by live previews."""
     nid = node["id"]
@@ -533,7 +534,7 @@ async def _execute_node(pipeline_id: int, conn, schema: str, node: dict,
     elif ntype == "gate":
         return await _run_gate(conn, schema, nid, node, edges, all_rows, by_handle)
     elif ntype == "llm":
-        subtasks, out_rows = await _run_llm(data, all_rows)
+        subtasks, out_rows = await _run_llm(data, all_rows, user_id=user_id)
     elif ntype == "output":
         subtasks, out_rows = await _run_output(data, all_rows)
     else:
@@ -594,7 +595,8 @@ async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
             subtasks: list[dict] = []
             try:
                 subtasks, out_rows = await _execute_node(
-                    pipeline_id, conn, schema, node, edges, all_rows, by_handle)
+                    pipeline_id, conn, schema, node, edges, all_rows, by_handle,
+                    user_id=user_id)
                 produced.add(nid)
                 ok_count += 1
                 dur = (datetime.utcnow() - t0).total_seconds() * 1000
@@ -707,11 +709,12 @@ async def _run_gate(conn, schema: str, nid: str, node: dict, edges: list[dict],
 # --------------------------------------------------------------------------
 
 async def _llm_complete(messages: list[dict], *, model: str, api_key: str,
-                        base_url: str, max_tokens: int = 300) -> str:
+                        base_url: str, max_tokens: int = 300,
+                        user_id: int | None = None) -> str:
     """Call an OpenAI-compatible endpoint using the node's own model/key/base
     URL when provided; otherwise fall back to the platform's configured provider."""
     if not (model and base_url):
-        return await ai._chat(messages, max_tokens=max_tokens)
+        return await ai._chat(messages, max_tokens=max_tokens, user_id=user_id)
     url = f"{base_url.rstrip('/')}/chat/completions"
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -725,7 +728,7 @@ async def _llm_complete(messages: list[dict], *, model: str, api_key: str,
     return data["choices"][0]["message"]["content"].strip()
 
 
-async def _run_llm(data: dict, in_rows: list[dict]):
+async def _run_llm(data: dict, in_rows: list[dict], user_id: int | None = None):
     model = (data.get("model") or "").strip()
     api_key = (data.get("api_key") or "").strip()
     base_url = (data.get("base_url") or "").strip()
@@ -742,7 +745,8 @@ async def _run_llm(data: dict, in_rows: list[dict]):
         resp = await _llm_complete(
             [{"role": "system", "content": system_prompt},
              {"role": "user", "content": user}],
-            model=model, api_key=api_key, base_url=base_url, max_tokens=500)
+            model=model, api_key=api_key, base_url=base_url, max_tokens=500,
+            user_id=user_id)
         subtasks.append({"label": "aggregate reasoning", "status": "success"})
         return subtasks, [{out_field: resp}]
 
@@ -755,7 +759,8 @@ async def _run_llm(data: dict, in_rows: list[dict]):
             resp = await _llm_complete(
                 [{"role": "system", "content": system_prompt},
                  {"role": "user", "content": json.dumps(r)[:4000]}],
-                model=model, api_key=api_key, base_url=base_url, max_tokens=200)
+                model=model, api_key=api_key, base_url=base_url, max_tokens=200,
+                user_id=user_id)
         except Exception as exc:  # noqa: BLE001
             resp = f"[llm error: {exc}]"
             errors += 1
@@ -863,7 +868,9 @@ async def preview_node(pipeline_id: int, graph: dict, node_id: str,
 # LLM: generate a system prompt from the user's intent
 # --------------------------------------------------------------------------
 
-async def gen_system_prompt(intent: str, sample_columns: list[str]) -> str:
+async def gen_system_prompt(
+    intent: str, sample_columns: list[str], user_id: int | None = None
+) -> str:
     cols = ", ".join(sample_columns[:30]) or "(unknown)"
     messages = [
         {"role": "system", "content":
@@ -875,7 +882,7 @@ async def gen_system_prompt(intent: str, sample_columns: list[str]) -> str:
          "Write a system prompt instructing the model how to process each row."},
     ]
     try:
-        return (await ai._chat(messages, max_tokens=300)).strip()
+        return (await ai._chat(messages, max_tokens=300, user_id=user_id)).strip()
     except Exception:
         return (f"You are a data-processing assistant. For each record "
                 f"(columns: {cols}), {intent}. Respond concisely with only the "

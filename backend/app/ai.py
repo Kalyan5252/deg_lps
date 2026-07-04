@@ -9,14 +9,18 @@ from __future__ import annotations
 import json
 import logging
 import re
+import base64
 from typing import Any
 
 import httpx
 
+from . import db
 from .config import get_settings
 from .scenarios import Scenario
 
 logger = logging.getLogger("sqlforge.ai")
+
+OLLAMA_CLOUD_DEFAULT_MODEL = "gemma4:31b-cloud"
 
 MENTOR_SYSTEM = """\
 You are a senior data engineer mentoring a teammate through a live production \
@@ -37,46 +41,230 @@ lectures unless asked.
 """
 
 
-def _client_headers() -> dict[str, str]:
+def _mask_key(key: str | None) -> str | None:
+    if not key:
+        return None
+    if len(key) <= 8:
+        return "••••"
+    return f"{key[:4]}…{key[-4:]}"
+
+
+def _secret_bytes() -> bytes:
+    secret = get_settings().jwt_secret or "sqlforge-dev-secret"
+    return secret.encode("utf-8")
+
+
+def encrypt_api_key(api_key: str) -> str:
+    """Small reversible obfuscation so keys are not stored as plain text.
+
+    For production deployments this should be replaced with KMS/secret-manager
+    envelope encryption, but keeping it local avoids adding a dependency here.
+    """
+    raw = api_key.encode("utf-8")
+    secret = _secret_bytes()
+    mixed = bytes(b ^ secret[i % len(secret)] for i, b in enumerate(raw))
+    return base64.urlsafe_b64encode(mixed).decode("ascii")
+
+
+def decrypt_api_key(value: str | None) -> str:
+    if not value:
+        return ""
+    try:
+        raw = base64.urlsafe_b64decode(value.encode("ascii"))
+        secret = _secret_bytes()
+        return bytes(b ^ secret[i % len(secret)] for i, b in enumerate(raw)).decode("utf-8")
+    except Exception:
+        return ""
+
+
+async def user_ai_settings(user_id: int) -> dict[str, Any]:
+    row = await db.pool().fetchrow(
+        "SELECT provider, base_url, model, api_key_enc, enabled, updated_at "
+        "FROM app.ai_settings WHERE user_id=$1",
+        user_id,
+    )
+    if not row:
+        return {
+            "provider": "platform_default",
+            "base_url": get_settings().ai_base_url,
+            "model": get_settings().ai_model,
+            "enabled": False,
+            "has_api_key": False,
+            "api_key_mask": None,
+        }
+    api_key = decrypt_api_key(row["api_key_enc"])
+    return {
+        "provider": row["provider"],
+        "base_url": row["base_url"],
+        "model": row["model"],
+        "enabled": bool(row["enabled"]),
+        "has_api_key": bool(api_key),
+        "api_key_mask": _mask_key(api_key),
+        "updated_at": row["updated_at"],
+    }
+
+
+async def save_user_ai_settings(
+    user_id: int,
+    *,
+    provider: str = "ollama_cloud",
+    base_url: str = "https://ollama.com",
+    model: str = OLLAMA_CLOUD_DEFAULT_MODEL,
+    api_key: str | None = None,
+    enabled: bool = True,
+) -> dict[str, Any]:
+    provider = (provider or "ollama_cloud").strip()
+    base_url = (base_url or "https://ollama.com").strip().rstrip("/")
+    model = (model or OLLAMA_CLOUD_DEFAULT_MODEL).strip()
+    if provider != "ollama_cloud":
+        raise ValueError("Only Ollama Cloud is supported for user AI settings right now.")
+    if enabled and not api_key:
+        current = await user_ai_settings(user_id)
+        if not current.get("has_api_key"):
+            raise ValueError("Ollama API key is required to enable user AI.")
+    api_key_enc = encrypt_api_key(api_key.strip()) if api_key and api_key.strip() else None
+    if api_key_enc:
+        await db.pool().execute(
+            "INSERT INTO app.ai_settings "
+            "(user_id, provider, base_url, model, api_key_enc, enabled, updated_at) "
+            "VALUES ($1,$2,$3,$4,$5,$6,now()) "
+            "ON CONFLICT (user_id) DO UPDATE SET provider=$2, base_url=$3, "
+            "model=$4, api_key_enc=$5, enabled=$6, updated_at=now()",
+            user_id, provider, base_url, model, api_key_enc, enabled,
+        )
+    else:
+        await db.pool().execute(
+            "INSERT INTO app.ai_settings "
+            "(user_id, provider, base_url, model, enabled, updated_at) "
+            "VALUES ($1,$2,$3,$4,$5,now()) "
+            "ON CONFLICT (user_id) DO UPDATE SET provider=$2, base_url=$3, "
+            "model=$4, enabled=$5, updated_at=now()",
+            user_id, provider, base_url, model, enabled,
+        )
+    return await user_ai_settings(user_id)
+
+
+async def disable_user_ai_settings(user_id: int) -> dict[str, Any]:
+    await db.pool().execute(
+        "UPDATE app.ai_settings SET enabled=false, updated_at=now() WHERE user_id=$1",
+        user_id,
+    )
+    return await user_ai_settings(user_id)
+
+
+async def _provider(user_id: int | None = None) -> dict[str, Any]:
+    if user_id is not None:
+        row = await db.pool().fetchrow(
+            "SELECT provider, base_url, model, api_key_enc, enabled "
+            "FROM app.ai_settings WHERE user_id=$1",
+            user_id,
+        )
+        if row and row["enabled"] and row["api_key_enc"]:
+            return {
+                "provider": row["provider"],
+                "base_url": row["base_url"],
+                "model": row["model"],
+                "api_key": decrypt_api_key(row["api_key_enc"]),
+                "timeout": get_settings().ai_timeout_seconds,
+            }
     s = get_settings()
+    return {
+        "provider": "openai_compatible",
+        "base_url": s.ai_base_url,
+        "model": s.ai_model,
+        "api_key": s.lightning_api_key,
+        "timeout": s.ai_timeout_seconds,
+    }
+
+
+async def _ai_available(user_id: int | None = None) -> bool:
+    if user_id is not None:
+        row = await db.pool().fetchrow(
+            "SELECT enabled, api_key_enc FROM app.ai_settings WHERE user_id=$1",
+            user_id,
+        )
+        if row and row["enabled"] and row["api_key_enc"]:
+            return True
+    return get_settings().ai_enabled
+
+
+def _client_headers(api_key: str | None = None) -> dict[str, str]:
     headers = {"Content-Type": "application/json"}
-    if s.lightning_api_key.strip():  # local providers (Ollama) need no auth
-        headers["Authorization"] = f"Bearer {s.lightning_api_key}"
+    if api_key and api_key.strip():  # local providers (Ollama) need no auth
+        headers["Authorization"] = f"Bearer {api_key.strip()}"
     return headers
 
 
 async def _chat(messages: list[dict[str, str]], *, max_tokens: int = 600,
-                temperature: float = 0.4) -> str:
-    s = get_settings()
-    url = f"{s.ai_base_url.rstrip('/')}/chat/completions"
+                temperature: float = 0.4, user_id: int | None = None) -> str:
+    p = await _provider(user_id)
+    if p["provider"] == "ollama_cloud":
+        url = f"{p['base_url'].rstrip('/')}/api/chat"
+        payload = {
+            "model": p["model"],
+            "messages": messages,
+            "stream": False,
+            "options": {"temperature": temperature, "num_predict": max_tokens},
+        }
+        async with httpx.AsyncClient(timeout=p["timeout"]) as client:
+            resp = await client.post(url, headers=_client_headers(p["api_key"]), json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        return data["message"]["content"].strip()
+
+    url = f"{p['base_url'].rstrip('/')}/chat/completions"
     payload = {
-        "model": s.ai_model,
+        "model": p["model"],
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
     }
-    async with httpx.AsyncClient(timeout=s.ai_timeout_seconds) as client:
-        resp = await client.post(url, headers=_client_headers(), json=payload)
+    async with httpx.AsyncClient(timeout=p["timeout"]) as client:
+        resp = await client.post(url, headers=_client_headers(p["api_key"]), json=payload)
         resp.raise_for_status()
         data = resp.json()
     return data["choices"][0]["message"]["content"].strip()
 
 
 async def _chat_stream(messages: list[dict[str, str]], *, max_tokens: int = 900,
-                       temperature: float = 0.4):
+                       temperature: float = 0.4, user_id: int | None = None):
     """Async generator yielding content deltas from an OpenAI-compatible stream."""
-    s = get_settings()
-    url = f"{s.ai_base_url.rstrip('/')}/chat/completions"
+    p = await _provider(user_id)
+    if p["provider"] == "ollama_cloud":
+        url = f"{p['base_url'].rstrip('/')}/api/chat"
+        payload = {
+            "model": p["model"],
+            "messages": messages,
+            "stream": True,
+            "options": {"temperature": temperature, "num_predict": max_tokens},
+        }
+        async with httpx.AsyncClient(timeout=p["timeout"]) as client:
+            async with client.stream(
+                "POST", url, headers=_client_headers(p["api_key"]), json=payload
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    try:
+                        delta = json.loads(line).get("message", {}).get("content")
+                    except Exception:
+                        continue
+                    if delta:
+                        yield delta
+        return
+
+    url = f"{p['base_url'].rstrip('/')}/chat/completions"
     payload = {
-        "model": s.ai_model,
+        "model": p["model"],
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
         "stream": True,
     }
-    async with httpx.AsyncClient(timeout=s.ai_timeout_seconds) as client:
+    async with httpx.AsyncClient(timeout=p["timeout"]) as client:
         async with client.stream(
-            "POST", url, headers=_client_headers(), json=payload
+            "POST", url, headers=_client_headers(p["api_key"]), json=payload
         ) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -114,9 +302,9 @@ async def mentor_reply(
     history: list[dict[str, str]],
     current_sql: str | None,
     last_result: dict[str, Any] | None,
+    user_id: int | None = None,
 ) -> str:
-    settings = get_settings()
-    if not settings.ai_enabled:
+    if not await _ai_available(user_id):
         return _fallback_mentor(scenario, history, current_sql, last_result)
 
     context = _scenario_brief(scenario)
@@ -135,7 +323,7 @@ async def mentor_reply(
     ]
     messages += [{"role": m["role"], "content": m["content"]} for m in history[-12:]]
     try:
-        return await _chat(messages, max_tokens=400, temperature=0.5)
+        return await _chat(messages, max_tokens=400, temperature=0.5, user_id=user_id)
     except Exception as exc:
         logger.warning("AI mentor call failed, using fallback: %s", _ai_error(exc))
         return _fallback_mentor(scenario, history, current_sql, last_result)
@@ -147,10 +335,9 @@ async def mentor_reply(
 
 async def evaluation_feedback(
     scenario: Scenario, user_sql: str, score: int,
-    checks: list[dict[str, Any]], passed: bool,
+    checks: list[dict[str, Any]], passed: bool, user_id: int | None = None,
 ) -> dict[str, Any]:
-    settings = get_settings()
-    if not settings.ai_enabled:
+    if not await _ai_available(user_id):
         return _fallback_feedback(scenario, score, checks, passed)
 
     checks_text = "\n".join(
@@ -174,7 +361,7 @@ async def evaluation_feedback(
                 {"role": "system", "content": "You are a precise senior SQL reviewer. Output only JSON."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=500, temperature=0.3,
+            max_tokens=500, temperature=0.3, user_id=user_id,
         )
         parsed = _extract_json(raw)
         if parsed:
@@ -200,13 +387,14 @@ def _ai_error(exc: Exception) -> str:
 
 async def custom_question_ai(
     schema_text: str, level: int, recent_prompts: list[str],
+    user_id: int | None = None,
 ) -> dict[str, Any] | None:
     """Ask the model for a question + reference SQL over a user's dataset.
 
     Returns {prompt, reference_sql, skills} or None (caller falls back to the
     deterministic template generator and always validates the reference SQL).
     """
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return None
     avoid = "\n".join(f"- {p}" for p in recent_prompts[-6:]) or "(none yet)"
     prompt = (
@@ -227,7 +415,7 @@ async def custom_question_ai(
                 {"role": "system", "content": "You output only valid JSON."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=500, temperature=0.6,
+            max_tokens=500, temperature=0.6, user_id=user_id,
         )
         parsed = _extract_json(raw)
         if parsed and parsed.get("prompt") and parsed.get("reference_sql"):
@@ -240,9 +428,9 @@ async def custom_question_ai(
 
 async def custom_feedback(
     prompt: str, user_sql: str, passed: bool,
-    expected_rows: int, got_rows: int,
+    expected_rows: int, got_rows: int, user_id: int | None = None,
 ) -> dict[str, Any]:
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return _fallback_custom_feedback(passed, expected_rows, got_rows)
     msg = (
         f"Exercise: {prompt}\n\n"
@@ -260,7 +448,7 @@ async def custom_feedback(
                 {"role": "system", "content": "You output only valid JSON."},
                 {"role": "user", "content": msg},
             ],
-            max_tokens=400, temperature=0.4,
+            max_tokens=400, temperature=0.4, user_id=user_id,
         )
         parsed = _extract_json(raw)
         if parsed:
@@ -317,9 +505,10 @@ async def track_chat_reply(
     history: list[dict[str, str]],
     user_message: str,
     current_sql: str | None,
+    user_id: int | None = None,
 ) -> str:
     """Conversational mentor reply (Markdown). Falls back when AI is disabled."""
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return _fallback_tutor(user_message, schema_text)
 
     context = f"The learner's dataset schema (PostgreSQL):\n{schema_text or '(no tables yet)'}"
@@ -332,7 +521,7 @@ async def track_chat_reply(
     ]
     messages += [{"role": m["role"], "content": m["content"]} for m in history[-16:]]
     try:
-        return await _chat(messages, max_tokens=900, temperature=0.5)
+        return await _chat(messages, max_tokens=900, temperature=0.5, user_id=user_id)
     except Exception as exc:
         logger.warning("AI tutor chat failed, using fallback: %s", _ai_error(exc))
         return _fallback_tutor(user_message, schema_text)
@@ -343,10 +532,10 @@ async def track_chat_stream(
     history: list[dict[str, str]],
     user_message: str,
     current_sql: str | None,
+    user_id: int | None = None,
 ):
     """Async generator yielding the mentor reply token-by-token (Markdown deltas)."""
-    settings = get_settings()
-    if not settings.ai_enabled:
+    if not await _ai_available(user_id):
         for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
             yield chunk
         return
@@ -360,35 +549,13 @@ async def track_chat_stream(
     ]
     messages += [{"role": m["role"], "content": m["content"]} for m in history[-16:]]
 
-    s = settings
-    url = f"{s.ai_base_url.rstrip('/')}/chat/completions"
-    payload = {
-        "model": s.ai_model,
-        "messages": messages,
-        "max_tokens": 900,
-        "temperature": 0.5,
-        "stream": True,
-    }
     got_any = False
     try:
-        async with httpx.AsyncClient(timeout=s.ai_timeout_seconds) as client:
-            async with client.stream(
-                "POST", url, headers=_client_headers(), json=payload
-            ) as resp:
-                resp.raise_for_status()
-                async for line in resp.aiter_lines():
-                    if not line or not line.startswith("data:"):
-                        continue
-                    data = line[5:].strip()
-                    if data == "[DONE]":
-                        break
-                    try:
-                        delta = json.loads(data)["choices"][0]["delta"].get("content")
-                    except Exception:
-                        continue
-                    if delta:
-                        got_any = True
-                        yield delta
+        async for delta in _chat_stream(
+            messages, max_tokens=900, temperature=0.5, user_id=user_id
+        ):
+            got_any = True
+            yield delta
     except Exception as exc:
         logger.warning("AI stream failed, using fallback: %s", _ai_error(exc))
         if not got_any:
@@ -569,7 +736,8 @@ def _fmt_run_result(res: dict, max_rows: int = 12) -> str:
 
 
 async def agent_chat(schema_text, history, user_message, current_sql, run_sql, *,
-                     level: int = 1, max_steps: int = 5) -> dict:
+                     level: int = 1, max_steps: int = 5,
+                     user_id: int | None = None) -> dict:
     """Agentic mentor turn.
 
     `run_sql(sql) -> result dict` executes SQL in the learner's sandbox schema
@@ -579,8 +747,7 @@ async def agent_chat(schema_text, history, user_message, current_sql, run_sql, *
     where `questions` are validated questions the caller should persist, and
     current_index points at the one to make active.
     """
-    settings = get_settings()
-    if not settings.ai_enabled:
+    if not await _ai_available(user_id):
         return {"reply": _fallback_tutor(user_message, schema_text),
                 "questions": [], "current_index": 0}
 
@@ -602,7 +769,9 @@ async def agent_chat(schema_text, history, user_message, current_sql, run_sql, *
 
     for _ in range(max_steps):
         try:
-            raw = await _chat(messages, max_tokens=1200, temperature=0.4)
+            raw = await _chat(
+                messages, max_tokens=1200, temperature=0.4, user_id=user_id
+            )
         except Exception as exc:
             logger.warning("agent_chat call failed: %s", _ai_error(exc))
             return {"reply": last_text or _fallback_tutor(user_message, schema_text),
@@ -766,7 +935,8 @@ async def _apply_agent_action(action, run_sql, questions, level, prose_emitted):
 
 
 async def agent_chat_stream(schema_text, history, user_message, current_sql, run_sql,
-                            *, level: int = 1, max_steps: int = 5):
+                            *, level: int = 1, max_steps: int = 5,
+                            user_id: int | None = None):
     """Streaming agentic mentor turn.
 
     Yields tuples:
@@ -781,8 +951,7 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
     JSON. run_query loops (feeding results back); a set_* action that arrived
     without accompanying prose triggers one more turn so the model presents it.
     """
-    settings = get_settings()
-    if not settings.ai_enabled:
+    if not await _ai_available(user_id):
         for chunk in _chunk_text(_fallback_tutor(user_message, schema_text)):
             yield ("delta", chunk)
         yield ("result", ([], 0))
@@ -809,7 +978,9 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
         buffering = False    # once a ``` fence (or bare-json) starts, stop emitting
         prose_emitted = False
         try:
-            async for delta in _chat_stream(messages, max_tokens=1200):
+            async for delta in _chat_stream(
+                messages, max_tokens=1200, user_id=user_id
+            ):
                 raw += delta
                 if buffering:
                     continue
@@ -910,13 +1081,14 @@ _DIFFICULTY = {
 
 
 async def hunt_question(schema_text, creativity, difficulty, recent_prompts,
-                        run_sql, *, streak: str = "") -> dict | None:
+                        run_sql, *, streak: str = "",
+                        user_id: int | None = None) -> dict | None:
     """Generate ONE adaptive challenge, validated against the dataset.
 
     `run_sql(sql)->result` validates the reference query. Returns
     {prompt, reference_sql, skills, difficulty, multi_solution} or None.
     """
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return None
     avoid = "\n".join(f"- {p}" for p in recent_prompts[-8:]) or "(none yet)"
     prompt = (
@@ -942,7 +1114,10 @@ async def hunt_question(schema_text, creativity, difficulty, recent_prompts,
             raw = await _chat(
                 [{"role": "system", "content": "You output only valid JSON."},
                  {"role": "user", "content": prompt}],
-                max_tokens=700, temperature=0.5 + 0.12 * creativity)
+                max_tokens=700,
+                temperature=0.5 + 0.12 * creativity,
+                user_id=user_id,
+            )
             data = _extract_json(raw)
         except Exception as exc:
             logger.warning("hunt_question failed: %s", _ai_error(exc))
@@ -964,9 +1139,9 @@ async def hunt_question(schema_text, creativity, difficulty, recent_prompts,
     return None
 
 
-async def hunt_hint(schema_text, prompt, user_sql) -> str:
+async def hunt_hint(schema_text, prompt, user_sql, user_id: int | None = None) -> str:
     """A nudge — never the full answer."""
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return ("Break it down: which tables hold the columns you need, how do they "
                 "join, and what do you group by? Try a small piece first.")
     ctx = (f"Dataset schema:\n{schema_text}\n\nChallenge:\n{prompt}\n\n"
@@ -977,14 +1152,15 @@ async def hunt_hint(schema_text, prompt, user_sql) -> str:
               "You are a SQL coach. Give ONE concrete hint (2-3 sentences) that "
               "moves the learner forward. NEVER write the full solution query."},
              {"role": "user", "content": ctx}],
-            max_tokens=220, temperature=0.5)
+            max_tokens=220, temperature=0.5, user_id=user_id)
     except Exception:
         return "Think about the join keys first, then the aggregation."
 
 
-async def hunt_optimize(schema_text, user_sql, run_result=None) -> str:
+async def hunt_optimize(schema_text, user_sql, run_result=None,
+                        user_id: int | None = None) -> str:
     """Query-optimization coaching for the learner's own SQL."""
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return ("Check for missing WHERE filters, unnecessary DISTINCT, and whether an "
                 "index on your join/filter columns would help. Read the EXPLAIN plan.")
     perf = ""
@@ -1000,14 +1176,15 @@ async def hunt_optimize(schema_text, user_sql, run_result=None) -> str:
               "concrete optimization advice (indexes, join order, avoiding scans, "
               "rewrites). Be specific and reference their columns. Markdown."},
              {"role": "user", "content": ctx}],
-            max_tokens=450, temperature=0.3)
+            max_tokens=450, temperature=0.3, user_id=user_id)
     except Exception:
         return "Consider indexes on your join/filter columns and check the EXPLAIN plan."
 
 
-async def hunt_reason_feedback(prompt, user_sql, reasoning) -> str:
+async def hunt_reason_feedback(prompt, user_sql, reasoning,
+                               user_id: int | None = None) -> str:
     """React to WHY the learner chose their approach (for multi-solution questions)."""
-    if not get_settings().ai_enabled:
+    if not await _ai_available(user_id):
         return "Good reasoning — weigh readability vs. performance and index usage."
     ctx = (f"Challenge:\n{prompt}\n\nTheir query:\n```sql\n{user_sql}\n```\n\n"
            f"Their stated reason for this approach:\n{reasoning}")
@@ -1018,14 +1195,15 @@ async def hunt_reason_feedback(prompt, user_sql, reasoning) -> str:
               "valid ones. In 2-3 sentences, affirm what's sound and add one "
               "trade-off (performance/readability/index use) they should consider."},
              {"role": "user", "content": ctx}],
-            max_tokens=200, temperature=0.5)
+            max_tokens=200, temperature=0.5, user_id=user_id)
     except Exception:
         return "Solid choice — just weigh it against performance and index usage."
 
 
-async def hunt_optimized_sql(schema_text, prompt, user_sql) -> str:
+async def hunt_optimized_sql(schema_text, prompt, user_sql,
+                             user_id: int | None = None) -> str:
     """Reveal an optimized rewrite of the learner's query (returns SQL only)."""
-    if not get_settings().ai_enabled or not (user_sql or "").strip():
+    if not await _ai_available(user_id) or not (user_sql or "").strip():
         return user_sql or ""
     ctx = (f"Dataset schema:\n{schema_text}\n\nChallenge:\n{prompt}\n\n"
            f"The learner's working query:\n```sql\n{user_sql}\n```\n\n"
@@ -1035,7 +1213,7 @@ async def hunt_optimized_sql(schema_text, prompt, user_sql) -> str:
         out = await _chat(
             [{"role": "system", "content": "You output only a single SQL query."},
              {"role": "user", "content": ctx}],
-            max_tokens=400, temperature=0.2)
+            max_tokens=400, temperature=0.2, user_id=user_id)
     except Exception:
         return user_sql
     # strip any ```sql fences the model may add
