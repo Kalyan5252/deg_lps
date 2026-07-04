@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { api } from "@/lib/api";
+import { useState } from 'react';
+import { api } from '@/lib/api';
 
-const OLLAMA_URL = "https://ollama.com";
-const OLLAMA_KEYS_URL = "https://ollama.com/settings/keys";
+const OLLAMA_URL = 'https://ollama.com';
+const OLLAMA_KEYS_URL = 'https://ollama.com/settings/keys';
 
 /**
  * First-run onboarding modal: walks a new user through creating an Ollama Cloud
@@ -18,49 +18,49 @@ export default function OllamaSetupModal({
   userName: string;
   onClose: () => void;
 }) {
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState('');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function save() {
     if (!apiKey.trim()) {
-      setErr("Paste your Ollama API key first.");
+      setErr('Paste your Ollama API key first.');
       return;
     }
     setSaving(true);
     setErr(null);
     try {
       await api.saveAISettings({
-        provider: "ollama_cloud",
-        base_url: "https://ollama.com",
-        model: "gemma4:31b-cloud",
+        provider: 'ollama_cloud',
+        base_url: 'https://ollama.com',
+        model: 'gemma4:31b-cloud',
         api_key: apiKey.trim(),
         enabled: true,
       });
       onClose();
     } catch (e: any) {
-      setErr(e.message || "Could not save the key.");
+      setErr(e.message || 'Could not save the key.');
       setSaving(false);
     }
   }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-line bg-white shadow-2xl">
+      <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-line bg-white shadow-2xl">
         <div className="grid md:grid-cols-2">
           {/* left — steps + key */}
           <div className="flex flex-col p-6">
             <h2 className="text-lg font-semibold text-ink">
-              Welcome, {userName} 👋
+              Welcome, {userName}
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-sub">
-              Learn SQL &amp; data engineering with an AI mentor at your side.
-              Before you start, let&apos;s connect your AI.
+              Learn Data engineering with an AI mentor at your side. Before you
+              start, let&apos;s connect your AI.
             </p>
 
             <ol className="mt-4 space-y-2 text-[13px] text-ink">
               <li>
-                <span className="font-medium">1.</span> Open{" "}
+                <span className="font-medium">1.</span> Open{' '}
                 <a
                   href={OLLAMA_URL}
                   target="_blank"
@@ -68,11 +68,11 @@ export default function OllamaSetupModal({
                   className="font-medium text-accent hover:underline"
                 >
                   ollama.com
-                </a>{" "}
+                </a>{' '}
                 and sign in (or create an account).
               </li>
               <li>
-                <span className="font-medium">2.</span> Go to{" "}
+                <span className="font-medium">2.</span> Go to{' '}
                 <a
                   href={OLLAMA_KEYS_URL}
                   target="_blank"
@@ -99,7 +99,7 @@ export default function OllamaSetupModal({
                 placeholder="Paste your Ollama API key"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && save()}
+                onKeyDown={(e) => e.key === 'Enter' && save()}
               />
               {err && <p className="mt-1 text-[11px] text-bad">{err}</p>}
             </div>
@@ -116,20 +116,28 @@ export default function OllamaSetupModal({
                 onClick={save}
                 disabled={saving}
               >
-                {saving ? "Saving…" : "Save & continue"}
+                {saving ? 'Saving…' : 'Save & continue'}
               </button>
             </div>
           </div>
 
-          {/* right — looping demo video */}
-          <div className="hidden bg-canvas md:block">
+          {/* right — looping demo video floating inside a warm grainy backdrop */}
+          <div className="relative hidden items-center justify-center overflow-hidden bg-gradient-to-br from-amber-200 via-orange-300 to-amber-700 p-5 md:flex">
+            {/* subtle grain */}
+            {/* <div
+              className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay"
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+              }}
+            /> */}
             <video
               src="/videos/ollama_api_key_demo.mp4"
               autoPlay
               loop
               muted
               playsInline
-              className="h-full w-full object-cover"
+              className="relative aspect-video w-full object-cover shadow-xl"
             />
           </div>
         </div>
