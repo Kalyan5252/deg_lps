@@ -15,21 +15,28 @@ fi
 docker --version
 docker compose version || apt-get install -y docker-compose-plugin
 
-echo "==> Installing Java + Jenkins (native)"
-apt-get install -y fontconfig openjdk-17-jre
-install -m 0755 -d /usr/share/keyrings
-# Dearmor the signing key to a binary keyring (more reliable than armored .asc
-# with signed-by; avoids the NO_PUBKEY error). Verify the download isn't empty.
-rm -f /usr/share/keyrings/jenkins-keyring.asc /etc/apt/sources.list.d/jenkins.list
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
-  | gpg --dearmor -o /usr/share/keyrings/jenkins-keyring.gpg
-[ -s /usr/share/keyrings/jenkins-keyring.gpg ] || {
-  echo "ERROR: Jenkins signing key failed to download"; exit 1; }
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] \
+echo "==> Installing Java 21 + Jenkins (native)"
+# Jenkins LTS (2.5xx) requires Java 21; make it the default `java`.
+apt-get install -y fontconfig openjdk-21-jre
+update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java || true
+
+if ! dpkg -s jenkins >/dev/null 2>&1; then
+  install -m 0755 -d /usr/share/keyrings
+  # Dearmor Jenkins' key, then also pull the repo's current signing key from a
+  # keyserver (Jenkins rotates it and the .key file can lag → NO_PUBKEY).
+  curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
+    | gpg --dearmor -o /usr/share/keyrings/jenkins-keyring.gpg || true
+  gpg --no-default-keyring --keyring /usr/share/keyrings/jenkins-keyring.gpg \
+    --keyserver keyserver.ubuntu.com --recv-keys 7198F4B714ABFC68 || true
+  chmod 644 /usr/share/keyrings/jenkins-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] \
 https://pkg.jenkins.io/debian-stable binary/" \
-  > /etc/apt/sources.list.d/jenkins.list
-apt-get update -y
-apt-get install -y jenkins
+    > /etc/apt/sources.list.d/jenkins.list
+  apt-get update -y
+  apt-get install -y jenkins
+else
+  echo "    jenkins already installed — skipping repo/key setup"
+fi
 
 echo "==> Letting Jenkins drive Docker"
 usermod -aG docker jenkins
