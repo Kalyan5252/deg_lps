@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getToken } from "@/lib/api";
 import { api } from "@/lib/api";
 import { nodeTypes, NODE_META } from "@/components/pipeline/nodes";
+import { edgeTypes } from "@/components/pipeline/edges";
 import ConfigPanel from "@/components/pipeline/ConfigPanel";
 import ActivityPanel from "@/components/pipeline/ActivityPanel";
 
@@ -54,7 +55,13 @@ function Builder({ pipelineId }: { pipelineId: string }) {
       .then((p) => {
         setName(p.name);
         setNodes(p.graph?.nodes || []);
-        setEdges(p.graph?.edges || []);
+        setEdges(
+          (p.graph?.edges || []).map((e: any) => ({
+            ...e,
+            type: "deletable",
+            markerEnd: { type: MarkerType.ArrowClosed },
+          }))
+        );
       })
       .catch((e) => setStatus(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +71,11 @@ function Builder({ pipelineId }: { pipelineId: string }) {
     (params: any) =>
       setEdges((eds) =>
         addEdge(
-          { ...params, markerEnd: { type: MarkerType.ArrowClosed } },
+          {
+            ...params,
+            type: "deletable",
+            markerEnd: { type: MarkerType.ArrowClosed },
+          },
           eds
         )
       ),
@@ -194,6 +205,11 @@ function Builder({ pipelineId }: { pipelineId: string }) {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            defaultEdgeOptions={{
+              type: "deletable",
+              markerEnd: { type: MarkerType.ArrowClosed },
+            }}
             onNodeClick={(_, n) => setSelectedId(n.id)}
             onPaneClick={() => {
               setMenu(null);
