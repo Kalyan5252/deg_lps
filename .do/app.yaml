@@ -1,0 +1,61 @@
+# DigitalOcean App Platform spec for the FastAPI backend.
+# Deploy:  doctl apps create --spec .do/app.yaml
+# Update:  doctl apps update <APP_ID> --spec .do/app.yaml
+# (Or use the dashboard: Create App -> GitHub -> pick this repo -> it will
+#  auto-detect backend/Dockerfile. See DEPLOY.md.)
+#
+# Replace REPLACE_ME_OWNER/REPLACE_ME_REPO and the region to match your DO
+# managed Postgres cluster's region. Secrets are set in the dashboard, not here.
+name: deg-api
+region: nyc
+services:
+  - name: api
+    # Build the backend/ directory with its Dockerfile.
+    source_dir: backend
+    dockerfile_path: backend/Dockerfile
+    github:
+      repo: REPLACE_ME_OWNER/REPLACE_ME_REPO
+      branch: master
+      deploy_on_push: true
+    http_port: 8080
+    instance_count: 1
+    # pandas + the app fit in 1 GB comfortably; bump if you seed large scenarios.
+    instance_size_slug: basic-xs
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 60
+      period_seconds: 15
+      timeout_seconds: 5
+      failure_threshold: 5
+    envs:
+      # ---- Database (DO Managed Postgres) ----
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET            # postgresql://doadmin:...@host:25060/sqlforge
+      - key: DB_SSLMODE
+        scope: RUN_TIME
+        value: require          # managed clusters require TLS
+      - key: DB_POOL_MAX
+        scope: RUN_TIME
+        value: "5"              # stay under the cluster's connection limit
+      # ---- Auth ----
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET            # a long random string
+      # ---- CORS (frontend origins) ----
+      - key: CORS_ORIGINS
+        scope: RUN_TIME
+        value: https://REPLACE_ME.vercel.app
+      - key: CORS_ORIGIN_REGEX
+        scope: RUN_TIME
+        value: https://.*\.vercel\.app   # allow Vercel preview deploys
+      # ---- AI (Ollama Cloud, OpenAI-compatible) ----
+      - key: AI_BASE_URL
+        scope: RUN_TIME
+        value: https://ollama.com/v1     # no local daemon in prod
+      - key: AI_MODEL
+        scope: RUN_TIME
+        value: gemma4:31b-cloud
+      - key: LIGHTNING_API_KEY
+        scope: RUN_TIME
+        type: SECRET            # your Ollama Cloud API key (sent as Bearer)
