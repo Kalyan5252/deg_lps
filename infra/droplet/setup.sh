@@ -18,9 +18,14 @@ docker compose version || apt-get install -y docker-compose-plugin
 echo "==> Installing Java + Jenkins (native)"
 apt-get install -y fontconfig openjdk-17-jre
 install -m 0755 -d /usr/share/keyrings
+# Dearmor the signing key to a binary keyring (more reliable than armored .asc
+# with signed-by; avoids the NO_PUBKEY error). Verify the download isn't empty.
+rm -f /usr/share/keyrings/jenkins-keyring.asc /etc/apt/sources.list.d/jenkins.list
 curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
-  | tee /usr/share/keyrings/jenkins-keyring.asc >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  | gpg --dearmor -o /usr/share/keyrings/jenkins-keyring.gpg
+[ -s /usr/share/keyrings/jenkins-keyring.gpg ] || {
+  echo "ERROR: Jenkins signing key failed to download"; exit 1; }
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] \
 https://pkg.jenkins.io/debian-stable binary/" \
   > /etc/apt/sources.list.d/jenkins.list
 apt-get update -y
