@@ -54,7 +54,7 @@ async def current_user(request: Request) -> dict:
             raise HTTPException(
                 status_code=503,
                 detail=(
-                    "Database unavailable; check the Postgres tunnel/Studio DB. "
+                    "Database unavailable; check the Postgres server/connection. "
                     f"({_db_error_detail(exc)})"
                 ),
             )
@@ -63,7 +63,7 @@ async def current_user(request: Request) -> dict:
             raise HTTPException(
                 status_code=503,
                 detail=(
-                    "Database unavailable; check the Postgres tunnel/Studio DB. "
+                    "Database unavailable; check the Postgres server/connection. "
                     f"({_db_error_detail(last_exc)})"
                 ),
             )

@@ -467,6 +467,15 @@ async def evaluate(track_id: int, reference_sql: str, user_sql: str):
             "expected_columns": [], "expected_preview": [],
         }
     ref = await sandbox.run_in_schema(schema, reference_sql, max_rows=None)
+    if not ref["ok"]:
+        # The stored answer key no longer runs (e.g. the schema changed) —
+        # surface that instead of comparing against an empty result set.
+        return {
+            "ok": False, "passed": False, "score": 0,
+            "error": ("This question's reference answer can no longer run "
+                      "against the dataset — generate a new question."),
+            "expected_columns": [], "expected_preview": [],
+        }
     exp_ms = sandbox._multiset([dict(r) for r in ref["rows"]])
     got_ms = sandbox._multiset(user["rows"])
     passed = exp_ms == got_ms

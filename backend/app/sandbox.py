@@ -398,6 +398,7 @@ async def run_in_schema(
     columns: list[str] = []
     rows: list[dict[str, Any]] = []
     command: str | None = None
+    truncated = False
     start = time.perf_counter()
     try:
         async with db.pool().acquire() as conn:
@@ -429,6 +430,7 @@ async def run_in_schema(
                     else:
                         command = await conn.execute(stmt)
                         columns, rows = [], []
+                        truncated = False
     except (asyncpg.PostgresError, SandboxPermissionError) as exc:
         return {"ok": False, "error": str(exc), "columns": [], "rows": [],
                 "row_count": 0,
@@ -437,7 +439,7 @@ async def run_in_schema(
     duration_ms = round((time.perf_counter() - start) * 1000, 2)
     return {"ok": True, "error": None, "columns": columns, "rows": rows,
             "row_count": len(rows), "duration_ms": duration_ms, "command": command,
-            "truncated": bool(locals().get("truncated", False))}
+            "truncated": truncated}
 
 
 async def explain(

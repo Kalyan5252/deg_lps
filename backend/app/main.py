@@ -81,8 +81,8 @@ async def _db_down_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=503,
         content={
-            "detail": "Database unavailable — the Studio DB/tunnel looks down. "
-            "Run infra/lightning-studio/connect.sh, then retry."
+            "detail": "Database unavailable — the backend can't reach Postgres. "
+            "Check DATABASE_URL / the DB server, then retry."
         },
     )
 
