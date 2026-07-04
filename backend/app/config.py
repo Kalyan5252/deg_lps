@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     ai_model: str = "gemma4:31b-cloud"
     ai_timeout_seconds: int = 120
 
+    # Optional Kafka mirror for the platform event backbone (app.events stays
+    # the source of truth). Empty = Postgres-only, no broker needed.
+    kafka_bootstrap_servers: str = ""
+
     cors_origins: str = "http://localhost:3000"
     # Optional regex for CORS — matches e.g. Vercel preview URLs:
     #   CORS_ORIGIN_REGEX=https://.*\.vercel\.app

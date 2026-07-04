@@ -21,7 +21,8 @@ from typing import Any
 
 import httpx
 
-from . import ai, custom, db, func_runner, global_datasets, sandbox, simulate
+from . import (ai, custom, db, events, func_runner, global_datasets, sandbox,
+               simulate)
 
 MAX_ROWS = 50_000
 
@@ -649,6 +650,10 @@ async def run(pipeline_id: int, user_id: int, graph: dict) -> int:
         "WHERE id=$3", status,
         json.dumps({"nodes": len(nodes), "ok": ok_count, "failed": len(failed)}),
         run_id)
+    await events.emit("pipeline.run_finished",
+                      {"pipeline_id": pipeline_id, "run_id": run_id,
+                       "status": status, "nodes": len(nodes),
+                       "failed": len(failed)}, user_id=user_id)
     return run_id
 
 

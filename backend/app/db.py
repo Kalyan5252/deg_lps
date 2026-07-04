@@ -297,6 +297,8 @@ async def _bootstrap(pool: asyncpg.Pool) -> None:
             "ALTER TABLE app.custom_tracks "
             "ADD COLUMN IF NOT EXISTS active_question_id BIGINT")
         await conn.execute(HUNT_DDL)
+        from .events import EVENTS_DDL  # local import to avoid a cycle
+        await conn.execute(EVENTS_DDL)
 
 
 # RegHunt — endless adaptive AI challenge mode. A session runs against a private

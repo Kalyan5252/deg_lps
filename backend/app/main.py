@@ -10,7 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from . import ai, auth, custom, db, global_datasets, pipelines, sandbox, simulate
+from . import (ai, auth, custom, db, events, global_datasets, pipelines,
+               sandbox, simulate)
 from .config import get_settings
 from .scenarios import PATHS, all_scenarios, get_scenario
 
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI):
     await db.init_pool()
     await sandbox.provision_all()
     yield
+    await events.close()
     await db.close_pool()
 
 
@@ -188,6 +190,7 @@ async def login(body: LoginIn):
         "ON CONFLICT (email) DO UPDATE SET display_name = app.users.display_name "
         "RETURNING id, email, display_name", email, name)
     user = dict(row)
+    await events.emit("user.login", {"email": user["email"]}, user_id=user["id"])
     return {"token": auth.make_token(user["id"]), "user": user}
 
 
@@ -352,6 +355,10 @@ async def workbench_submit(body: RunIn, user: dict = auth.CurrentUser):
         "SELECT scenario_key FROM app.progress WHERE user_id=$1 AND status='solved'",
         user["id"])}
     next_key = _recommend_next(solved, new_difficulty) if passed else None
+
+    await events.emit("scenario.submitted",
+                      {"scenario_key": body.scenario_key, "score": score,
+                       "passed": passed}, user_id=user["id"])
 
     return {
         "ok": True, "score": score, "passed": passed, "checks": checks,
@@ -737,6 +744,11 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
         "UPDATE app.custom_questions SET status=$2 WHERE id=$1",
         body.question_id, "passed" if result["passed"] else "failed")
 
+    await events.emit("track.submitted",
+                      {"track_id": track_id, "question_id": body.question_id,
+                       "score": result["score"], "passed": result["passed"]},
+                      user_id=user["id"])
+
     # adaptive difficulty
     new_level = track["level"]
     if result["passed"]:
@@ -1115,6 +1127,10 @@ async def hunt_submit(session_id: int, body: HuntSubmitIn, user: dict = auth.Cur
     await db.pool().execute(
         "UPDATE app.hunt_sessions SET difficulty=greatest(1,least(5,difficulty+$2)) "
         "WHERE id=$1", session_id, delta)
+    await events.emit("hunt.checkpoint_submitted",
+                      {"session_id": session_id, "checkpoint_id": cp["id"],
+                       "score": result["score"], "passed": result["passed"]},
+                      user_id=user["id"])
     return {
         "ok": True, "passed": result["passed"], "score": result["score"],
         "expected_rows": result["expected_rows"], "got_rows": result["got_rows"],
