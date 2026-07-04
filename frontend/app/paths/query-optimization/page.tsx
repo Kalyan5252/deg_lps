@@ -17,6 +17,13 @@ const slides = [
     title: "Measure first",
     body: "Use timing and execution plans before changing SQL. Guessing at performance usually creates noise.",
     example: "EXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 42;",
+    practice: {
+      prompt: "Ask the database for the execution plan and timing of the customer lookup.",
+      starter: "-- inspect the plan\n",
+      expected: "explain analyze select * from orders where customer_id = 42",
+      hint: "Start with EXPLAIN ANALYZE, then the SELECT statement.",
+      result: "Plan request accepted.",
+    },
   },
   {
     eyebrow: "Screen 4",
@@ -64,6 +71,13 @@ const slides = [
     title: "Avoid repeated subqueries",
     body: "If the same expensive expression or subquery is repeated, consider a Common Table Expression (CTE), derived table, or materialized result.",
     example: "WITH recent_orders AS (...) SELECT ... FROM recent_orders;",
+    practice: {
+      prompt: "Create a CTE named recent_orders that selects from orders.",
+      starter: "-- write a CTE shell\n",
+      expected: "with recent_orders as (select * from orders) select * from recent_orders",
+      hint: "Use WITH recent_orders AS (SELECT * FROM orders) SELECT * FROM recent_orders.",
+      result: "CTE pattern accepted.",
+    },
   },
   {
     eyebrow: "Screen 13",

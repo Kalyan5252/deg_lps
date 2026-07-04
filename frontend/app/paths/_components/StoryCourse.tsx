@@ -1,5 +1,6 @@
 "use client";
 
+import Editor from "@monaco-editor/react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -9,6 +10,13 @@ export type StoryCourseSlide = {
   body: string;
   accent?: string;
   example?: string;
+  practice?: {
+    prompt: string;
+    starter: string;
+    expected: string | RegExp;
+    hint: string;
+    result?: string;
+  };
 };
 
 export default function StoryCourse({
@@ -19,11 +27,32 @@ export default function StoryCourse({
   slides: StoryCourseSlide[];
 }) {
   const [index, setIndex] = useState(0);
+  const [answer, setAnswer] = useState(slides[0]?.practice?.starter || "-- write SQL here\n");
+  const [status, setStatus] = useState<"idle" | "pass" | "fail">("idle");
   const current = slides[index];
   const progress = Math.round(((index + 1) / slides.length) * 100);
 
   function go(next: number) {
-    setIndex(Math.max(0, Math.min(slides.length - 1, next)));
+    const bounded = Math.max(0, Math.min(slides.length - 1, next));
+    setIndex(bounded);
+    setAnswer(slides[bounded]?.practice?.starter || "-- write SQL here\n");
+    setStatus("idle");
+  }
+
+  function runCheck() {
+    if (!current.practice) return;
+    const normalized = answer
+      .toLowerCase()
+      .replace(/--.*$/gm, "")
+      .replace(/\s+/g, " ")
+      .replace(/;$/, "")
+      .trim();
+    const expected = current.practice.expected;
+    const ok =
+      typeof expected === "string"
+        ? normalized === expected.toLowerCase().replace(/\s+/g, " ").trim()
+        : expected.test(normalized);
+    setStatus(ok ? "pass" : "fail");
   }
 
   return (
@@ -83,7 +112,14 @@ export default function StoryCourse({
         </div>
 
         <main className="flex flex-1 items-center justify-center px-8 pb-16">
-          <section className="mx-auto max-w-5xl text-center">
+          <section
+            className={`mx-auto w-full ${
+              current.practice
+                ? "grid max-w-7xl grid-cols-1 gap-5 lg:grid-cols-[minmax(340px,0.85fr)_minmax(0,1.15fr)]"
+                : "max-w-5xl text-center"
+            }`}
+          >
+            <div className={current.practice ? "text-left" : ""}>
             <div className="course-rise text-sm font-semibold uppercase tracking-[0.32em] text-blue-200/80">
               {current.eyebrow}
             </div>
@@ -115,6 +151,68 @@ export default function StoryCourse({
                 Next →
               </button>
             </div>
+            </div>
+            {current.practice && (
+              <div className="course-rise course-rise-delay-2 flex min-h-[560px] flex-col overflow-hidden rounded-lg border border-white/10 bg-white text-ink shadow-2xl">
+                <div className="border-b border-line p-5">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-sub">
+                    Your turn
+                  </div>
+                  <p className="mt-1 text-sm">{current.practice.prompt}</p>
+                </div>
+                <div className="min-h-0 flex-1">
+                  <Editor
+                    height="100%"
+                    defaultLanguage="sql"
+                    theme="vs"
+                    value={answer}
+                    onChange={(value) => setAnswer(value || "")}
+                    options={{
+                      fontSize: 14,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      padding: { top: 16 },
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                      renderLineHighlight: "none",
+                    }}
+                  />
+                </div>
+                <div className="border-t border-line p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="text-xs font-medium uppercase tracking-wide text-sub">
+                      Check
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {status === "pass" && (
+                        <span className="text-xs font-medium text-ok">Correct</span>
+                      )}
+                      {status === "fail" && (
+                        <span className="max-w-72 truncate text-xs font-medium text-bad">
+                          {current.practice.hint}
+                        </span>
+                      )}
+                      <button
+                        className="btn !py-1"
+                        onClick={() => {
+                          setAnswer(current.practice?.starter || "-- write SQL here\n");
+                          setStatus("idle");
+                        }}
+                      >
+                        Reset
+                      </button>
+                      <button className="btn btn-primary !py-1" onClick={runCheck}>
+                        Run Check
+                      </button>
+                    </div>
+                  </div>
+                  <div className="rounded-md border border-line bg-canvas p-3 font-mono text-sm text-sub">
+                    {status === "pass"
+                      ? current.practice.result || "Statement accepted."
+                      : "Run the statement when you are ready."}
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         </main>
       </div>
