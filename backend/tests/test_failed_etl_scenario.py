@@ -73,6 +73,19 @@ async def _run() -> None:
         score = sum(c["weight"] for c in checks if c["passed"])
         check(score < 80, "checks: wrong query does not reach pass threshold",
               f"score {score}")
+
+        # concurrent first-open: detail + schema requests provision the same
+        # user snapshot in parallel — must not collide on CREATE SCHEMA
+        user_schema = sandbox.user_schema_name(999_999, scenario.key)
+        await sandbox.drop_schema(user_schema)
+        try:
+            a, b = await asyncio.gather(
+                sandbox.provision_user_snapshot(scenario, 999_999),
+                sandbox.provision_user_snapshot(scenario, 999_999))
+            check(a == b == user_schema,
+                  "provision: concurrent user snapshots don't race")
+        finally:
+            await sandbox.drop_schema(user_schema)
     finally:
         await sandbox.drop_schema(schema)
 

@@ -58,15 +58,19 @@ async def provision(scenario: Scenario, force: bool = False) -> None:
         return
     schema = schema_name(scenario.key)
     async with db.pool().acquire() as conn:
-        if force:
-            await conn.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
-        exists = await conn.fetchval(
-            "SELECT 1 FROM information_schema.schemata WHERE schema_name = $1", schema
-        )
-        if exists and not force:
-            return
-        await conn.execute(f'CREATE SCHEMA "{schema}"')
         async with conn.transaction():
+            # serialize concurrent provisioning of the same schema (two browser
+            # requests can race here and collide on CREATE SCHEMA)
+            await conn.execute(
+                "SELECT pg_advisory_xact_lock(hashtext($1))", schema)
+            exists = await conn.fetchval(
+                "SELECT 1 FROM information_schema.schemata WHERE schema_name = $1",
+                schema)
+            if exists:
+                if not force:
+                    return
+                await conn.execute(f'DROP SCHEMA "{schema}" CASCADE')
+            await conn.execute(f'CREATE SCHEMA "{schema}"')
             await conn.execute(f'SET LOCAL search_path TO "{schema}"')
             await conn.execute(scenario.seed_sql)
 
@@ -84,15 +88,20 @@ async def provision_user_snapshot(
     user_schema = user_schema_name(user_id, scenario.key)
     await provision(scenario)
     async with db.pool().acquire() as conn:
-        if force:
-            await conn.execute(f'DROP SCHEMA IF EXISTS "{user_schema}" CASCADE')
-        exists = await conn.fetchval(
-            "SELECT 1 FROM information_schema.schemata WHERE schema_name = $1",
-            user_schema,
-        )
-        if exists and not force:
-            return user_schema
         async with conn.transaction():
+            # serialize concurrent provisioning of the same user schema — the
+            # scenario page fires detail + schema requests in parallel and both
+            # land here on first open
+            await conn.execute(
+                "SELECT pg_advisory_xact_lock(hashtext($1))", user_schema)
+            exists = await conn.fetchval(
+                "SELECT 1 FROM information_schema.schemata WHERE schema_name = $1",
+                user_schema,
+            )
+            if exists:
+                if not force:
+                    return user_schema
+                await conn.execute(f'DROP SCHEMA "{user_schema}" CASCADE')
             await conn.execute(f'CREATE SCHEMA "{user_schema}"')
             tables = await conn.fetch(
                 "SELECT tablename FROM pg_tables WHERE schemaname = $1 "

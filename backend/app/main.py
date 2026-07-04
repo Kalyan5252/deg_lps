@@ -87,6 +87,16 @@ async def _db_down_handler(request: Request, exc: Exception):
     )
 
 
+# Any other database error -> a JSON 500 that still goes through the CORS
+# middleware, so the browser sees a readable error instead of "Failed to fetch".
+@app.exception_handler(asyncpg.PostgresError)
+async def _db_error_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Database error: {exc}"},
+    )
+
+
 # --------------------------------------------------------------------------
 # Schemas
 # --------------------------------------------------------------------------
