@@ -1,0 +1,42 @@
+# Production backend on a DigitalOcean droplet.
+#   FastAPI (api)  ──  Caddy reverse proxy (auto-HTTPS via Let's Encrypt)
+#
+# Secrets live on the droplet in /etc/deg/api.env (NOT in git). The public
+# hostname (e.g. <ip>.nip.io) comes from $API_DOMAIN (see /etc/deg/deploy.env).
+# Deploy:  API_DOMAIN=<ip>.nip.io docker compose -f docker-compose.prod.yml up -d --build
+name: deg      # stable project name so caddy_data (TLS certs) survives redeploys
+services:
+  api:
+    build:
+      context: ./backend          # uses backend/Dockerfile
+    image: deg-api:latest
+    restart: unless-stopped
+    env_file:
+      - /etc/deg/api.env          # DATABASE_URL, JWT_SECRET, AI keys, CORS…
+    expose:
+      - "8080"                    # internal only; Caddy publishes 80/443
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/api/health').status==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN (e.g. 168-144-21-78.nip.io)}
+    volumes:
+      - ./infra/droplet/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data          # persists issued TLS certs
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  caddy_data:
+  caddy_config:

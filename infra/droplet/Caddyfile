@@ -1,0 +1,7 @@
+# Caddy auto-obtains + renews a free Let's Encrypt cert for $API_DOMAIN and
+# reverse-proxies HTTPS traffic to the FastAPI container on :8080.
+# Requires: DNS for $API_DOMAIN resolves to this droplet, ports 80+443 open.
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8080
+}
