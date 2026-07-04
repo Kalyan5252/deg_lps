@@ -195,11 +195,21 @@ def _client_headers(api_key: str | None = None) -> dict[str, str]:
     return headers
 
 
+def _ollama_native_base(base_url: str) -> str:
+    """Ollama's native API lives at ``{host}/api/chat`` — it has no OpenAI-style
+    ``/v1`` prefix. Tolerate users who paste either ``https://ollama.com`` or
+    ``https://ollama.com/v1`` by stripping a trailing ``/v1``."""
+    b = (base_url or "https://ollama.com").strip().rstrip("/")
+    if b.endswith("/v1"):
+        b = b[:-3].rstrip("/")
+    return b
+
+
 async def _chat(messages: list[dict[str, str]], *, max_tokens: int = 600,
                 temperature: float = 0.4, user_id: int | None = None) -> str:
     p = await _provider(user_id)
     if p["provider"] == "ollama_cloud":
-        url = f"{p['base_url'].rstrip('/')}/api/chat"
+        url = f"{_ollama_native_base(p['base_url'])}/api/chat"
         payload = {
             "model": p["model"],
             "messages": messages,
@@ -231,7 +241,7 @@ async def _chat_stream(messages: list[dict[str, str]], *, max_tokens: int = 900,
     """Async generator yielding content deltas from an OpenAI-compatible stream."""
     p = await _provider(user_id)
     if p["provider"] == "ollama_cloud":
-        url = f"{p['base_url'].rstrip('/')}/api/chat"
+        url = f"{_ollama_native_base(p['base_url'])}/api/chat"
         payload = {
             "model": p["model"],
             "messages": messages,
