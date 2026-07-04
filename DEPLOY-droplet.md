@@ -36,7 +36,8 @@ It prints the **Jenkins initial admin password** and opens `http://168.144.177.1
 cp /opt/deg/infra/droplet/api.env.example /etc/deg/api.env
 nano /etc/deg/api.env       # DATABASE_URL (private host, sslmode=require), JWT_SECRET,
                             # CORS_ORIGINS, AI_BASE_URL, AI_MODEL, LIGHTNING_API_KEY
-chmod 600 /etc/deg/api.env
+# Jenkins (docker compose) reads this as the jenkins user — group-read, not world:
+chown root:jenkins /etc/deg/api.env && chmod 640 /etc/deg/api.env
 
 cat /etc/deg/deploy.env      # setup.sh auto-set API_DOMAIN=<ip>.nip.io — verify it
 ```

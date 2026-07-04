@@ -52,8 +52,12 @@ yes | ufw enable || true
 
 echo "==> Secrets scaffolding"
 mkdir -p /etc/deg
-[ -f /etc/deg/api.env ]   || { echo "# fill me (see infra/droplet/api.env.example)"   > /etc/deg/api.env;   chmod 600 /etc/deg/api.env; }
-[ -f /etc/deg/deploy.env ]|| { echo "API_DOMAIN=$(curl -s ifconfig.me | tr '.' '-').nip.io" > /etc/deg/deploy.env; }
+[ -f /etc/deg/api.env ]   || echo "# fill me (see infra/droplet/api.env.example)" > /etc/deg/api.env
+[ -f /etc/deg/deploy.env ]|| echo "API_DOMAIN=$(curl -s ifconfig.me | tr '.' '-').nip.io" > /etc/deg/deploy.env
+# Jenkins runs `docker compose` (which reads env_file client-side) as the
+# `jenkins` user, so it needs group-read on the secrets — but not world-read.
+chown root:jenkins /etc/deg/api.env /etc/deg/deploy.env 2>/dev/null || true
+chmod 640 /etc/deg/api.env /etc/deg/deploy.env
 
 echo
 echo "==================================================================="
