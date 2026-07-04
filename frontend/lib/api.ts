@@ -7,6 +7,15 @@ const TOKEN_KEY = "sqlforge_token";
 const USER_KEY = "sqlforge_user";
 
 export type User = { id: number; email: string; display_name: string };
+export type AISettings = {
+  provider: string;
+  base_url: string;
+  model: string;
+  enabled: boolean;
+  has_api_key: boolean;
+  api_key_mask?: string | null;
+  updated_at?: string;
+};
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -67,6 +76,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, display_name }),
     }),
+  aiSettings: () => request<AISettings>("/settings/ai"),
+  saveAISettings: (payload: {
+    provider: string;
+    base_url: string;
+    model: string;
+    api_key?: string;
+    enabled: boolean;
+  }) =>
+    request<AISettings>("/settings/ai", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  disableAISettings: () =>
+    request<AISettings>("/settings/ai", { method: "DELETE" }),
   paths: () => request<any[]>("/paths"),
   scenarios: () => request<any[]>("/scenarios"),
   scenario: (key: string) => request<any>(`/scenarios/${key}`),

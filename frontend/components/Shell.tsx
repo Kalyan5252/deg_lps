@@ -13,6 +13,7 @@ const NAV = [
   { href: "/pipelines", label: "Pipelines", icon: "⇄" },
   { href: "/progress", label: "Progress", icon: "▲" },
   { href: "/history", label: "Scenario History", icon: "≣" },
+  { href: "/settings", label: "Settings", icon: "⚙" },
   { href: "/reghunt", label: "RegHunt", icon: "🎯", priority: true },
 ];
 
