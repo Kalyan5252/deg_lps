@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     ai_timeout_seconds: int = 120
 
     cors_origins: str = "http://localhost:3000"
+    # Optional regex for CORS — matches e.g. Vercel preview URLs:
+    #   CORS_ORIGIN_REGEX=https://.*\.vercel\.app
+    cors_origin_regex: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:
