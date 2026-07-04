@@ -39,6 +39,9 @@ function Builder({ pipelineId }: { pipelineId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelNode, setPanelNode] = useState<any | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const [nodeMenu, setNodeMenu] = useState<
+    { x: number; y: number; nodeId: string } | null
+  >(null);
   const [showActivity, setShowActivity] = useState(false);
   const [activeRunId, setActiveRunId] = useState<number | null>(null);
   const [status, setStatus] = useState<string>("");
@@ -115,6 +118,24 @@ function Builder({ pipelineId }: { pipelineId: string }) {
     setNodes((nds) => [...nds, { id, type, position: pos, data }]);
     setMenu(null);
     setSelectedId(id);
+  }
+
+  // remove every edge touching a node
+  function dropConnections(nodeId: string) {
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+    );
+    setNodeMenu(null);
+  }
+
+  // remove a node and all of its connections
+  function dropNode(nodeId: string) {
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+    );
+    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    setSelectedId((cur) => (cur === nodeId ? null : cur));
+    setNodeMenu(null);
   }
 
   function patchNode(nodeId: string, patch: any) {
@@ -211,12 +232,19 @@ function Builder({ pipelineId }: { pipelineId: string }) {
               markerEnd: { type: MarkerType.ArrowClosed },
             }}
             onNodeClick={(_, n) => setSelectedId(n.id)}
+            onNodeContextMenu={(e, n) => {
+              e.preventDefault();
+              setMenu(null);
+              setNodeMenu({ x: e.clientX, y: e.clientY, nodeId: n.id });
+            }}
             onPaneClick={() => {
               setMenu(null);
+              setNodeMenu(null);
               setSelectedId(null);
             }}
             onPaneContextMenu={(e) => {
               e.preventDefault();
+              setNodeMenu(null);
               setMenu({ x: e.clientX, y: e.clientY });
             }}
             fitView
@@ -266,6 +294,44 @@ function Builder({ pipelineId }: { pipelineId: string }) {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {nodeMenu && (
+            <div
+              className="fixed z-50 w-52 overflow-hidden rounded-lg border border-line bg-white py-1 shadow-lg"
+              style={{ left: nodeMenu.x, top: nodeMenu.y }}
+              onMouseLeave={() => setNodeMenu(null)}
+            >
+              <div className="truncate px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-sub">
+                {NODE_META[nodes.find((n) => n.id === nodeMenu.nodeId)?.type]
+                  ?.label || "Component"}
+              </div>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
+                onClick={() => {
+                  setSelectedId(nodeMenu.nodeId);
+                  setShowActivity(false);
+                  setNodeMenu(null);
+                }}
+              >
+                <span className="w-4 text-center text-xs">◎</span>
+                Select component
+              </button>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-canvas"
+                onClick={() => dropConnections(nodeMenu.nodeId)}
+              >
+                <span className="w-4 text-center text-xs">⤫</span>
+                Drop all connections
+              </button>
+              <button
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-bad hover:bg-bad/5"
+                onClick={() => dropNode(nodeMenu.nodeId)}
+              >
+                <span className="w-4 text-center text-xs">🗑</span>
+                Drop component
+              </button>
             </div>
           )}
         </div>
