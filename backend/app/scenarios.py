@@ -435,6 +435,116 @@ ANALYZE;
 ))
 
 
+_register(Scenario(
+    key="consumer_lag",
+    title="Consumer Lag Pileup",
+    summary="A Kafka consumer group is falling behind. One partition is frozen on a poison message while the topic keeps growing. Find it before checkout data goes stale.",
+    path="streaming",
+    difficulty=3,
+    tables=["partitions", "consumer_offsets"],
+    story=(
+        "PagerDuty fired: 'fraud-detector consumer lag > SLo'. The fraud team's "
+        "Kafka consumer group reads checkout.events (12 partitions), and the "
+        "dashboard fed by it has been flat for hours while orders keep flowing. "
+        "You've exported the broker state into two tables: partitions holds each "
+        "partition's log_end_offset (the newest message), and consumer_offsets "
+        "holds each group's committed_offset per partition. Lag for a partition "
+        "is log_end_offset - committed_offset. Healthy consumers here run a lag "
+        "of a few hundred to a couple thousand. Somewhere, one partition has "
+        "stopped moving entirely — the classic poison-message signature: the "
+        "committed offset froze hours ago while the log end keeps growing. "
+        "Report every (group_id, topic, partition) whose lag exceeds 100,000, "
+        "with the lag itself."
+    ),
+    objectives=[
+        "Join consumer_offsets to partitions on (topic, partition).",
+        "Compute lag = log_end_offset - committed_offset per group/partition.",
+        "Return group_id, topic, partition, lag for lag > 100000, biggest first.",
+    ],
+    constraints=[
+        "Expected columns, in order: group_id, topic, partition, lag.",
+        "Only rows with lag greater than 100,000.",
+        "Order by lag descending.",
+    ],
+    hidden_problems=[
+        "fraud-detector's partition 7 of checkout.events froze at offset 41,213 "
+        "six hours ago (poison message); its lag is ~2 million.",
+        "Every other group/partition has a healthy lag under ~2,000.",
+    ],
+    skills=["JOINS", "SELECT"],
+    success_criteria="Return exactly the stuck group/partition rows (lag > 100k) with correct lag values, largest lag first.",
+    kind="query",
+    starter_sql=(
+        "-- Kafka state exported from the brokers:\n"
+        "--   partitions(topic, partition, log_end_offset)\n"
+        "--   consumer_offsets(group_id, topic, partition, committed_offset, last_commit_at)\n"
+        "-- lag = log_end_offset - committed_offset\n"
+        "-- Expected columns: group_id, topic, partition, lag (lag > 100000, desc)\n"
+        "SELECT * FROM consumer_offsets LIMIT 10;\n"
+    ),
+    seed_sql="""
+CREATE TABLE partitions (
+    topic           TEXT NOT NULL,
+    partition       INT NOT NULL,
+    log_end_offset  BIGINT NOT NULL,
+    PRIMARY KEY (topic, partition)
+);
+CREATE TABLE consumer_offsets (
+    group_id         TEXT NOT NULL,
+    topic            TEXT NOT NULL,
+    partition        INT NOT NULL,
+    committed_offset BIGINT NOT NULL,
+    last_commit_at   TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (group_id, topic, partition)
+);
+
+INSERT INTO partitions
+SELECT 'checkout.events', g, 2000000 + g * 13777 FROM generate_series(0, 11) g
+UNION ALL
+SELECT 'email.sends', g, 400000 + g * 9311 FROM generate_series(0, 5) g;
+
+-- healthy consumers: lag stays in the hundreds-to-low-thousands
+INSERT INTO consumer_offsets
+SELECT 'billing-service', topic, partition,
+       log_end_offset - (150 + partition * 37),
+       now() - interval '5 seconds'
+FROM partitions WHERE topic = 'checkout.events';
+
+INSERT INTO consumer_offsets
+SELECT 'email-sender', topic, partition,
+       log_end_offset - (80 + partition * 21),
+       now() - interval '3 seconds'
+FROM partitions WHERE topic = 'email.sends';
+
+-- fraud-detector: healthy everywhere EXCEPT partition 7, frozen on a poison
+-- message six hours ago
+INSERT INTO consumer_offsets
+SELECT 'fraud-detector', topic, partition,
+       CASE WHEN partition = 7 THEN 41213
+            ELSE log_end_offset - (900 + partition * 55) END,
+       CASE WHEN partition = 7 THEN now() - interval '6 hours'
+            ELSE now() - interval '4 seconds' END
+FROM partitions WHERE topic = 'checkout.events';
+
+ANALYZE;
+""",
+    expected_sql=(
+        "SELECT co.group_id, co.topic, co.partition, "
+        "p.log_end_offset - co.committed_offset AS lag "
+        "FROM consumer_offsets co "
+        "JOIN partitions p ON p.topic = co.topic AND p.partition = co.partition "
+        "WHERE p.log_end_offset - co.committed_offset > 100000 "
+        "ORDER BY lag DESC"
+    ),
+    checks=[
+        {"type": "matches", "weight": 80,
+         "label": "Returns exactly the stuck partition(s) with correct lag"},
+        {"type": "row_count", "count": 1, "weight": 20,
+         "label": "Exactly one partition is pathologically behind"},
+    ],
+))
+
+
 # ----- Stubbed scenarios (visible, authored later) ------------------------
 
 def _stub(key: str, title: str, summary: str, path: str, difficulty: int,
@@ -460,6 +570,12 @@ _stub("inventory_mismatch", "Inventory Mismatch",
 _stub("customer_segmentation", "Customer Segmentation",
       "Build RFM-style segments from raw orders using window functions.",
       "analytics", 4, ["WINDOW FUNCTIONS", "CTEs", "GROUP BY"])
+_stub("rebalance_storm", "Rebalance Storm",
+      "A consumer group churns through rebalances every few minutes. Trace membership flapping from the group-coordinator log.",
+      "streaming", 4, ["SELECT", "GROUP BY", "WINDOW FUNCTIONS"])
+_stub("exactly_once", "Double-Charged: Exactly-Once Gone Wrong",
+      "A non-idempotent producer retried during a broker failover. Find the duplicated payment events by business key.",
+      "streaming", 4, ["JOINS", "GROUP BY", "CTEs"])
 
 
 PATHS = {
@@ -477,6 +593,11 @@ PATHS = {
         "key": "analytics",
         "title": "Analytics Engineering",
         "description": "Turn messy operational data into trustworthy reports with CTEs and window functions.",
+    },
+    "streaming": {
+        "key": "streaming",
+        "title": "Streaming & Kafka",
+        "description": "Diagnose consumer lag, rebalance storms and delivery-semantics bugs the way an on-call streaming engineer does.",
     },
 }
 
