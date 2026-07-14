@@ -71,7 +71,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <aside
         className={`flex shrink-0 flex-col border-r border-line bg-white transition-[width] duration-150 ${
-          collapsed ? "w-14" : "w-60"
+          collapsed ? "w-16" : "w-60"
         }`}
       >
         <div
@@ -125,8 +125,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 <span
                   className={
                     priority
-                      ? "w-5 text-center text-lg leading-none"
-                      : "w-4 text-center text-xs"
+                      ? "w-6 text-center text-2xl leading-none"
+                      : "w-6 text-center text-xl leading-none"
                   }
                 >
                   {item.icon}
