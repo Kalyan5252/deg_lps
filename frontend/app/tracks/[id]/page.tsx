@@ -182,6 +182,19 @@ export default function TrackWorkbench() {
     questionIdRef.current = question?.id ?? null;
   }, [question]);
 
+  // One-shot glow on the question card whenever the question is replaced, so
+  // the learner notices the swap (issue #23 bug 2).
+  const [qGlow, setQGlow] = useState(0);
+  const glowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pulseQuestion = useCallback(() => {
+    setQGlow((n) => n + 1);
+    if (glowTimer.current) clearTimeout(glowTimer.current);
+    glowTimer.current = setTimeout(() => setQGlow(0), 2900);
+  }, []);
+  useEffect(() => () => {
+    if (glowTimer.current) clearTimeout(glowTimer.current);
+  }, []);
+
   // Pull the mentor/curriculum's active question and, if it changed, show it.
   // Returns "changed" | "same" | "none" so callers can react (e.g. generate a
   // fresh question when the curriculum ran out).
@@ -194,13 +207,14 @@ export default function TrackWorkbench() {
         setLeftTab("question");
         setShowLeft(true);
         localStorage.setItem("sqlforge_track_showLeft", "1");
+        pulseQuestion();
         return "changed";
       }
       return "same";
     } catch {
       return "error"; // transient fetch error — don't trigger regeneration
     }
-  }, [id]);
+  }, [id, pulseQuestion]);
 
   // After each mentor turn, refresh the Question panel (agent may have set one).
   useEffect(() => {
@@ -223,6 +237,7 @@ export default function TrackWorkbench() {
       setQuestion(q);
       setServerUp(true);
       setLeftTab("question");
+      pulseQuestion();
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -383,7 +398,12 @@ export default function TrackWorkbench() {
                           {question.source === "ai" ? "AI-generated" : "generated"}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed">
+                      <div
+                        key={qGlow ? `glow-${qGlow}` : "idle"}
+                        className={`rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed ${
+                          qGlow ? "question-glow" : ""
+                        }`}
+                      >
                         <Markdownish text={question.prompt} />
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">

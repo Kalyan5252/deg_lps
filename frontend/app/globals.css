@@ -115,6 +115,67 @@ body {
   }
 }
 
+/* ---- Question panel: one-shot Siri-style glow when the mentor swaps the
+   active question (issue #23 bug 2 — the change used to be invisible) ---- */
+@keyframes q-glow-fade {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.question-glow {
+  position: relative;
+  isolation: isolate;
+}
+.question-glow::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--siri-angle),
+    rgba(120, 150, 255, 0) 0deg,
+    rgba(150, 178, 255, 0.9) 70deg,
+    rgba(214, 188, 255, 0.6) 140deg,
+    rgba(150, 214, 255, 0.9) 210deg,
+    rgba(196, 208, 255, 0.55) 290deg,
+    rgba(120, 150, 255, 0) 360deg
+  );
+  filter: blur(10px);
+  animation: siri-spin 2.4s linear infinite,
+    q-glow-fade 2.8s ease-in-out forwards;
+}
+.question-glow::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: inherit;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgba(170, 192, 255, 0.5),
+    rgba(170, 192, 255, 0) 75%
+  );
+  filter: blur(14px);
+  animation: q-glow-fade 2.8s ease-in-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .question-glow::before {
+    animation: q-glow-fade 2.8s ease-in-out forwards; /* fade only, no spin */
+  }
+}
+
 @keyframes course-rise {
   from {
     opacity: 0;
