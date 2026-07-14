@@ -692,6 +692,11 @@ async def track_question(track_id: int, user: dict = auth.CurrentUser):
         "VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at",
         track_id, user["id"], q["level"], q["prompt"], q["reference_sql"],
         q["skills"], q["source"])
+    # keep the curriculum pointer on what the learner actually sees, so
+    # submit/current stay consistent with the displayed question.
+    await db.pool().execute(
+        "UPDATE app.custom_tracks SET active_question_id=$2 WHERE id=$1",
+        track_id, row["id"])
     return {"id": row["id"], "prompt": q["prompt"], "level": q["level"],
             "skills": q["skills"], "source": q["source"]}
 

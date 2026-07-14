@@ -183,17 +183,22 @@ export default function TrackWorkbench() {
   }, [question]);
 
   // Pull the mentor/curriculum's active question and, if it changed, show it.
+  // Returns "changed" | "same" | "none" so callers can react (e.g. generate a
+  // fresh question when the curriculum ran out).
   const applyCurrentQuestion = useCallback(async () => {
     try {
       const cur = await api.trackQuestionCurrent(id);
-      if (cur && cur.id !== questionIdRef.current) {
+      if (!cur) return "none";
+      if (cur.id !== questionIdRef.current) {
         setQuestion(cur);
         setLeftTab("question");
         setShowLeft(true);
         localStorage.setItem("sqlforge_track_showLeft", "1");
+        return "changed";
       }
+      return "same";
     } catch {
-      /* noop */
+      return "error"; // transient fetch error — don't trigger regeneration
     }
   }, [id]);
 
@@ -203,12 +208,16 @@ export default function TrackWorkbench() {
     return () => window.removeEventListener("mentor:done", applyCurrentQuestion);
   }, [applyCurrentQuestion]);
 
-  async function generate() {
+  // `soft` keeps the review/results from the last submission visible — used
+  // when auto-advancing after a pass (the learner still wants their feedback).
+  async function generate(opts?: { soft?: boolean }) {
     setBusy("question");
     setErr(null);
-    setEvalResult(null);
-    setResult(null);
-    setSql("-- write your query here\n");
+    if (!opts?.soft) {
+      setEvalResult(null);
+      setResult(null);
+      setSql("-- write your query here\n");
+    }
     try {
       const q = await api.trackQuestion(id);
       setQuestion(q);
@@ -247,8 +256,13 @@ export default function TrackWorkbench() {
       localStorage.setItem("sqlforge_track_showRight", "1");
       if (ev.result) setResult(ev.result);
       if (ev.level) setTrack((t: any) => ({ ...t, level: ev.level }));
-      // on a pass the curriculum advances — load the next active question.
-      if (ev.passed) applyCurrentQuestion();
+      // on a pass the curriculum advances — load the next active question, or
+      // generate a fresh one when the plan is exhausted (bug: the solved
+      // question used to stay on screen with no signal).
+      if (ev.passed) {
+        const state = await applyCurrentQuestion();
+        if (state === "none" || state === "same") generate({ soft: true });
+      }
     } catch (e: any) {
       setErr(e.message);
     } finally {
