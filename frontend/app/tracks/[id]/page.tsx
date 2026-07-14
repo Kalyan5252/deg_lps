@@ -415,7 +415,7 @@ export default function TrackWorkbench() {
                       </div>
                       <button
                         className="btn mt-4"
-                        onClick={generate}
+                        onClick={() => generate()}
                         disabled={!!busy}
                       >
                         {busy === "question" ? "Generating…" : "Skip / new question"}
@@ -434,7 +434,7 @@ export default function TrackWorkbench() {
                       </p>
                       <button
                         className="btn btn-primary mt-3"
-                        onClick={generate}
+                        onClick={() => generate()}
                         disabled={!!busy}
                       >
                         Generate question

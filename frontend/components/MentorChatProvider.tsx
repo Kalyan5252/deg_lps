@@ -8,9 +8,9 @@ import {
   useEffect,
   useState,
 } from "react";
-import { api, getToken } from "@/lib/api";
+import { api, getToken, AgentStep } from "@/lib/api";
 
-export type Msg = { role: string; content: string };
+export type Msg = { role: string; content: string; steps?: AgentStep[] };
 
 type Ctx = {
   trackId: string | null;
@@ -71,14 +71,32 @@ export function MentorChatProvider({ children }: { children: React.ReactNode }) 
       setBusy(true);
       try {
         if (trackId) {
-          await api.trackChatStream(trackId, msg, (delta) => {
-            setMessages((m) => {
-              const copy = [...m];
-              const last = copy[copy.length - 1];
-              copy[copy.length - 1] = { ...last, content: last.content + delta };
-              return copy;
-            });
-          });
+          await api.trackChatStream(
+            trackId,
+            msg,
+            (delta) => {
+              setMessages((m) => {
+                const copy = [...m];
+                const last = copy[copy.length - 1];
+                copy[copy.length - 1] = { ...last, content: last.content + delta };
+                return copy;
+              });
+            },
+            undefined,
+            // live agent actions — upsert by id into the streaming message
+            (step) => {
+              setMessages((m) => {
+                const copy = [...m];
+                const last = copy[copy.length - 1];
+                const steps = [...(last.steps || [])];
+                const i = steps.findIndex((s) => s.id === step.id);
+                if (i === -1) steps.push(step);
+                else steps[i] = step;
+                copy[copy.length - 1] = { ...last, steps };
+                return copy;
+              });
+            }
+          );
         } else if (scenarioKey) {
           const { reply } = await api.mentor(scenarioKey, msg);
           setMessages((m) => {

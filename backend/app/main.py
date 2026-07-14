@@ -863,6 +863,8 @@ async def track_chat_stream_ep(
         except Exception as exc:  # noqa: BLE001 - surface as a tool error, don't crash
             return {"ok": False, "error": str(exc)}
 
+    # NDJSON event stream: {"t":"d","v":text} prose deltas interleaved with
+    # {"t":"step",...} live agent-action events (issue #23 bug 2b).
     async def gen():
         parts: list[str] = []
         questions: list[dict] = []
@@ -872,7 +874,9 @@ async def track_chat_stream_ep(
             level=track["level"], user_id=user["id"], activity=activity):
             if kind == "delta":
                 parts.append(payload)
-                yield payload
+                yield json.dumps({"t": "d", "v": payload}) + "\n"
+            elif kind == "step":
+                yield json.dumps({"t": "step", **payload}) + "\n"
             elif kind == "result":
                 questions, current_index = payload
         await _apply_agent_questions(
@@ -884,7 +888,7 @@ async def track_chat_stream_ep(
                 "(track_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)",
                 track_id, user["id"], full)
 
-    return StreamingResponse(gen(), media_type="text/plain; charset=utf-8")
+    return StreamingResponse(gen(), media_type="application/x-ndjson")
 
 
 async def _apply_agent_questions(

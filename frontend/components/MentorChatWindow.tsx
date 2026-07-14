@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Markdown from "@/components/Markdown";
 import { useMentorChat } from "@/components/MentorChatProvider";
+import type { AgentStep } from "@/lib/api";
 
 export default function MentorChatWindow() {
   const { messages, busy, clear } = useMentorChat();
@@ -48,6 +49,9 @@ export default function MentorChatWindow() {
           ) : (
             <div key={i} className="flex justify-start">
               <div className="max-w-[92%] rounded-lg border border-line bg-white px-3 py-2">
+                {m.steps && m.steps.length > 0 && (
+                  <AgentActivity steps={m.steps} streaming={streaming} />
+                )}
                 {m.content ? (
                   <div className="relative">
                     <Markdown>{m.content}</Markdown>
@@ -56,11 +60,13 @@ export default function MentorChatWindow() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 py-0.5">
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sub [animation-delay:-0.2s]" />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sub [animation-delay:-0.1s]" />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sub" />
-                  </div>
+                  !(m.steps && m.steps.length > 0 && streaming) && (
+                    <div className="flex items-center gap-1 py-0.5">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sub [animation-delay:-0.2s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sub [animation-delay:-0.1s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sub" />
+                    </div>
+                  )
                 )}
               </div>
             </div>
@@ -68,5 +74,91 @@ export default function MentorChatWindow() {
         })}
       </div>
     </div>
+  );
+}
+
+/* ---- Codex-style activity feed: the actions the agent takes during a turn
+   (ran a query, set a challenge, …) as a collapsible group; while streaming
+   the current action stays visible with a spinner (issue #23 bug 2b). ---- */
+
+function StepIcon({ status }: { status: AgentStep["status"] }) {
+  if (status === "running")
+    return (
+      <span className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-[1.5px] border-line border-t-accent" />
+    );
+  if (status === "ok")
+    return <span className="w-3 shrink-0 text-center text-ok">✓</span>;
+  return <span className="w-3 shrink-0 text-center text-warn">!</span>;
+}
+
+function StepRow({ step }: { step: AgentStep }) {
+  const [showDetail, setShowDetail] = useState(false);
+  return (
+    <div className="text-xs">
+      <button
+        onClick={() => step.detail && setShowDetail((s) => !s)}
+        className={`flex w-full items-center gap-2 py-1 text-left ${
+          step.detail ? "cursor-pointer hover:text-ink" : "cursor-default"
+        } ${step.status === "running" ? "text-ink" : "text-sub"}`}
+      >
+        <StepIcon status={step.status} />
+        <span className="min-w-0 flex-1 truncate">{step.label}</span>
+        {step.detail && (
+          <span
+            className={`text-[10px] text-sub transition-transform ${
+              showDetail ? "rotate-90" : ""
+            }`}
+          >
+            ▸
+          </span>
+        )}
+      </button>
+      {showDetail && step.detail && (
+        <pre className="mb-1 ml-5 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-canvas px-2 py-1.5 font-mono text-[11px] text-sub">
+          {step.detail}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+function AgentActivity({
+  steps,
+  streaming,
+}: {
+  steps: AgentStep[];
+  streaming: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const running = steps.filter((s) => s.status === "running");
+  const done = steps.length - running.length;
+
+  // While the turn streams, show every step live; afterwards collapse into a
+  // one-line summary the learner can expand for reference.
+  if (streaming || open) {
+    return (
+      <div className="mb-2 rounded-md border border-line bg-canvas/60 px-2 py-1">
+        {!streaming && (
+          <button
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-1.5 py-0.5 text-left text-[11px] font-medium uppercase tracking-wide text-sub hover:text-ink"
+          >
+            <span className="rotate-90 text-[10px]">▸</span> Agent activity
+          </button>
+        )}
+        {steps.map((s) => (
+          <StepRow key={s.id} step={s} />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <button
+      onClick={() => setOpen(true)}
+      className="mb-2 flex items-center gap-1.5 rounded-md border border-line bg-canvas/60 px-2 py-1 text-[11px] text-sub hover:text-ink"
+    >
+      <span className="text-[10px]">▸</span>
+      {done === 1 ? "1 action taken" : `${done} actions taken`}
+    </button>
   );
 }

@@ -7,6 +7,14 @@ const TOKEN_KEY = "sqlforge_token";
 const USER_KEY = "sqlforge_user";
 
 export type User = { id: number; email: string; display_name: string };
+// A live agent action during a mentor chat turn (Codex-style activity feed).
+export type AgentStep = {
+  t?: "step";
+  id: number;
+  label: string;
+  status: "running" | "ok" | "error";
+  detail?: string | null;
+};
 export type AISettings = {
   provider: string;
   base_url: string;
@@ -247,12 +255,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message, current_sql }),
     }),
-  // Streams the reply token-by-token; calls onToken with each delta.
+  // Streams the mentor reply as NDJSON events: {"t":"d","v":text} prose
+  // deltas and {"t":"step",...} live agent-action events.
   trackChatStream: async (
     id: number | string,
     message: string,
     onToken: (delta: string) => void,
-    current_sql?: string
+    current_sql?: string,
+    onStep?: (step: AgentStep) => void
   ) => {
     const token = getToken();
     const res = await fetch(`${API_BASE}/tracks/${id}/chat/stream`, {
@@ -279,12 +289,30 @@ export const api = {
     }
     const reader = res.body.getReader();
     const dec = new TextDecoder();
+    let buf = "";
+    const handleLine = (line: string) => {
+      if (!line.trim()) return;
+      let ev: any;
+      try {
+        ev = JSON.parse(line);
+      } catch {
+        onToken(line); // defensive: treat unparseable lines as plain text
+        return;
+      }
+      if (ev.t === "d" && typeof ev.v === "string") onToken(ev.v);
+      else if (ev.t === "step") onStep?.(ev as AgentStep);
+    };
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      const text = dec.decode(value, { stream: true });
-      if (text) onToken(text);
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf("\n")) !== -1) {
+        handleLine(buf.slice(0, nl));
+        buf = buf.slice(nl + 1);
+      }
     }
+    if (buf) handleLine(buf);
   },
   trackChatClear: (id: number | string) =>
     request<any>(`/tracks/${id}/chat`, { method: "DELETE" }),
