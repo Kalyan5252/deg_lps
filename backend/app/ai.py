@@ -439,9 +439,19 @@ async def custom_question_ai(
 async def custom_feedback(
     prompt: str, user_sql: str, passed: bool,
     expected_rows: int, got_rows: int, user_id: int | None = None,
+    next_prompt: str | None = None,
 ) -> dict[str, Any]:
     if not await _ai_available(user_id):
         return _fallback_custom_feedback(passed, expected_rows, got_rows)
+    if next_prompt:
+        next_rule = (
+            "the learner's NEXT queued exercise is exactly: "
+            f'"{next_prompt.strip()}" — introduce THIS exercise; do NOT invent '
+            "a different task or direction"
+        )
+    else:
+        next_rule = ("what to try next; if incorrect, a nudge — "
+                     "do NOT paste the answer")
     msg = (
         f"Exercise: {prompt}\n\n"
         f"Learner's SQL:\n```sql\n{user_sql.strip()}\n```\n\n"
@@ -449,8 +459,7 @@ async def custom_feedback(
         f"(reference returned {expected_rows} rows, learner returned {got_rows}).\n\n"
         "As a senior reviewer respond with STRICT JSON only:\n"
         '{"summary": "1-2 sentences", "optimization": "one concrete performance or '
-        'readability tip about THEIR query", "next": "what to try next; if incorrect, '
-        'a nudge — do NOT paste the answer"}'
+        f'readability tip about THEIR query", "next": "{next_rule}"}}'
     )
     try:
         raw = await _chat(
@@ -516,12 +525,15 @@ async def track_chat_reply(
     user_message: str,
     current_sql: str | None,
     user_id: int | None = None,
+    activity: str | None = None,
 ) -> str:
     """Conversational mentor reply (Markdown). Falls back when AI is disabled."""
     if not await _ai_available(user_id):
         return _fallback_tutor(user_message, schema_text)
 
     context = f"The learner's dataset schema (PostgreSQL):\n{schema_text or '(no tables yet)'}"
+    if activity:
+        context += f"\n\n{activity}"
     if current_sql and current_sql.strip():
         context += f"\n\nWhat they currently have in the editor:\n```sql\n{current_sql.strip()}\n```"
 
@@ -704,6 +716,10 @@ challenge in prose, actually set it.
 - After an action succeeds, you'll be prompted to present it; then reply in \
 normal friendly Markdown (no json) describing the challenge.
 - For a plain question that needs no action, just reply in Markdown.
+- STAY CONSISTENT with the platform state you're given (the active question, \
+the learner's recent submissions, and this conversation). When discussing "the \
+question" or reviewing work, refer to the ACTUAL active question — never a \
+different or imagined one. Only set_question/set_curriculum changes it.
 """
 
 
@@ -946,7 +962,8 @@ async def _apply_agent_action(action, run_sql, questions, level, prose_emitted):
 
 async def agent_chat_stream(schema_text, history, user_message, current_sql, run_sql,
                             *, level: int = 1, max_steps: int = 5,
-                            user_id: int | None = None):
+                            user_id: int | None = None,
+                            activity: str | None = None):
     """Streaming agentic mentor turn.
 
     Yields tuples:
@@ -970,6 +987,8 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
     ctx = (f"The learner's dataset schema (PostgreSQL):\n"
            f"{schema_text or '(no tables yet)'}\n"
            f"Current difficulty level: {level}/5.")
+    if activity:
+        ctx += f"\n\n{activity}"
     if current_sql and current_sql.strip():
         ctx += f"\n\nEditor SQL:\n```sql\n{current_sql.strip()}\n```"
 

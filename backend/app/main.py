@@ -717,17 +717,6 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
                 "feedback": {"summary": "Your SQL didn't run — fix the error first.",
                              "optimization": "", "next": result["error"]}}
 
-    feedback = await ai.custom_feedback(
-        q["prompt"], body.sql, result["passed"],
-        result["expected_rows"], result["got_rows"], user_id=user["id"])
-
-    await db.pool().execute(
-        "INSERT INTO app.custom_attempts (question_id, user_id, sql, score, passed, feedback) "
-        "VALUES ($1,$2,$3,$4,$5,$6)",
-        body.question_id, user["id"], body.sql, result["score"], result["passed"],
-        {"feedback": feedback, "expected_rows": result["expected_rows"],
-         "got_rows": result["got_rows"]})
-
     await db.pool().execute(
         "UPDATE app.custom_questions SET status=$2 WHERE id=$1",
         body.question_id, "passed" if result["passed"] else "failed")
@@ -744,14 +733,30 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
 
     # Curriculum progression: on a pass, advance the active question to the next
     # still-open one (easiest first); clear the pointer when the plan is done.
+    # Do this BEFORE the AI review so its "next" advice can reference the real
+    # queued exercise instead of inventing one (issue #23 bug 3).
+    next_prompt = None
     if result["passed"]:
-        nxt = await db.pool().fetchval(
-            "SELECT id FROM app.custom_questions "
+        nxt = await db.pool().fetchrow(
+            "SELECT id, prompt FROM app.custom_questions "
             "WHERE track_id=$1 AND status='open' AND id<>$2 "
             "ORDER BY level ASC, id ASC LIMIT 1", track_id, body.question_id)
         await db.pool().execute(
             "UPDATE app.custom_tracks SET active_question_id=$2 WHERE id=$1",
-            track_id, nxt)
+            track_id, nxt["id"] if nxt else None)
+        next_prompt = nxt["prompt"] if nxt else None
+
+    feedback = await ai.custom_feedback(
+        q["prompt"], body.sql, result["passed"],
+        result["expected_rows"], result["got_rows"], user_id=user["id"],
+        next_prompt=next_prompt)
+
+    await db.pool().execute(
+        "INSERT INTO app.custom_attempts (question_id, user_id, sql, score, passed, feedback) "
+        "VALUES ($1,$2,$3,$4,$5,$6)",
+        body.question_id, user["id"], body.sql, result["score"], result["passed"],
+        {"feedback": feedback, "expected_rows": result["expected_rows"],
+         "got_rows": result["got_rows"]})
 
     return {
         "ok": True, "passed": result["passed"], "score": result["score"],
@@ -765,6 +770,32 @@ async def track_submit(track_id: int, body: TrackSubmitIn, user: dict = auth.Cur
 class TrackChatIn(BaseModel):
     message: str
     current_sql: str | None = None
+
+
+async def _track_activity(track_id: int, user_id: int) -> str | None:
+    """Platform-state brief for the mentor: the active question the learner is
+    looking at plus their recent submissions, so chat/review stay consistent
+    with what's actually on screen (issue #23 bug 3)."""
+    lines: list[str] = []
+    aq = await db.pool().fetchrow(
+        "SELECT q.prompt, q.level, q.status FROM app.custom_tracks t "
+        "JOIN app.custom_questions q ON q.id=t.active_question_id "
+        "WHERE t.id=$1", track_id)
+    if aq:
+        lines.append(
+            f'The ACTIVE question in the learner\'s Question panel (level '
+            f'{aq["level"]}, {aq["status"]}) is exactly:\n"{aq["prompt"]}"')
+    attempts = await db.pool().fetch(
+        "SELECT q.prompt, a.passed, a.score "
+        "FROM app.custom_attempts a JOIN app.custom_questions q ON q.id=a.question_id "
+        "WHERE q.track_id=$1 AND a.user_id=$2 ORDER BY a.id DESC LIMIT 3",
+        track_id, user_id)
+    if attempts:
+        lines.append("Their most recent submissions (newest first):")
+        for a in attempts:
+            outcome = "PASSED" if a["passed"] else "failed"
+            lines.append(f'- {outcome} (score {a["score"]}): "{a["prompt"][:160]}"')
+    return "\n".join(lines) if lines else None
 
 
 @app.get("/api/tracks/{track_id}/chat")
@@ -793,7 +824,8 @@ async def track_chat(track_id: int, body: TrackChatIn, user: dict = auth.Current
 
     graph = await custom.schema_graph(track_id)
     reply = await ai.track_chat_reply(
-        _schema_text(graph), history, msg, body.current_sql, user_id=user["id"])
+        _schema_text(graph), history, msg, body.current_sql, user_id=user["id"],
+        activity=await _track_activity(track_id, user["id"]))
 
     await db.pool().execute(
         "INSERT INTO app.custom_chat_messages (track_id, user_id, role, content) "
@@ -823,6 +855,7 @@ async def track_chat_stream_ep(
     await _ensure_provisioned(track_id)
     schema = custom.schema_for(track_id)
     track = await _own_track(track_id, user["id"])
+    activity = await _track_activity(track_id, user["id"])
 
     async def _run_sql(sql: str) -> dict:
         try:
@@ -836,7 +869,7 @@ async def track_chat_stream_ep(
         current_index = 0
         async for kind, payload in ai.agent_chat_stream(
             schema_text, history, msg, body.current_sql, _run_sql,
-            level=track["level"], user_id=user["id"]):
+            level=track["level"], user_id=user["id"], activity=activity):
             if kind == "delta":
                 parts.append(payload)
                 yield payload
