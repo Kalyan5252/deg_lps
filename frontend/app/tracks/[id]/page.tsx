@@ -182,20 +182,39 @@ export default function TrackWorkbench() {
     questionIdRef.current = question?.id ?? null;
   }, [question]);
 
+  // One-shot glow on the question card whenever the question is replaced, so
+  // the learner notices the swap (issue #23 bug 2).
+  const [qGlow, setQGlow] = useState(0);
+  const glowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pulseQuestion = useCallback(() => {
+    setQGlow((n) => n + 1);
+    if (glowTimer.current) clearTimeout(glowTimer.current);
+    glowTimer.current = setTimeout(() => setQGlow(0), 2900);
+  }, []);
+  useEffect(() => () => {
+    if (glowTimer.current) clearTimeout(glowTimer.current);
+  }, []);
+
   // Pull the mentor/curriculum's active question and, if it changed, show it.
+  // Returns "changed" | "same" | "none" so callers can react (e.g. generate a
+  // fresh question when the curriculum ran out).
   const applyCurrentQuestion = useCallback(async () => {
     try {
       const cur = await api.trackQuestionCurrent(id);
-      if (cur && cur.id !== questionIdRef.current) {
+      if (!cur) return "none";
+      if (cur.id !== questionIdRef.current) {
         setQuestion(cur);
         setLeftTab("question");
         setShowLeft(true);
         localStorage.setItem("sqlforge_track_showLeft", "1");
+        pulseQuestion();
+        return "changed";
       }
+      return "same";
     } catch {
-      /* noop */
+      return "error"; // transient fetch error — don't trigger regeneration
     }
-  }, [id]);
+  }, [id, pulseQuestion]);
 
   // After each mentor turn, refresh the Question panel (agent may have set one).
   useEffect(() => {
@@ -203,17 +222,22 @@ export default function TrackWorkbench() {
     return () => window.removeEventListener("mentor:done", applyCurrentQuestion);
   }, [applyCurrentQuestion]);
 
-  async function generate() {
+  // `soft` keeps the review/results from the last submission visible — used
+  // when auto-advancing after a pass (the learner still wants their feedback).
+  async function generate(opts?: { soft?: boolean }) {
     setBusy("question");
     setErr(null);
-    setEvalResult(null);
-    setResult(null);
-    setSql("-- write your query here\n");
+    if (!opts?.soft) {
+      setEvalResult(null);
+      setResult(null);
+      setSql("-- write your query here\n");
+    }
     try {
       const q = await api.trackQuestion(id);
       setQuestion(q);
       setServerUp(true);
       setLeftTab("question");
+      pulseQuestion();
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -247,8 +271,13 @@ export default function TrackWorkbench() {
       localStorage.setItem("sqlforge_track_showRight", "1");
       if (ev.result) setResult(ev.result);
       if (ev.level) setTrack((t: any) => ({ ...t, level: ev.level }));
-      // on a pass the curriculum advances — load the next active question.
-      if (ev.passed) applyCurrentQuestion();
+      // on a pass the curriculum advances — load the next active question, or
+      // generate a fresh one when the plan is exhausted (bug: the solved
+      // question used to stay on screen with no signal).
+      if (ev.passed) {
+        const state = await applyCurrentQuestion();
+        if (state === "none" || state === "same") generate({ soft: true });
+      }
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -369,8 +398,15 @@ export default function TrackWorkbench() {
                           {question.source === "ai" ? "AI-generated" : "generated"}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed">
-                        <Markdownish text={question.prompt} />
+                      {/* glow lives on the wrapper so its ring paints BEHIND
+                          the opaque card — border-only glow, never a wash */}
+                      <div
+                        key={qGlow ? `glow-${qGlow}` : "idle"}
+                        className={qGlow ? "question-glow" : undefined}
+                      >
+                        <div className="rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed">
+                          <Markdownish text={question.prompt} />
+                        </div>
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {(question.skills || []).map((s: string) => (
@@ -381,7 +417,7 @@ export default function TrackWorkbench() {
                       </div>
                       <button
                         className="btn mt-4"
-                        onClick={generate}
+                        onClick={() => generate()}
                         disabled={!!busy}
                       >
                         {busy === "question" ? "Generating…" : "Skip / new question"}
@@ -400,7 +436,7 @@ export default function TrackWorkbench() {
                       </p>
                       <button
                         className="btn btn-primary mt-3"
-                        onClick={generate}
+                        onClick={() => generate()}
                         disabled={!!busy}
                       >
                         Generate question

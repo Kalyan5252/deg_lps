@@ -439,9 +439,19 @@ async def custom_question_ai(
 async def custom_feedback(
     prompt: str, user_sql: str, passed: bool,
     expected_rows: int, got_rows: int, user_id: int | None = None,
+    next_prompt: str | None = None,
 ) -> dict[str, Any]:
     if not await _ai_available(user_id):
         return _fallback_custom_feedback(passed, expected_rows, got_rows)
+    if next_prompt:
+        next_rule = (
+            "the learner's NEXT queued exercise is exactly: "
+            f'"{next_prompt.strip()}" — introduce THIS exercise; do NOT invent '
+            "a different task or direction"
+        )
+    else:
+        next_rule = ("what to try next; if incorrect, a nudge — "
+                     "do NOT paste the answer")
     msg = (
         f"Exercise: {prompt}\n\n"
         f"Learner's SQL:\n```sql\n{user_sql.strip()}\n```\n\n"
@@ -449,8 +459,7 @@ async def custom_feedback(
         f"(reference returned {expected_rows} rows, learner returned {got_rows}).\n\n"
         "As a senior reviewer respond with STRICT JSON only:\n"
         '{"summary": "1-2 sentences", "optimization": "one concrete performance or '
-        'readability tip about THEIR query", "next": "what to try next; if incorrect, '
-        'a nudge — do NOT paste the answer"}'
+        f'readability tip about THEIR query", "next": "{next_rule}"}}'
     )
     try:
         raw = await _chat(
@@ -516,12 +525,15 @@ async def track_chat_reply(
     user_message: str,
     current_sql: str | None,
     user_id: int | None = None,
+    activity: str | None = None,
 ) -> str:
     """Conversational mentor reply (Markdown). Falls back when AI is disabled."""
     if not await _ai_available(user_id):
         return _fallback_tutor(user_message, schema_text)
 
     context = f"The learner's dataset schema (PostgreSQL):\n{schema_text or '(no tables yet)'}"
+    if activity:
+        context += f"\n\n{activity}"
     if current_sql and current_sql.strip():
         context += f"\n\nWhat they currently have in the editor:\n```sql\n{current_sql.strip()}\n```"
 
@@ -704,6 +716,10 @@ challenge in prose, actually set it.
 - After an action succeeds, you'll be prompted to present it; then reply in \
 normal friendly Markdown (no json) describing the challenge.
 - For a plain question that needs no action, just reply in Markdown.
+- STAY CONSISTENT with the platform state you're given (the active question, \
+the learner's recent submissions, and this conversation). When discussing "the \
+question" or reviewing work, refer to the ACTUAL active question — never a \
+different or imagined one. Only set_question/set_curriculum changes it.
 """
 
 
@@ -897,14 +913,40 @@ def _try_json(s: str):
         return None
 
 
+def _step_start(action: dict) -> dict:
+    """Client-facing description of an action that is about to run (never
+    includes reference SQL — that's the hidden answer key)."""
+    act = action.get("action")
+    if act == "run_query":
+        sql = (action.get("sql") or "").strip()
+        return {"label": "Querying your dataset",
+                "detail": sql[:300], "status": "running"}
+    if act == "set_question":
+        return {"label": "Writing your next challenge",
+                "detail": None, "status": "running"}
+    if act == "set_curriculum":
+        n = len(action.get("questions") or [])
+        return {"label": f"Building a {n}-step curriculum" if n else
+                "Building a curriculum", "detail": None, "status": "running"}
+    return {"label": f"Action: {act}", "detail": None, "status": "running"}
+
+
 async def _apply_agent_action(action, run_sql, questions, level, prose_emitted):
     """Execute one action. Returns (followup_message_or_None, current_index_or_None,
-    is_run_query). Appends validated questions to `questions` in place."""
+    is_run_query, step) where `step` describes the outcome for the client's
+    activity feed. Appends validated questions to `questions` in place."""
     act = action.get("action")
     if act == "run_query":
         sql = (action.get("sql") or "").strip()
         res = await run_sql(sql) if sql else {"ok": False, "error": "empty sql"}
-        return ("[query result]\n" + _fmt_run_result(res), None, True)
+        if res.get("ok"):
+            step = {"label": "Queried your dataset",
+                    "detail": f"{sql[:300]}\n→ {res.get('row_count', 0)} rows",
+                    "status": "ok"}
+        else:
+            step = {"label": "Query failed",
+                    "detail": str(res.get("error"))[:200], "status": "error"}
+        return ("[query result]\n" + _fmt_run_result(res), None, True, step)
     if act == "set_question":
         q = _norm_question(action, level)
         v = await run_sql(q["reference_sql"]) if q["reference_sql"] else {"ok": False, "error": "no reference_sql"}
@@ -916,9 +958,13 @@ async def _apply_agent_action(action, run_sql, questions, level, prose_emitted):
                 "Present THIS exact challenge to the learner in friendly Markdown "
                 "(keep the task identical — do NOT invent a different one). "
                 "Do NOT reveal the reference SQL. No json.")
-            return (follow, idx, False)
+            step = {"label": "Set your next challenge",
+                    "detail": q["prompt"][:200], "status": "ok"}
+            return (follow, idx, False, step)
+        step = {"label": "Challenge didn't validate — retrying",
+                "detail": None, "status": "error"}
         return (f"[reference_sql failed: {v.get('error')}] Send a corrected "
-                "set_question action.", None, False)
+                "set_question action.", None, False, step)
     if act == "set_curriculum":
         added = []
         for rawq in (action.get("questions") or [])[:8]:
@@ -938,19 +984,27 @@ async def _apply_agent_action(action, run_sql, questions, level, prose_emitted):
                 "Present THIS exact challenge to the learner in friendly Markdown "
                 "(keep the task identical — do NOT invent a different one). "
                 "Mention there are more steps to come. No json.")
-            return (follow, idx, False)
+            step = {"label": f"Built a {len(added)}-step curriculum",
+                    "detail": f'First up: {added[0]["prompt"][:160]}', "status": "ok"}
+            return (follow, idx, False, step)
+        step = {"label": "Curriculum didn't validate — retrying",
+                "detail": None, "status": "error"}
         return ("[all reference_sql failed] Re-send set_curriculum with corrected "
-                "SQL.", None, False)
-    return (None, None, False)
+                "SQL.", None, False, step)
+    return (None, None, False, None)
 
 
 async def agent_chat_stream(schema_text, history, user_message, current_sql, run_sql,
                             *, level: int = 1, max_steps: int = 5,
-                            user_id: int | None = None):
+                            user_id: int | None = None,
+                            activity: str | None = None):
     """Streaming agentic mentor turn.
 
     Yields tuples:
       ("delta", text)  — natural-language reply tokens to forward to the client
+      ("step", {id, label, status, detail}) — live activity feed of the actions
+        the agent takes (status: running → ok|error), for the client's
+        Codex-style step display; never contains reference SQL
       ("result", (questions, current_index)) — emitted once at the end so the
         caller can persist any questions the agent created.
 
@@ -970,6 +1024,8 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
     ctx = (f"The learner's dataset schema (PostgreSQL):\n"
            f"{schema_text or '(no tables yet)'}\n"
            f"Current difficulty level: {level}/5.")
+    if activity:
+        ctx += f"\n\n{activity}"
     if current_sql and current_sql.strip():
         ctx += f"\n\nEditor SQL:\n```sql\n{current_sql.strip()}\n```"
 
@@ -981,6 +1037,7 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
 
     questions: list[dict] = []
     current_index = 0
+    step_id = 0
 
     for _ in range(max_steps):
         raw = ""
@@ -1042,8 +1099,12 @@ async def agent_chat_stream(schema_text, history, user_message, current_sql, run
         had_run = False
         followups: list[str] = []
         for action in actions:
-            follow, idx, is_run = await _apply_agent_action(
+            step_id += 1
+            yield ("step", {"id": step_id, **_step_start(action)})
+            follow, idx, is_run, step = await _apply_agent_action(
                 action, run_sql, questions, level, prose_emitted)
+            if step:
+                yield ("step", {"id": step_id, **step})
             if idx is not None:
                 current_index = idx
             if is_run:

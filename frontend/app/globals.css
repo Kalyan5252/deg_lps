@@ -115,6 +115,90 @@ body {
   }
 }
 
+/* ---- Question panel: one-shot Siri-style BORDER glow when the mentor swaps
+   the active question (issue #23 bug 2). The colored ring + luminescence live
+   on the card's edges only, like the iPhone Siri effect.
+
+   Mask-free on purpose (mask-composite is unreliable across build chains):
+   `.question-glow` is a thin WRAPPER around the opaque card. Its pseudo-
+   elements carry the spinning conic gradient at z:-1 and overhang the card
+   by a few px. Because negative-z children paint below sibling content (but
+   a pseudo can never paint below its own element's background), the wrapper
+   pattern is what guarantees the card hollows out the middle — only the
+   overhang ring + outer luminescence can ever show. ---- */
+@keyframes q-glow-fade {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.question-glow {
+  position: relative;
+  isolation: isolate; /* keeps the z:-1 ring above the panel behind it */
+  border-radius: 8px; /* match the card (rounded-lg) so the ring hugs it */
+}
+/* the card's own gray border reads as a gap inside the ring — hide it */
+.question-glow > .rounded-lg {
+  border-color: transparent;
+}
+/* crisp gradient ring: only the 2.5px overhang past the card shows */
+.question-glow::before {
+  content: "";
+  position: absolute;
+  inset: -2.5px;
+  border-radius: 11px; /* card is rounded-lg (8px) + 2.5px overhang */
+  z-index: -1;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--siri-angle),
+    #7a9bff 0deg,
+    #6d8dff 60deg,
+    #b98cff 130deg,
+    #ff8fd4 180deg,
+    #6fd4ff 240deg,
+    #8f9dff 300deg,
+    #7a9bff 360deg
+  );
+  animation: siri-spin 2.2s linear infinite,
+    q-glow-fade 2.8s ease-in-out forwards;
+}
+/* soft luminescence bleeding outward from the ring (blurred, still behind) */
+.question-glow::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 12px;
+  z-index: -2;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--siri-angle),
+    rgba(122, 155, 255, 0.85) 0deg,
+    rgba(109, 141, 255, 0.85) 60deg,
+    rgba(185, 140, 255, 0.8) 130deg,
+    rgba(255, 143, 212, 0.8) 180deg,
+    rgba(111, 212, 255, 0.85) 240deg,
+    rgba(143, 157, 255, 0.8) 300deg,
+    rgba(122, 155, 255, 0.85) 360deg
+  );
+  filter: blur(7px);
+  animation: siri-spin 2.2s linear infinite,
+    q-glow-fade 2.8s ease-in-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .question-glow::before,
+  .question-glow::after {
+    animation: q-glow-fade 2.8s ease-in-out forwards; /* fade only, no spin */
+  }
+}
+
 @keyframes course-rise {
   from {
     opacity: 0;
