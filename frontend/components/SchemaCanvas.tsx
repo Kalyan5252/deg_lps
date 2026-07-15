@@ -98,10 +98,13 @@ export default function SchemaCanvas({
   tables,
   relations,
   storageKey,
+  extraHint,
 }: {
   tables: Table[];
   relations: Relation[];
   storageKey: string;
+  /** optional extra text for the help pill (e.g. an expand shortcut) */
+  extraHint?: string;
 }) {
   const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -124,6 +127,19 @@ export default function SchemaCanvas({
   useEffect(() => {
     panRef.current = pan;
   }, [pan]);
+
+  // visible canvas size (for the mini-map viewport rectangle)
+  const [viewSize, setViewSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect();
+      setViewSize({ w: r.width, h: r.height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Smooth, cursor-anchored zoom. The wheel applies a zoom delta proportional to
   // the scroll amount (so trackpads are fine-grained); a short CSS transition on
@@ -270,6 +286,55 @@ export default function SchemaCanvas({
       .filter(Boolean) as any[];
   }, [relations, pos, tables]);
 
+  // ---- mini-map (VS Code style): a scaled-down world with a draggable
+  // viewport rectangle, so large schemas are easy to navigate ----
+  const MM_W = 176;
+  const MM_H = 120;
+  const MM_PAD = 8;
+  const mini = useMemo(() => {
+    const names = tables.filter((t) => pos[t.name]);
+    if (!names.length) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const t of names) {
+      const p = pos[t.name];
+      x0 = Math.min(x0, p.x);
+      y0 = Math.min(y0, p.y);
+      x1 = Math.max(x1, p.x + cardWidth(t));
+      y1 = Math.max(y1, p.y + cardHeight(t));
+    }
+    // include the current viewport in the bounds so the rect never clips away
+    if (viewSize.w && zoom) {
+      x0 = Math.min(x0, -pan.x / zoom);
+      y0 = Math.min(y0, -pan.y / zoom);
+      x1 = Math.max(x1, (-pan.x + viewSize.w) / zoom);
+      y1 = Math.max(y1, (-pan.y + viewSize.h) / zoom);
+    }
+    const bw = Math.max(1, x1 - x0);
+    const bh = Math.max(1, y1 - y0);
+    const k = Math.min((MM_W - MM_PAD * 2) / bw, (MM_H - MM_PAD * 2) / bh);
+    // center the world inside the mini-map box
+    const ox = MM_PAD + (MM_W - MM_PAD * 2 - bw * k) / 2;
+    const oy = MM_PAD + (MM_H - MM_PAD * 2 - bh * k) / 2;
+    const toMini = (wx: number, wy: number) => ({
+      x: ox + (wx - x0) * k,
+      y: oy + (wy - y0) * k,
+    });
+    return { k, x0, y0, ox, oy, toMini };
+  }, [tables, pos, pan, zoom, viewSize]);
+
+  const miniDrag = useRef(false);
+  function miniNavigate(e: React.PointerEvent<SVGSVGElement>) {
+    if (!mini || !viewSize.w) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    // mini-map point -> world point, then center the viewport on it
+    const wx = mini.x0 + (mx - mini.ox) / mini.k;
+    const wy = mini.y0 + (my - mini.oy) / mini.k;
+    setSmooth(false);
+    setPan({ x: viewSize.w / 2 - wx * zoom, y: viewSize.h / 2 - wy * zoom });
+  }
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#fafbfc]">
       {/* controls */}
@@ -309,7 +374,69 @@ export default function SchemaCanvas({
         style={{ pointerEvents: "none" }}
       >
         Drag tables to arrange · drag canvas to pan · scroll to zoom
+        {extraHint ? ` · ${extraHint}` : ""}
       </div>
+
+      {/* mini-map */}
+      {mini && (
+        <svg
+          width={MM_W}
+          height={MM_H}
+          className="absolute bottom-3 right-3 z-20 rounded-md border border-line bg-white/90 shadow-sm"
+          style={{ cursor: "pointer", touchAction: "none" }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            miniDrag.current = true;
+            try {
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+              /* capture is best-effort (keeps drag alive outside the box) */
+            }
+            miniNavigate(e);
+          }}
+          onPointerMove={(e) => {
+            if (miniDrag.current) miniNavigate(e);
+          }}
+          onPointerUp={() => {
+            miniDrag.current = false;
+          }}
+        >
+          <title>Mini-map — click or drag to navigate</title>
+          {tables.map((t) => {
+            const p = pos[t.name];
+            if (!p) return null;
+            const a = mini.toMini(p.x, p.y);
+            return (
+              <rect
+                key={t.name}
+                x={a.x}
+                y={a.y}
+                width={Math.max(3, cardWidth(t) * mini.k)}
+                height={Math.max(2, cardHeight(t) * mini.k)}
+                rx={1.5}
+                fill="#c7cdd9"
+              />
+            );
+          })}
+          {viewSize.w > 0 && (
+            (() => {
+              const a = mini.toMini(-pan.x / zoom, -pan.y / zoom);
+              return (
+                <rect
+                  x={a.x}
+                  y={a.y}
+                  width={(viewSize.w / zoom) * mini.k}
+                  height={(viewSize.h / zoom) * mini.k}
+                  rx={2}
+                  fill="rgba(47, 109, 246, 0.08)"
+                  stroke="#2f6df6"
+                  strokeWidth={1.2}
+                />
+              );
+            })()
+          )}
+        </svg>
+      )}
 
       <div
         ref={canvasRef}
