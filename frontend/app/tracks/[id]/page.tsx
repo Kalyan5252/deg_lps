@@ -398,13 +398,15 @@ export default function TrackWorkbench() {
                           {question.source === "ai" ? "AI-generated" : "generated"}
                         </span>
                       </div>
+                      {/* glow lives on the wrapper so its ring paints BEHIND
+                          the opaque card — border-only glow, never a wash */}
                       <div
                         key={qGlow ? `glow-${qGlow}` : "idle"}
-                        className={`rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed ${
-                          qGlow ? "question-glow" : ""
-                        }`}
+                        className={qGlow ? "question-glow" : undefined}
                       >
-                        <Markdownish text={question.prompt} />
+                        <div className="rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed">
+                          <Markdownish text={question.prompt} />
+                        </div>
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {(question.skills || []).map((s: string) => (
