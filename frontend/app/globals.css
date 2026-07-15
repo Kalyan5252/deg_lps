@@ -115,8 +115,11 @@ body {
   }
 }
 
-/* ---- Question panel: one-shot Siri-style glow when the mentor swaps the
-   active question (issue #23 bug 2 — the change used to be invisible) ---- */
+/* ---- Question panel: one-shot Siri-style EDGE glow when the mentor swaps
+   the active question (issue #23 bug 2). Like the iPhone Siri effect, the
+   color lives on the card's border: a multicolor gradient ring travels
+   around the edges (masked to the border only), with a soft luminescent
+   spill just outside it — no background wash behind the content. ---- */
 @keyframes q-glow-fade {
   0% {
     opacity: 0;
@@ -125,7 +128,7 @@ body {
     opacity: 1;
   }
   65% {
-    opacity: 0.8;
+    opacity: 0.9;
   }
   100% {
     opacity: 0;
@@ -133,45 +136,64 @@ body {
 }
 .question-glow {
   position: relative;
-  isolation: isolate;
 }
+/* the crisp gradient border ring */
 .question-glow::before {
   content: "";
   position: absolute;
-  inset: -3px;
+  inset: -1px;
   border-radius: inherit;
-  z-index: -1;
+  padding: 2.5px; /* ring thickness */
   pointer-events: none;
+  z-index: 1;
   background: conic-gradient(
     from var(--siri-angle),
-    rgba(120, 150, 255, 0) 0deg,
-    rgba(150, 178, 255, 0.9) 70deg,
-    rgba(214, 188, 255, 0.6) 140deg,
-    rgba(150, 214, 255, 0.9) 210deg,
-    rgba(196, 208, 255, 0.55) 290deg,
-    rgba(120, 150, 255, 0) 360deg
+    rgba(90, 140, 255, 0.15) 0deg,
+    #6d8dff 60deg,
+    #b98cff 130deg,
+    #ff8fd4 180deg,
+    #6fd4ff 240deg,
+    #8f9dff 300deg,
+    rgba(90, 140, 255, 0.15) 360deg
   );
-  filter: blur(10px);
-  animation: siri-spin 2.4s linear infinite,
+  /* keep only the border ring of the gradient */
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: siri-spin 2.2s linear infinite,
     q-glow-fade 2.8s ease-in-out forwards;
 }
+/* soft light spilling off the edges (blurred copy of the same ring) */
 .question-glow::after {
   content: "";
   position: absolute;
-  inset: -12px;
+  inset: -2px;
   border-radius: inherit;
-  z-index: -2;
+  padding: 4px;
   pointer-events: none;
-  background: radial-gradient(
-    closest-side,
-    rgba(170, 192, 255, 0.5),
-    rgba(170, 192, 255, 0) 75%
+  z-index: 1;
+  background: conic-gradient(
+    from var(--siri-angle),
+    rgba(90, 140, 255, 0) 0deg,
+    rgba(109, 141, 255, 0.8) 60deg,
+    rgba(185, 140, 255, 0.7) 130deg,
+    rgba(255, 143, 212, 0.7) 180deg,
+    rgba(111, 212, 255, 0.8) 240deg,
+    rgba(143, 157, 255, 0.7) 300deg,
+    rgba(90, 140, 255, 0) 360deg
   );
-  filter: blur(14px);
-  animation: q-glow-fade 2.8s ease-in-out forwards;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  filter: blur(6px);
+  animation: siri-spin 2.2s linear infinite,
+    q-glow-fade 2.8s ease-in-out forwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .question-glow::before {
+  .question-glow::before,
+  .question-glow::after {
     animation: q-glow-fade 2.8s ease-in-out forwards; /* fade only, no spin */
   }
 }
