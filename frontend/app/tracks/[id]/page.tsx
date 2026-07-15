@@ -101,6 +101,27 @@ export default function TrackWorkbench() {
   const [showLeft, setShowLeft] = useState(true);
   const [showRight, setShowRight] = useState(true);
 
+  // ⌘/Ctrl + hold on the schema canvas: the schema takes the full width while
+  // held (editor + agent panels collapse), releasing restores the layout.
+  const [schemaFocus, setSchemaFocus] = useState(false);
+  useEffect(() => {
+    if (!schemaFocus) return;
+    const end = () => setSchemaFocus(false);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Meta" || e.key === "Control") end();
+    };
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", end);
+    return () => {
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", end);
+    };
+  }, [schemaFocus]);
+
   // dataset browser
   const [dataTable, setDataTable] = useState<string | null>(null);
   const [dataResult, setDataResult] = useState<any>(null);
@@ -363,11 +384,13 @@ export default function TrackWorkbench() {
         <div className="flex min-h-0 flex-1">
           {/* Left: Question / Schema / Data */}
           <div
-            className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
-            style={{ width: showLeft ? leftW : 0 }}
+            className={`overflow-hidden transition-[width] duration-300 ease-in-out ${
+              schemaFocus ? "min-w-0 flex-1" : "shrink-0"
+            }`}
+            style={{ width: schemaFocus ? undefined : showLeft ? leftW : 0 }}
           >
             <aside
-              style={{ width: leftW }}
+              style={{ width: schemaFocus ? "100%" : leftW }}
               className={`flex h-full flex-col border-r border-line bg-white transition-transform duration-300 ease-in-out ${
                 showLeft ? "translate-x-0" : "-translate-x-full"
               }`}
@@ -447,11 +470,17 @@ export default function TrackWorkbench() {
               )}
 
               {leftTab === "schema" && (
-                <div className="min-h-0 flex-1">
+                <div
+                  className="min-h-0 flex-1"
+                  onPointerDown={(e) => {
+                    if (e.metaKey || e.ctrlKey) setSchemaFocus(true);
+                  }}
+                >
                   <SchemaCanvas
                     tables={schema.tables}
                     relations={schema.relations}
                     storageKey={`sqlforge_schema_pos_${id}`}
+                    extraHint="⌘ + hold to expand"
                   />
                 </div>
               )}
@@ -503,15 +532,19 @@ export default function TrackWorkbench() {
               )}
             </aside>
           </div>
-          {showLeft && (
+          {showLeft && !schemaFocus && (
             <Splitter
               axis="x"
               onDelta={(d) => setLeftW((w) => Math.max(260, Math.min(640, w + d)))}
             />
           )}
 
-          {/* Center: editor + results */}
-          <section className="flex min-w-0 flex-1 flex-col">
+          {/* Center: editor + results (hidden while the schema is expanded) */}
+          <section
+            className={`${
+              schemaFocus ? "hidden" : "flex"
+            } min-w-0 flex-1 flex-col`}
+          >
             <div className="flex items-center justify-between border-b border-line bg-canvas px-3 py-1.5">
               <div className="flex items-center gap-2">
                 {!showLeft && (
@@ -624,7 +657,7 @@ export default function TrackWorkbench() {
               </div>
             </div>
           </section>
-          {showRight && (
+          {showRight && !schemaFocus && (
             <Splitter
               axis="x"
               onDelta={(d) => setRightW((w) => Math.max(280, Math.min(620, w - d)))}
@@ -634,7 +667,7 @@ export default function TrackWorkbench() {
           {/* Right: agentic panel — chat window (messages) + review */}
           <div
             className="shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
-            style={{ width: showRight ? rightW : 0 }}
+            style={{ width: schemaFocus ? 0 : showRight ? rightW : 0 }}
           >
             <aside
               style={{ width: rightW }}
